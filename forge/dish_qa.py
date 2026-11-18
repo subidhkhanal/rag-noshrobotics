@@ -21,19 +21,22 @@ RECALL = re.compile(
     r"(pichli|pichhli|pehle wali|pichla|pichhla) (recipe|dish|wali|wala)|kaun si recipe (batayi|di) thi)\b", re.I)
 
 # A question about a specific dish: question form + a pointer to it.
-QUESTION = re.compile(r"^\s*(is|isn'?t|are|does|doesn'?t|do|has|have|can|could|will|would|how|what|kya|ye|yeh|"
+QUESTION = re.compile(r"^\s*(is|isn'?t|are|does|doesn'?t|do|has|have|can|could|will|would|how|what|which|kya|ye|yeh|"
                       r"it|this|that|should)\b|\?\s*$|\b(hai|hain|kya)\s*\??\s*$", re.I)
 POINTER = re.compile(r"\b(it|its|this|that|these|those|them|ye|yeh|iska|iski|isme|ismein|isse|"
                      r"(the )?(first|second|third|fourth|fifth|last|1st|2nd|3rd|4th|5th) (one|recipe|dish))\b", re.I)
-ALL_SHOWN = re.compile(r"\b(these|those|them|all of them|all (these|those|the) (ones|recipes|dishes))\b", re.I)
-ASKS_TIME = re.compile(r"\b(how long|how much time|time|minutes?|mins?|kitna (time|samay)|der)\b", re.I)
+ALL_SHOWN = re.compile(r"\b(these|those|them|all of them|all (these|those|the) (ones|recipes|dishes)|"
+                       r"which (one|ones|dish|dishes|recipe|recipes)\b(?! (should|do|can) (i|you) (make|cook)))\b", re.I)
+ASKS_TIME = re.compile(r"\b(how long|how much time|time|minutes?|mins?|kitna (time|samay)|der|quickest|fastest|"
+                       r"shortest|slowest|longest)\b", re.I)
 ASKS_SERVES = re.compile(r"\b(how many (people|persons|servings?)|serves?|servings?|kitne log|kitne logo)\b", re.I)
 ASKS_NUTRITION = re.compile(r"\b(calories?|kcal|nutrition|nutrients?|macros?|carbs?|fat content|sugar content|"
                             r"protein content|grams? of protein|diabetic|weight loss)\b", re.I)
 
 
 def is_dish_question(message: str) -> bool:
-    return bool(QUESTION.search(message) and (POINTER.search(message) or re.search(r"\?\s*$", message)))
+    return bool(QUESTION.search(message) and (POINTER.search(message) or ALL_SHOWN.search(message)
+                                              or re.search(r"\?\s*$", message)))
 
 
 def answer(engine, idx: int, q: Constraints, message: str) -> list[str]:

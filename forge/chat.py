@@ -332,6 +332,12 @@ class Assistant:
             s.focus = t
         else:
             reply = "\n".join(f"{eng.recipes[eng.by_id[t]]['name']}: {' '.join(lines[t])}" for t in targets)
+            timed = [t for t in targets if eng.recipes[eng.by_id[t]]["total_min"]]
+            if dish_qa.ASKS_TIME.search(message) and timed:
+                best = min(timed, key=lambda t: eng.recipes[eng.by_id[t]]["total_min"])
+                r = eng.recipes[eng.by_id[best]]
+                reply = f"Quickest: {r['name']} ({r['total_min']} min).\n" + reply
+                s.focus = best
         results = []
         for t in targets:
             i = eng.by_id[t]
