@@ -420,24 +420,63 @@ dialog.addEventListener("click", (e) => {
 });
 
 // ---------- stress test ----------
+// What the Nosh Companion app's assistant answered (hands-on test, Nov 2026) vs what RecipeForge does.
 const STRESS = [
-  { qs: ["no onion no garlic vegetarian"], tag: "bad", obs: "Returned No Boil Methi Dal, whose own ingredient list includes garlic paste. Compliance was inferred from recipe names, not ingredients." },
-  { qs: ["Jain food options"], tag: "bad", obs: "Returned an unranked list of 80+ recipes, including Cheese Corn Maggi — instant-noodle tastemakers typically list onion and garlic powder." },
-  { qs: ["I'm lactose intolerant what can I make"], tag: "gap", obs: "Recognised lactose intolerance, then listed recipes alphabetically (Aloo…, Aloo…, Andhra…) with no ranking or reasoning." },
-  { qs: ["vegetarian breakfast under 20 mins"], tag: "gap", obs: "The in-app veg / non-veg toggle did not change the assistant's answers." },
-  { qs: ["I have chicken tomatoes and rice", "something similar but spicier", "make it under 15 minutes"], tag: "good", obs: "Nosh handled this chain well: it kept context and honestly reported nothing under 15 minutes." },
-  { qs: ["I want butter chicken but I'm vegetarian"], tag: "good", obs: "Nosh suggested Paneer Butter Masala — good culinary reasoning." },
-  { qs: ["something for a dinner party for 6 people"], tag: "gap", obs: "Returned a single recipe and asked the user to scale it themselves." },
-  { qs: ["suggest something different from what I usually make"], tag: "gap", obs: "Answered confidently with no cooking history to compare against. Here, tap “Cooked it” on a few dishes first — it then avoids your usual cuisines and ingredients, and says so honestly when it has no history." },
-  { qs: ["what did I cook last week"], tag: "gap", obs: "Had no history to answer from. Here it answers from dishes you've marked as cooked on this device." },
-  { qs: ["plan my week, Jain dinners"], tag: "gap", obs: "Offered a meal-planning calendar but no plan. Here: 7 validated dinners, no main ingredient repeated on consecutive days, plus a shopping list." },
+  { qs: ["no onion no garlic vegetarian"], tag: "bad",
+    nosh: "Suggested No Boil Methi Dal, though its own ingredient list includes garlic paste. It judged recipes by their names, not their ingredients.",
+    here: "Checks every ingredient line, so garlic paste, onion powder and hidden onion (as in ketchup) are all ruled out." },
+  { qs: ["Jain food options"], tag: "bad",
+    nosh: "Listed 80+ recipes in no order, including Cheese Corn Maggi, whose masala usually contains onion and garlic.",
+    here: "Rules out onion, garlic and root vegetables, including inside pastes and masalas, then shows 5 ranked dishes." },
+  { qs: ["I'm lactose intolerant what can I make"], tag: "gap",
+    nosh: "Understood the request, then listed recipes alphabetically (Aloo…, Aloo…, Andhra…) with no reasoning.",
+    here: "Removes milk, curd, paneer and cream, marks ghee and butter as low-lactose risks, and ranks what's left." },
+  { qs: ["vegetarian breakfast under 20 mins"], tag: "gap",
+    nosh: "The app's veg / non-veg switch didn't change the assistant's answers.",
+    here: "Applies both rules, vegetarian and under 20 minutes, to every result." },
+  { qs: ["something for a dinner party for 6 people"], tag: "gap",
+    nosh: "Gave a single recipe and left the scaling to you.",
+    here: "Gives 5 options, each showing how much to scale it for 6 people." },
+  { qs: ["suggest something different from what I usually make"], tag: "gap",
+    nosh: "Answered confidently without knowing anything you've cooked.",
+    here: "Learns from dishes you mark as cooked on this device, and says so honestly when it has no history yet." },
+  { qs: ["what did I cook last week"], tag: "gap",
+    nosh: "Had no cooking history to answer from.",
+    here: "Answers from the dishes you've marked as cooked on this device." },
+  { qs: ["plan my week, Jain dinners"], tag: "gap",
+    nosh: "Showed a meal-planning calendar, but no plan.",
+    here: "Plans 7 checked Jain dinners with no main ingredient repeated on back-to-back days, plus a shopping list." },
+  { qs: ["I have chicken tomatoes and rice", "something similar but spicier", "make it under 15 minutes"], tag: "good",
+    nosh: "Kept the context across all three messages and honestly said nothing fitted under 15 minutes.",
+    here: "Does the same, and offers the closest dish when nothing fits the time limit." },
+  { qs: ["I want butter chicken but I'm vegetarian"], tag: "good",
+    nosh: "Suggested Paneer Butter Masala, which is good cooking sense.",
+    here: "Makes the same swap (chicken → paneer) and says it did." },
 ];
-$("#stress-list").innerHTML = STRESS.map((s, i) => `
-  <div class="item">
-    <div class="q">${s.qs.map((q) => `<code>${esc(q)}</code>`).join(" → ")}</div>
-    <div class="obs"><span class="tag ${s.tag}">${{ bad: "failure", gap: "gap", good: "handled" }[s.tag]}</span>${esc(s.obs)}</div>
-    <button class="link" data-stress="${i}">Run here →</button>
-  </div>`).join("");
+const GROUPS = [
+  { tag: "bad", title: "Unsafe answers", note: "Recommended food that breaks the diet asked for." },
+  { tag: "gap", title: "Fell short", note: "Safe, but unhelpful or incomplete." },
+  { tag: "good", title: "Handled well", note: "Nosh got these right too." },
+];
+$("#stress-summary").innerHTML = GROUPS.map((g) => `
+  <div class="tile ${g.tag}"><b>${STRESS.filter((s) => s.tag === g.tag).length}</b><span>${g.title.toLowerCase()}</span></div>`).join("");
+$("#stress-list").innerHTML = GROUPS.map((g) => `
+  <section class="cmp-group ${g.tag}">
+    <h3>${g.title}<span>${g.note}</span></h3>
+    ${STRESS.map((s, i) => [s, i]).filter(([s]) => s.tag === g.tag).map(([s, i]) => `
+      <article class="cmp">
+        <div class="cmp-head">
+          ${s.qs.length === 1
+            ? `<q>${esc(s.qs[0])}</q>`
+            : `<ol class="chain">${s.qs.map((q) => `<li><q>${esc(q)}</q></li>`).join("")}</ol>`}
+          <button class="try" data-stress="${i}">Try it</button>
+        </div>
+        <div class="cmp-cols">
+          <div class="col nosh"><span class="lbl">Nosh assistant</span><p>${esc(s.nosh)}</p></div>
+          <div class="col ours"><span class="lbl">RecipeForge</span><p>${esc(s.here)}</p></div>
+        </div>
+      </article>`).join("")}
+  </section>`).join("");
 $("#stress-list").addEventListener("click", async (e) => {
   const b = e.target.closest("[data-stress]");
   if (!b) return;
@@ -458,5 +497,13 @@ $("#stress-list").addEventListener("click", async (e) => {
   }
   const recent = loadChats()[0];
   if (recent) openChat(recent.id);
-  else newChat();
+  else await newChat();
+  openPageFromHash();
 })();
+
+// Shareable page links: /#stress and /#how open those pages directly.
+function openPageFromHash() {
+  const page = location.hash.slice(1);
+  if (page === "stress" || page === "how") showTab(page);
+}
+window.addEventListener("hashchange", openPageFromHash);

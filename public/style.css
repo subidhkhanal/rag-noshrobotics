@@ -306,7 +306,7 @@ body { display: block; height: 100dvh; overflow: hidden; }
 .topbar { display: none; }
 .tab { overflow-y: auto; padding: 0; min-height: 0; }
 .tab.page { padding: 32px 24px 48px; }
-.tab.page > * { max-width: 768px; margin-left: auto; margin-right: auto; }
+.tab.page > * { width: 100%; max-width: 768px; margin-left: auto; margin-right: auto; }
 .tab.page .flow, .tab.page .facts { margin-left: auto; margin-right: auto; }
 #tab-chat { display: none; }
 #tab-chat.active { display: flex; flex-direction: column; overflow: hidden; }
@@ -375,4 +375,47 @@ body { display: block; height: 100dvh; overflow: hidden; }
   .starters { grid-template-columns: 1fr; }
   .empty h2 { font-size: 25px; }
   .msg.user { max-width: 88%; }
+}
+
+/* ---------- Stress test: Nosh vs RecipeForge comparison ---------- */
+.cmp-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 4px auto 28px; }
+.cmp-summary .tile { border-radius: 14px; padding: 14px 16px; display: grid; gap: 2px; border: 1px solid var(--border);
+                     background: var(--surface); }
+.cmp-summary .tile b { font-family: Fraunces, Georgia, serif; font-size: 28px; line-height: 1.1; }
+.cmp-summary .tile span { color: var(--muted); font-size: 13px; }
+.cmp-summary .tile.bad b { color: var(--block); }
+.cmp-summary .tile.gap b { color: var(--flag); }
+.cmp-summary .tile.good b { color: var(--pass); }
+.cmp-list { display: grid; gap: 30px; }
+.cmp-group { display: grid; gap: 12px; }
+.cmp-group h3 { margin: 0; font-size: 16px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.cmp-group h3::before { content: ""; width: 9px; height: 9px; border-radius: 50%; align-self: center; flex: none; }
+.cmp-group.bad h3::before { background: var(--block); }
+.cmp-group.gap h3::before { background: var(--flag); }
+.cmp-group.good h3::before { background: var(--pass); }
+.cmp-group h3 span { font-size: 13px; font-weight: 400; color: var(--muted); }
+.cmp { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); }
+.cmp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+.cmp q { font-weight: 600; font-size: 15.5px; quotes: "“" "”"; }
+.chain { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; counter-reset: turn; }
+.chain li { counter-increment: turn; display: flex; gap: 8px; align-items: baseline; }
+.chain li::before { content: counter(turn); font-size: 11px; font-weight: 700; color: var(--muted); background: var(--surface-2);
+                    border-radius: 50%; width: 18px; height: 18px; display: inline-grid; place-items: center; flex: none; }
+.try {
+  flex: none; background: var(--text); color: var(--bg); border: 0; border-radius: 999px; padding: 6px 14px;
+  font-size: 13px; font-weight: 600;
+}
+.try:hover { opacity: .88; }
+.try::after { content: " →"; }
+.cmp-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.cmp .col { border-radius: 10px; padding: 10px 12px; background: var(--surface-2); }
+.cmp .col p { margin: 3px 0 0; font-size: 13.5px; line-height: 1.5; }
+.cmp .lbl { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.cmp-group.bad .col.nosh { background: var(--block-bg); }
+.cmp-group.bad .col.nosh .lbl { color: var(--block); }
+.cmp .col.ours .lbl { color: var(--pass); }
+@media (max-width: 620px) {
+  .cmp-cols { grid-template-columns: 1fr; }
+  .cmp-summary .tile b { font-size: 22px; }
+  .cmp-head { flex-direction: column; gap: 10px; }
 }
