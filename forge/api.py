@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import guard, llm_parser
+from . import guard, llm_parser, router
 from .adapt import adapt
 from .chat import Assistant, chips, session_from
 from .search import DATA, Engine
@@ -68,7 +68,8 @@ class StateIn(BaseModel):
 @app.get("/api/health")
 def health():
     return {"ok": True, "recipes": len(engine.recipes), "profile": engine.profile, "dense": engine.emb is not None,
-            "claude_parser": llm_parser.enabled(), "guard": guard.stats}
+            "claude_parser": llm_parser.enabled(), "router": router.MODEL if router.enabled() else None,
+            "guard": guard.stats | router.stats}
 
 
 @app.post("/api/chat")

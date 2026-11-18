@@ -198,7 +198,7 @@ class Engine:
     @cached_property
     def speller(self) -> Speller:
         vocab = self._vocab or build_vocab(self.onto, self.recipes)
-        return Speller(vocab)
+        return Speller(vocab, keep=KEEP_WORDS)
 
     @cached_property
     def reranker(self):

@@ -70,6 +70,30 @@ CHAINS = [
     ["breakfast", "start over", "dinner"],
 ]
 
+# Everyday conversation with the expected kind of answer: "search" (recipe cards), "detail" (one shown recipe's
+# steps/ingredients) or "chat" (a reply without recipes). The third field marks turns only the Claude router
+# can get right; they are checked when the router is on (live site, or ANTHROPIC_API_KEY set).
+EVERYDAY = [
+    [("jain dinner", "search", False), ("how to make the first one", "detail", False),
+     ("what do I need for the second one", "detail", False), ("the last one", "detail", False),
+     ("ingredients for #3", "detail", False), ("tell me more about the fourth dish", "detail", True)],
+    [("food with no salt", "search", False), ("first one kaise banaye", "detail", False),
+     ("show me that one", "detail", False), ("something like the first one", "search", False),
+     ("what goes into the third one", "detail", False)],
+    [("paneer dinner", "search", False), ("recipe 2", "detail", False), ("thanks", "chat", False),
+     ("one more", "search", False), ("ok and how long does that one take to cook", "detail", True)],
+    [("what can you do", "chat", False)], [("what do you do", "chat", False)], [("what can you ddo", "chat", False)],
+    [("how does this work", "chat", False)], [("who are you", "chat", False)], [("hi there", "chat", False)],
+    [("tum kya kar sakte ho", "chat", False)], [("umm", "chat", False)], [("hmm ok", "chat", False)],
+    [("lol", "chat", False)], [("good night", "chat", False)],
+    [("so umm what is it you actually do here", "chat", False)], [("tell me about yourself", "chat", False)],
+    [("is this thing an AI or a person", "chat", True)], [("can i use this for my restaurant menu", "chat", True)],
+    [("what can i do with paneer", "search", False)], [("what do you do with okra", "search", False)],
+    [("help me find a vegan lunch", "search", False)], [("show me something spicy", "search", False)],
+    [("what should I make for dinner", "search", False)], [("khir", "search", False)],
+    [("pakode banane hain", "search", False)], [("चाट", "search", False)],
+]
+
 GARBLE = re.compile(r"\b(\w+) \1\b|recipe recipe|  |\bNone\b|\bnull\b|\{|\}|\[\]|nan\b", re.I)
 
 
@@ -160,8 +184,28 @@ def main():
                          "results": [r["name"][:50] for r in out.get("results", [])],
                          "issues": issues})
             state = out.get("state", state)
+    from forge import router
+    router_on = bool(args.live) or router.enabled()
+    n_everyday = 0
+    for conv in EVERYDAY:
+        state = None
+        for msg, expected, needs_router in conv:
+            out = call(msg, state)
+            st = out.get("state") or {}
+            issues = check(engine, msg, out, st.get("diets", []), st.get("exclude", []), st.get("include", []))
+            got = "chat" if out.get("mode") not in ("search", "detail", "plan") or not (
+                out.get("results") or out.get("closest")) else out.get("mode")
+            if (router_on or not needs_router) and got != expected:
+                issues.append(f"expected {expected}, got {got}: {out.get('reply', '')[:80]!r}")
+            n_everyday += 1
+            n_issues += bool(issues)
+            rows.append({"conv": conv[0][0], "msg": msg, "mode": out.get("mode"), "expected": expected,
+                         "reply": out.get("reply", "")[:220], "results": [r["name"][:50] for r in out.get("results", [])],
+                         "issues": issues})
+            state = out.get("state", state)
     Path(args.out).write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
-    print(f"{len(rows)} turns, {n_issues} with automatic issues")
+    print(f"{len(rows)} turns ({n_everyday} everyday-conversation, router {'on' if router_on else 'off'}), "
+          f"{n_issues} with automatic issues")
     for r in rows:
         if r["issues"]:
             print(f"- {r['msg']!r}: {r['issues'][:2]}")

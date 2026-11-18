@@ -127,11 +127,30 @@ def _edit(a: str, b: str, cap: int = 3) -> float:
     return prev[-1]
 
 
+# Everyday English and Hinglish words are never "corrected" ("here" is not "hare", "thing" is not "tangy").
+COMMON = set("""
+a about above after again all also am an and any are as at be because been before being below between both but by
+can cannot could did do does doing done down during each else even ever every few for from further get gets give
+go going good got great had has have having he her here hers him his how i if in into is it its just know let like
+make many may me might more most much must my need never new no nor not now of off often ok okay on once one only or
+other our out over own please pls really right said same say says see she should show so some something sometimes
+still such sure take tell than thank thanks that the their them then there these they thing things think this those
+though through to too try under until up us use used very want was way we well were what whatever when where
+whether which while who whom why will with without would yes yet you your yours actually basically maybe also
+hello hey hi hmm umm yeah yup nope lol stuff kind sort time today tomorrow tonight week day days people person
+hai hain ho hun hoon tha thi the ka ki ke ko se me mein par pe aur ya bhi kya kaise kab kahan kyun kuch koi
+mujhe muje humko hum tum aap ap apna mera meri mere tera teri yeh ye woh wo wala wali vala vali chahiye chaiye
+banane banao banaye banaun banau bana karna karo karna kar sakte sakta sakti accha acha achha theek thik
+nahi nahin mat bas abhi phir fir ab jaldi thoda zyada bahut khana khane
+""".split())
+
+
 class Speller:
     """Maps out-of-vocabulary words to the most frequent corpus word that sounds the same."""
 
-    def __init__(self, vocab: Counter):
+    def __init__(self, vocab: Counter, keep: set[str] = frozenset()):
         self.vocab = vocab
+        self.keep = COMMON | set(keep)
         self.by_soft: dict[str, str] = {}
         self.by_skel: dict[str, list[str]] = {}
         for w, _ in vocab.most_common():
@@ -142,7 +161,7 @@ class Speller:
         self._cache: dict[str, str] = {}
 
     def correct(self, word: str) -> str:
-        if word in self.vocab or len(word) < 4 or not word.isalpha():
+        if word in self.vocab or word in self.keep or len(word) < 4 or not word.isalpha():
             return word
         if word in self._cache:
             return self._cache[word]

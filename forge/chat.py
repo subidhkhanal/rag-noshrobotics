@@ -4,12 +4,13 @@ from __future__ import annotations
 import os
 import re
 import time
+from collections import Counter
 from dataclasses import dataclass, field, replace
 from functools import cached_property
 
 import httpx
 
-from . import llm_parser
+from . import llm_parser, router
 from .adapt import adapt
 from .plan import make_plan
 from .ontology import tokenize
@@ -34,11 +35,17 @@ REFERENCE = re.compile(
 ASK_STEPS = re.compile(r"\b(how (do|to|can|should) (i |you |we )?(make|cook|prepare)|steps?|method|instructions?|"
                        r"recipe for|procedure|kaise (banaye|banate|banaen|banau|bane)|vidhi|banane ka tarika|"
                        r"show me|tell me|full recipe|details?)\b", re.I)
+FOOD_STOP = COMMON_WORDS | {"the", "and", "with", "style", "recipe", "over", "start", "made", "home", "make", "easy",
+                            "best", "quick", "simple", "classic", "special", "homemade", "delicious", "done", "umm",
+                            "hmm", "lol", "actually", "here", "really", "basically", "stuff", "thing", "things"}
+# Words that may point at an on-screen card; when the rules can't resolve them, the router is asked.
+POINTING = re.compile(r"(?<!\w)(one|first|second|third|fourth|fifth|last|that|this|those|these|wala|wali|vala|"
+                      r"#\s*\d|number\s+\d|option\s+\d|upar|above|top)(?!\w)", re.I)
 # Naming a dish counts as a reference only after a clear ask ("show me something spicy" is a new search).
 ASK_BY_NAME = re.compile(r"\b(how (do|to|can|should) (i |you |we )?(make|cook|prepare)|(recipe|ingredients?|steps?|"
                          r"method|instructions?) (for|of)|what (do|will|would|should) (i|you|we) need for|"
                          r"kaise (banaye|banate|banaen|banau|bane))\b", re.I)
-ASK_INGREDIENTS = re.compile(r"\b(ingredients?|what (do|will|would|should) (i|you|we) need|what goes in|"
+ASK_INGREDIENTS = re.compile(r"\b(ingredients?|what (do|will|would|should) (i|you|we) need|what goes in(to)?|"
                              r"what('s| is) in|shopping|samagri|kya chahiye|kya kya chahiye|need for|items?)\b", re.I)
 
 
@@ -172,6 +179,9 @@ class Assistant:
         parsed = parse(onto, message)
         if "reset" in parsed.intents and not self._has_food_content(parsed, ignore_intents=True):
             return self._small_talk_reply(Session(), "reset")
+        routed = self._route(s, message, parsed)
+        if routed is not None:
+            return routed
         used_llm = llm_parser.enabled() and llm_parser.should_call(normalize_message(onto, message), parsed.understood)
         if used_llm:
             parsed = llm_parser.combine(onto, parsed, llm_parser.llm_parse(message))
@@ -253,13 +263,38 @@ class Assistant:
                     return best
         return None
 
-    def _detail_reply(self, s: Session, rid: int, message: str) -> dict:
+    def _route(self, s: Session, message: str, parsed: Constraints) -> dict | None:
+        """Ask the Claude router only when the rules couldn't place the message. Returns a reply, or None to
+        continue with the normal search path."""
+        unclear = self._food_signal(parsed) != "strong"
+        pointing = bool(s.last_ids) and bool(POINTING.search(message)) and not (
+            parsed.intents & {"more", "different", "similar", "plan", "history", "usual"})
+        if not (unclear or pointing) or not router.enabled():
+            return None
+        names = [self.engine.recipes[self.engine.by_id[rid]]["name"] for rid in s.last_ids]
+        r = router.route(message, names)
+        if r is None:
+            return None
+        if r["intent"] == "followup":
+            return self._detail_reply(s, s.last_ids[r["card"]], message, want=r["want"])
+        if r["intent"] in ("help", "about", "greeting", "thanks", "bye"):
+            return self._small_talk_reply(s, r["intent"])
+        if r["intent"] == "reset":
+            return self._small_talk_reply(Session(), "reset")
+        if r["intent"] == "off_topic":
+            return self._small_talk_reply(s, "unclear")
+        return None  # search: the normal pipeline decides (and still says "unclear" if there's nothing to search)
+
+    def _detail_reply(self, s: Session, rid: int, message: str, want: str | None = None) -> dict:
         """Ingredients and/or steps of a dish already shown, straight from the recipe record (no generation)."""
         onto, eng = self.engine.onto, self.engine
         i = eng.by_id[rid]
         r, st = eng.recipes[i], s.state
-        want_ing = bool(ASK_INGREDIENTS.search(message))
-        want_steps = bool(ASK_STEPS.search(message)) or not want_ing
+        if want:
+            want_ing, want_steps = want in ("ingredients", "both"), want in ("steps", "both")
+        else:
+            want_ing = bool(ASK_INGREDIENTS.search(message))
+            want_steps = bool(ASK_STEPS.search(message)) or not want_ing
         result = eng._explain(i, 0.0, eng.is_flagged(i, st), st)
         cd = card(result)
         if result.flagged:
@@ -288,20 +323,38 @@ class Assistant:
 
     @cached_property
     def _food_vocab(self) -> frozenset:
-        """Words that signal a food request: recipe-name words and ontology aliases."""
+        """Every word that may signal food: recipe-name words and ontology aliases."""
         words = set().union(*self.engine.name_tokens)
         for ing in self.engine.onto.ingredients.values():
             for a in ing.aliases:
                 words.update(tokenize(a))
-        stop = COMMON_WORDS | {"the", "and", "with", "style", "recipe", "over", "start", "made", "home", "make",
-                               "easy", "best", "quick", "simple", "classic", "special", "homemade", "delicious"}
-        return frozenset(w for w in words if len(w) > 2 and w not in stop)
+        return frozenset(w for w in words if len(w) > 2 and w not in FOOD_STOP)
 
-    def _has_food_content(self, c: Constraints, ignore_intents: bool = False) -> bool:
+    @cached_property
+    def _strong_food_vocab(self) -> frozenset:
+        """Unambiguous food words: ontology aliases, and dish words used in at least 5 recipe names.
+        A word from one odd recipe name ("umm" from Umm Ali) is only a weak signal."""
+        df = Counter(w for toks in self.engine.name_tokens for w in toks)
+        words = {w for w, n in df.items() if n >= 5}
+        for ing in self.engine.onto.ingredients.values():
+            for a in ing.aliases:
+                words.update(tokenize(a))
+        return frozenset(w for w in words if len(w) > 2 and w not in FOOD_STOP)
+
+    def _food_signal(self, c: Constraints, ignore_intents: bool = False) -> str:
+        """"strong" (clearly a food request), "weak" (only a rare word matched) or "none"."""
         if (c.diets or c.exclude or c.include or c.max_time or c.course or c.cuisine or c.attributes or c.servings
                 or c.prefer_non_veg or c.conflicts or c.generic or c.unsupported or (c.intents and not ignore_intents)):
-            return True
-        return bool(set(tokenize(c.text)) & self._food_vocab)
+            return "strong"
+        toks = set(tokenize(c.text))
+        # Spelling variants count too ("khir" -> kheer, "chikan" -> chicken), via the search speller.
+        toks |= {t for w in toks for t in tokenize(self.engine.speller.correct(w))}
+        if toks & self._strong_food_vocab:
+            return "strong"
+        return "weak" if toks & self._food_vocab else "none"
+
+    def _has_food_content(self, c: Constraints, ignore_intents: bool = False) -> bool:
+        return self._food_signal(c, ignore_intents) != "none"
 
     def _small_talk_reply(self, s: Session, kind: str) -> dict:
         onto = self.engine.onto
