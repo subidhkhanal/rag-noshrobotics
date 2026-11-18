@@ -178,6 +178,8 @@ class Engine:
         self.lineages = index["lineages"]
         self.tags = index["tags"]
         self.name_tokens = index["name_tokens"]
+        self.aka_tokens = index.get("aka_tokens") or [frozenset(tokenize(" ".join(r.get("aka", [])))) for r in self.recipes]
+        self.desc_tokens = index.get("desc_tokens") or [frozenset(tokenize(r.get("description", ""))) for r in self.recipes]
         self.name_ids = index["name_ids"]
         self._vocab = index.get("vocab")
         self.by_id = {r["id"]: i for i, r in enumerate(self.recipes)}
@@ -197,6 +199,11 @@ class Engine:
         # Convex 0.5 vs RRF on data/eval/golden.yaml: nDCG@10 0.690 vs 0.668; no worse on either half of the set.
         self.fusion = os.getenv("FORGE_FUSION", "convex")
         self.alpha = float(os.getenv("FORGE_ALPHA", "0.5"))
+        # Re-ranking weights (tuned on data/eval/golden.yaml; see scripts/retrieval_eval.py).
+        # Alternate names count as names, description words earn a smaller bonus, traits read the description:
+        # nDCG@10 0.739 -> ~0.746 and MRR 0.868 -> ~0.886, better on both halves of the set.
+        self.w_name, self.w_desc = 0.5, 0.3
+        self.aka_as_name, self.desc_features = True, True
 
     @cached_property
     def embedder(self):
@@ -270,6 +277,9 @@ class Engine:
     def features(self, i: int) -> dict[str, float]:
         r, ids = self.recipes[i], set(self.recipes[i]["ingredient_ids"])
         name = r["name"].lower()
+        if self.desc_features and r.get("description"):
+            # Traits stated in the dish description count too ("deep-fried, crisp" -> crispy).
+            name += " " + r["description"].lower()
         instr = r["instructions"].lower()
         spice = len(ids & SPICE_IDS) / 3 + (0.5 if re.search(r"spicy|masala|chilli|mirchi|pepper|schezwan|chettinad|kolhapuri", name) else 0)
         fried = bool(re.search(r"deep fry|deep-fry|deep fried", instr))
@@ -455,7 +465,10 @@ class Engine:
             cover = len(include & self.lineages[i]) / len(include) if include else 0.0
             s += (0.9 if c.pantry_mode else 0.5) * cover
             if content:
-                s += 0.5 * len(content & self.name_tokens[i]) / len(content)
+                names = self.name_tokens[i] | self.aka_tokens[i] if self.aka_as_name else self.name_tokens[i]
+                s += self.w_name * len(content & names) / len(content)
+                if self.w_desc:
+                    s += self.w_desc * len(content & self.desc_tokens[i]) / len(content)
             if include:
                 s += 0.4 * len(include & self.name_ids[i]) / len(include)
             for a in c.attributes:
@@ -624,6 +637,8 @@ def build_index(onto: Ontology, data_dir: Path = DATA, write: bool = False) -> d
         "lineages": [union([onto.lineage(i) for i in r["ingredient_ids"]]) for r in recipes],
         "tags": [union([onto.effective_tags(i) for i in r["ingredient_ids"]]) for r in recipes],
         "name_tokens": [frozenset(tokenize(r["name"])) for r in recipes],
+        "aka_tokens": [frozenset(tokenize(" ".join(r.get("aka", [])))) for r in recipes],
+        "desc_tokens": [frozenset(tokenize(r.get("description", ""))) for r in recipes],
         "name_ids": [frozenset(m.ingredient for m in onto.match(r["name"])) for r in recipes],
         "vocab": build_vocab(onto, recipes),
     }

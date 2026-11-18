@@ -76,6 +76,8 @@ COURSE_RES = {
                r"gulab jamun|rasgulla|rasmalai|ice ?cream|kulfi|cakes?|cupcakes?|brownies?|cookies?|shrikhand|phirni)\b",
     "side": r"\b(side dish|sides?|accompaniment|sabzi|sabji)\b",
 }
+COURSE_DISH = re.compile(r"pudding|kheer|payasam|halwa|ladoo|laddu|barfi|burfi|gulab jamun|rasgulla|rasmalai|"
+                         r"ice ?cream|kulfi|cakes?|cupcakes?|brownies?|cookies?|shrikhand|phirni|sabzi|sabji")
 CUISINE_GROUPS = {
     "south indian": ["South Indian", "Tamil Nadu", "Kerala", "Karnataka", "Andhra", "Chettinad", "Udupi", "Mangalorean",
                      "Coorg", "North Karnataka", "Coastal Karnataka", "South Karnataka", "Malabar", "Kongunadu", "Hyderabadi"],
@@ -423,10 +425,11 @@ def parse(onto: Ontology, message: str) -> Constraints:
             break
 
     for course, pat in COURSE_RES.items():
-        m = re.search(pat, low)
-        if m:
+        matches = list(re.finditer(pat, low))
+        if matches:
             c.course = course
-            consumed.append(m.group(0))
+            # Generic words ("dessert", "breakfast") are filters; dish names ("halwa", "kheer") stay as search words.
+            consumed += [m.group(0) for m in matches if not COURSE_DISH.fullmatch(m.group(0).strip())]
             break
     for key in sorted(CUISINE_GROUPS, key=len, reverse=True):
         m = re.search(rf"\b{re.escape(key)}\b", low)
