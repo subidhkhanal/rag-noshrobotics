@@ -87,7 +87,7 @@ EVERYDAY = [
     [("tum kya kar sakte ho", "chat", False)], [("umm", "chat", False)], [("hmm ok", "chat", False)],
     [("lol", "chat", False)], [("good night", "chat", False)],
     [("so umm what is it you actually do here", "chat", False)], [("tell me about yourself", "chat", False)],
-    [("is this thing an AI or a person", "chat", True)], [("can i use this for my restaurant menu", "chat", True)],
+    [("is this thing an AI or a person", "chat", True)], [("is this free to use or do i have to pay", "chat", True)],
     [("what can i do with paneer", "search", False)], [("what do you do with okra", "search", False)],
     [("help me find a vegan lunch", "search", False)], [("show me something spicy", "search", False)],
     [("what should I make for dinner", "search", False)], [("khir", "search", False)],
@@ -103,11 +103,12 @@ def call_local(assistant):
     return f
 
 
-def call_live(base):
+def call_live(base, pace: float = 1.7):
     import httpx
     client = httpx.Client(timeout=60)
 
     def f(message, state):
+        time.sleep(pace)  # stay under the site's own per-IP rate limit (40/min)
         r = client.post(base.rstrip("/") + "/api/chat", json={"message": message, "state": state})
         if r.status_code != 200:
             return {"_status": r.status_code, "_body": r.text[:200]}
@@ -153,6 +154,7 @@ def main():
     ap.add_argument("--live")
     ap.add_argument("--out", default=str(ROOT / "reports" / "qa.jsonl"))
     ap.add_argument("--strict", action="store_true", help="exit 1 if any turn has an automatic issue (CI)")
+    ap.add_argument("--everyday-only", action="store_true", help="run only the everyday-conversation battery")
     args = ap.parse_args()
     from forge.search import Engine
     engine = Engine(profile="fast")
@@ -162,7 +164,7 @@ def main():
         from forge.chat import Assistant
         call = call_local(Assistant(engine))
     rows, n_issues = [], 0
-    convs = [[m] for m in SINGLE] + CHAINS
+    convs = [] if args.everyday_only else [[m] for m in SINGLE] + CHAINS
     for conv in convs:
         state = None
         for msg in conv:
@@ -190,7 +192,10 @@ def main():
     for conv in EVERYDAY:
         state = None
         for msg, expected, needs_router in conv:
-            out = call(msg, state)
+            try:
+                out = call(msg, state)
+            except Exception as e:  # noqa: BLE001 - record, don't stop
+                out = {"_status": "EXC", "_body": repr(e)[:200]}
             st = out.get("state") or {}
             issues = check(engine, msg, out, st.get("diets", []), st.get("exclude", []), st.get("include", []))
             got = "chat" if out.get("mode") not in ("search", "detail", "plan") or not (

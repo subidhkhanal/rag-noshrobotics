@@ -65,6 +65,12 @@ def test_router_search_falls_through_to_pipeline(fake_router, shown):
     assert out["mode"] == "search" and "jain" in out["state"]["diets"]
 
 
+def test_router_food_verdict_searches_unrecognised_words(fake_router):
+    fake_router({"intent": "search", "card": None, "want": "both"})
+    out = assistant.chat(None, "street food")
+    assert out["mode"] == "search" and out["results"]
+
+
 def test_clear_requests_never_call_the_router(fake_router, shown):
     state, _ = shown
     calls = fake_router({"intent": "off_topic", "card": None, "want": "both"})

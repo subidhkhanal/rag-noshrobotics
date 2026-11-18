@@ -18,6 +18,7 @@ from .profile import build_profile
 from .query import (ATTRIBUTE_RES, COMMON_WORDS, COURSE_RES, CUISINE_GROUPS, Constraints, apply_diet_conflicts,
                     is_refinement, normalize_message, parse, rewrite_swapped_text)
 from .search import Engine, Result, SearchOutput
+from .translit import COMMON
 
 MAX_SHOWN = 60
 LAST_IDS = 14  # a weekly plan shows up to 14 cards
@@ -37,7 +38,11 @@ ASK_STEPS = re.compile(r"\b(how (do|to|can|should) (i |you |we )?(make|cook|prep
                        r"show me|tell me|full recipe|details?)\b", re.I)
 FOOD_STOP = COMMON_WORDS | {"the", "and", "with", "style", "recipe", "over", "start", "made", "home", "make", "easy",
                             "best", "quick", "simple", "classic", "special", "homemade", "delicious", "done", "umm",
-                            "hmm", "lol", "actually", "here", "really", "basically", "stuff", "thing", "things"}
+                            "hmm", "lol", "actually", "here", "really", "basically", "stuff", "thing", "things",
+                            # frequent in recipe names but never food on their own ("Gluten Free", "Using Leftovers")
+                            "free", "use", "using", "way", "ways", "version", "instant", "minute", "minutes", "mins",
+                            "ideas", "tips", "perfect", "favourite", "favorite", "world", "famous", "street",
+                            "restaurant", "party", "kids", "baby", "indian", "south", "north", "east", "west"} | COMMON
 # Words that may point at an on-screen card; when the rules can't resolve them, the router is asked.
 POINTING = re.compile(r"(?<!\w)(one|first|second|third|fourth|fifth|last|that|this|those|these|wala|wali|vala|"
                       r"#\s*\d|number\s+\d|option\s+\d|upar|above|top)(?!\w)", re.I)
@@ -180,12 +185,13 @@ class Assistant:
         if "reset" in parsed.intents and not self._has_food_content(parsed, ignore_intents=True):
             return self._small_talk_reply(Session(), "reset")
         routed = self._route(s, message, parsed)
-        if routed is not None:
+        if isinstance(routed, dict):
             return routed
+        router_says_food = routed == "search"
         used_llm = llm_parser.enabled() and llm_parser.should_call(normalize_message(onto, message), parsed.understood)
         if used_llm:
             parsed = llm_parser.combine(onto, parsed, llm_parser.llm_parse(message))
-        if not self._has_food_content(parsed):
+        if not self._has_food_content(parsed) and not (router_says_food and parsed.text.strip()):
             return self._small_talk_reply(s, "unclear")
         s.state = merge(s.state, parsed, message, onto)
         st = s.state
@@ -263,9 +269,9 @@ class Assistant:
                     return best
         return None
 
-    def _route(self, s: Session, message: str, parsed: Constraints) -> dict | None:
-        """Ask the Claude router only when the rules couldn't place the message. Returns a reply, or None to
-        continue with the normal search path."""
+    def _route(self, s: Session, message: str, parsed: Constraints) -> dict | str | None:
+        """Ask the Claude router only when the rules couldn't place the message. Returns a reply, "search" when
+        Claude says it's a food request, or None (router not asked or unavailable: the rules decide)."""
         unclear = self._food_signal(parsed) != "strong"
         pointing = bool(s.last_ids) and bool(POINTING.search(message)) and not (
             parsed.intents & {"more", "different", "similar", "plan", "history", "usual"})
@@ -283,7 +289,7 @@ class Assistant:
             return self._small_talk_reply(Session(), "reset")
         if r["intent"] == "off_topic":
             return self._small_talk_reply(s, "unclear")
-        return None  # search: the normal pipeline decides (and still says "unclear" if there's nothing to search)
+        return "search"  # a food request the rules didn't recognise ("street food"): search with its words
 
     def _detail_reply(self, s: Session, rid: int, message: str, want: str | None = None) -> dict:
         """Ingredients and/or steps of a dish already shown, straight from the recipe record (no generation)."""
