@@ -82,3 +82,21 @@ def test_refusals_never_become_wanted_ingredients(msg, diets, exclude, include):
 def test_bare_time_limits():
     assert parse(onto, "ready in 25").max_time == 25
     assert parse(onto, "15 minutes mexican fried rice").max_time == 15
+
+
+@pytest.mark.parametrize("msg,exclude", [
+    ("my kid can't eat cashews", {"cashew"}),
+    ("I can't stand mushrooms. paneer dinner?", {"mushroom"}),
+    ("I cannot have peas", {"peas"}),
+    ("I won't eat eggs", {"egg"}),
+])
+def test_contraction_refusals(msg, exclude):
+    c = parse(onto, msg)
+    assert exclude <= c.exclude and not exclude & set(c.include)
+
+
+def test_claude_gate_skips_refusals_rules_understood():
+    from forge.llm_parser import should_call
+    from forge.query import normalize_message
+    for msg in ["my kid can't eat cashews", "I can't stand mushrooms", "hold the onions please", "no onion no garlic"]:
+        assert not should_call(normalize_message(onto, msg), parse(onto, msg).understood), msg

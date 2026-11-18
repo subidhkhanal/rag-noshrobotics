@@ -40,7 +40,8 @@ NON_VEG = re.compile(r"\bnon[- ]?veg(etarian)?\b|\bchicken\b|\bmutton\b|\bfish\b
 
 EXCLUDE_RE = re.compile(
     r"\b(?:no|without|not|skip|avoid|except|minus|hate|dislike|don'?t (?:like|want|eat|add)|allergic to|(?<!ke )bina|zero|"
-    r"hold(?: the)?|can'?t (?:eat|have|stand|do)|cannot (?:eat|have)|nothing with|keep|leave out|leave|minus the)\s+"
+    r"hold(?: the)?|can'?t (?:eat|have|stand|do|tolerate)|cannot (?:eat|have|stand|do|tolerate)|"
+    r"will not (?:eat|have)|nothing with|keep|leave out|leave|minus the)\s+"
     r"((?:[a-zऀ-ॿ]+(?:\s*(?:,|and|or|&|aur|nor)\s*|\s+)?){1,4})",
     re.I,
 )

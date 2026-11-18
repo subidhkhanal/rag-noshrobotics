@@ -53,6 +53,8 @@ def enabled() -> bool:
 def should_call(message: str, understood: list[str] | None = None) -> bool:
     """Call Claude only when a cue word survives after removing what the rules already turned into constraints."""
     rest = " " + message.lower().replace("’", "'") + " "
+    rest = re.sub(r"\bcan'?t\b", "cannot", rest)
+    rest = re.sub(r"\bwon'?t\b", "will not", rest)
     rest = re.sub(r"n't\b", " not", rest)
     for span in sorted(understood or [], key=len, reverse=True):
         if span.strip():
