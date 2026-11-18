@@ -1,0 +1,130 @@
+# Dialogue-understanding test set: does each message get the right KIND of answer about the right dish?
+# Each case runs its `setup` messages, then every `say` turn independently from that same state.
+# expect:
+#   mode: search | detail | chat | plan
+#   item: card label from the setup's screen ("1".."5", "Mon".."Sun"), or "all" (answer about every card)
+#   name: a word that must be in the chosen card's name (for references by dish name)
+#   want: steps | ingredients (detail answers only)
+#   recall: true (the answer must list earlier suggestions)
+# Slices (tag): plan_day, ordinal, pronoun, by_name, question, multi, recall, new_request, social, hinglish, hindi,
+# no_context. Written by hand, independently of the implementation. Don't edit cases to fit the system.
+
+- setup: ["plan my week, Jain dinners"]
+  turns:
+    - {say: "explain monday", tag: plan_day, expect: {mode: detail, item: Mon}}
+    - {say: "explain friday item", tag: plan_day, expect: {mode: detail, item: Fri}}
+    - {say: "explain mon", tag: plan_day, expect: {mode: detail, item: Mon}}
+    - {say: "how do I make wednesday's dinner", tag: plan_day, expect: {mode: detail, item: Wed, want: steps}}
+    - {say: "ingredients for thursday", tag: plan_day, expect: {mode: detail, item: Thu, want: ingredients}}
+    - {say: "what do I need for the saturday one", tag: plan_day, expect: {mode: detail, item: Sat, want: ingredients}}
+    - {say: "tell me more about thursday", tag: plan_day, expect: {mode: detail, item: Thu}}
+    - {say: "what is friday's dish", tag: plan_day, expect: {mode: detail, item: Fri}}
+    - {say: "friday", tag: plan_day, expect: {mode: detail, item: Fri}}
+    - {say: "what's on tuesday", tag: plan_day, expect: {mode: detail, item: Tue}}
+    - {say: "show me sunday", tag: plan_day, expect: {mode: detail, item: Sun}}
+    - {say: "details of the last day", tag: plan_day, expect: {mode: detail, item: Sun}}
+    - {say: "2nd day recipe", tag: plan_day, expect: {mode: detail, item: Tue}}
+    - {say: "day 3", tag: plan_day, expect: {mode: detail, item: Wed}}
+    - {say: "is monday's dish healthy", tag: question, expect: {mode: detail, item: Mon}}
+    - {say: "is the friday one spicy?", tag: question, expect: {mode: detail, item: Fri}}
+    - {say: "does tuesday's have garlic?", tag: question, expect: {mode: detail, item: Tue}}
+    - {say: "how long does wednesday take", tag: question, expect: {mode: detail, item: Wed}}
+    - {say: "how many people does the sunday dinner serve", tag: question, expect: {mode: detail, item: Sun}}
+    - {say: "which day is the quickest", tag: multi, expect: {mode: detail, item: all}}
+    - {say: "which of these are spicy", tag: multi, expect: {mode: detail, item: all}}
+    - {say: "what was the plan again", tag: recall, expect: {mode: search, recall: true}}
+    - {say: "remind me of the dishes you suggested", tag: recall, expect: {mode: search, recall: true}}
+    - {say: "plan next week too, but lunches", tag: new_request, expect: {mode: plan}}
+    - {say: "sunday wala kaise banaye", tag: hinglish, expect: {mode: detail, item: Sun, want: steps}}
+    - {say: "kya monday wala jain hai", tag: hinglish, expect: {mode: detail, item: Mon}}
+    - {say: "budhvar ki recipe batao", tag: hinglish, expect: {mode: detail, item: Wed}}
+    - {say: "सोमवार की रेसिपी बताओ", tag: hindi, expect: {mode: detail, item: Mon}}
+    - {say: "शुक्रवार वाली डिश में क्या क्या चाहिए", tag: hindi, expect: {mode: detail, item: Fri, want: ingredients}}
+
+- setup: ["paneer dinner"]
+  turns:
+    - {say: "explain the first one", tag: ordinal, expect: {mode: detail, item: "1"}}
+    - {say: "explain item 2", tag: ordinal, expect: {mode: detail, item: "2"}}
+    - {say: "tell me about number 3", tag: ordinal, expect: {mode: detail, item: "3"}}
+    - {say: "the last one", tag: ordinal, expect: {mode: detail, item: "5"}}
+    - {say: "how to make the middle one", tag: ordinal, expect: {mode: detail, item: "3", want: steps}}
+    - {say: "what goes into the fourth", tag: ordinal, expect: {mode: detail, item: "4", want: ingredients}}
+    - {say: "can you explain the 4th", tag: ordinal, expect: {mode: detail, item: "4"}}
+    - {say: "the second please", tag: ordinal, expect: {mode: detail, item: "2"}}
+    - {say: "option 5", tag: ordinal, expect: {mode: detail, item: "5"}}
+    - {say: "the top one looks good, how do I cook it", tag: ordinal, expect: {mode: detail, item: "1", want: steps}}
+    - {say: "how do i make the makhani one", tag: by_name, expect: {mode: detail, name: makhani, want: steps}}
+    - {say: "the palak one, what do I need", tag: by_name, expect: {mode: detail, name: palak, want: ingredients}}
+    - {say: "tell me about the tawa paneer", tag: by_name, expect: {mode: detail, name: tawa}}
+    - {say: "is it healthy", tag: pronoun, expect: {mode: detail, item: "1"}}
+    - {say: "ok and how long does that one take", tag: pronoun, expect: {mode: detail, item: "1"}}
+    - {say: "is the second one spicy", tag: question, expect: {mode: detail, item: "2"}}
+    - {say: "is number 5 jain", tag: question, expect: {mode: detail, item: "5"}}
+    - {say: "does the third one have onion", tag: question, expect: {mode: detail, item: "3"}}
+    - {say: "is the makhani one good for weight loss", tag: question, expect: {mode: detail, name: makhani}}
+    - {say: "which of these is quickest", tag: multi, expect: {mode: detail, item: all}}
+    - {say: "which ones have cream", tag: multi, expect: {mode: detail, item: all}}
+    - {say: "are these vegetarian", tag: multi, expect: {mode: detail, item: all}}
+    - {say: "which one is the least spicy", tag: multi, expect: {mode: detail, item: all}}
+    - {say: "what was the last recipe", tag: recall, expect: {mode: search, recall: true}}
+    - {say: "what did you show me", tag: recall, expect: {mode: search, recall: true}}
+    - {say: "show me those again", tag: recall, expect: {mode: search, recall: true}}
+    - {say: "go back to the list", tag: recall, expect: {mode: search, recall: true}}
+    - {say: "something different", tag: new_request, expect: {mode: search}}
+    - {say: "more options", tag: new_request, expect: {mode: search}}
+    - {say: "make it spicier", tag: new_request, expect: {mode: search}}
+    - {say: "one more", tag: new_request, expect: {mode: search}}
+    - {say: "without onion", tag: new_request, expect: {mode: search}}
+    - {say: "good, now a dessert", tag: new_request, expect: {mode: search}}
+    - {say: "what about something vegan", tag: new_request, expect: {mode: search}}
+    - {say: "show me something healthy instead", tag: new_request, expect: {mode: search}}
+    - {say: "similar to the first one but quicker", tag: new_request, expect: {mode: search}}
+    - {say: "thanks", tag: social, expect: {mode: chat}}
+    - {say: "who are you", tag: social, expect: {mode: chat}}
+    - {say: "what can you do", tag: social, expect: {mode: chat}}
+    - {say: "kya pehla wala healthy hai", tag: hinglish, expect: {mode: detail, item: "1"}}
+    - {say: "dusra wala kaise banta hai", tag: hinglish, expect: {mode: detail, item: "2", want: steps}}
+    - {say: "teesre wale mein kya kya dalta hai", tag: hinglish, expect: {mode: detail, item: "3", want: ingredients}}
+    - {say: "aakhri wala kitni der mein banega", tag: hinglish, expect: {mode: detail, item: "5"}}
+    - {say: "पहली वाली रेसिपी कैसे बनाएं", tag: hindi, expect: {mode: detail, item: "1", want: steps}}
+    - {say: "दूसरी वाली में क्या क्या लगेगा", tag: hindi, expect: {mode: detail, item: "2", want: ingredients}}
+
+- setup: ["paneer dinner", "how to make the second one"]
+  turns:
+    - {say: "is it spicy", tag: pronoun, expect: {mode: detail, item: "2"}}
+    - {say: "how long does it take", tag: pronoun, expect: {mode: detail, item: "2"}}
+    - {say: "what do i need for it", tag: pronoun, expect: {mode: detail, item: "2", want: ingredients}}
+    - {say: "does it have onion", tag: pronoun, expect: {mode: detail, item: "2"}}
+    - {say: "is this one healthy", tag: pronoun, expect: {mode: detail, item: "2"}}
+    - {say: "and the first one?", tag: ordinal, expect: {mode: detail, item: "1"}}
+    - {say: "what about the third", tag: ordinal, expect: {mode: detail, item: "3"}}
+    - {say: "now show me the fifth", tag: ordinal, expect: {mode: detail, item: "5"}}
+    - {say: "go back to the list", tag: recall, expect: {mode: search, recall: true}}
+    - {say: "kya ye spicy hai", tag: hinglish, expect: {mode: detail, item: "2"}}
+    - {say: "isme kitna time lagega", tag: hinglish, expect: {mode: detail, item: "2"}}
+    - {say: "something lighter than this", tag: new_request, expect: {mode: search}}
+
+- setup: []
+  turns:
+    - {say: "explain monday", tag: no_context, expect: {mode: chat}}
+    - {say: "what was the last recipe", tag: no_context, expect: {mode: chat}}
+    - {say: "is it healthy", tag: no_context, expect: {mode: chat}}
+    - {say: "how to make dal makhani", tag: new_request, expect: {mode: search}}
+    - {say: "jain dinner", tag: new_request, expect: {mode: search}}
+    - {say: "bina pyaz lahsun ka khana", tag: new_request, expect: {mode: search}}
+    - {say: "what's for dinner", tag: new_request, expect: {mode: search}}
+    - {say: "street food", tag: new_request, expect: {mode: search}}
+    - {say: "plan 3 vegan lunches", tag: new_request, expect: {mode: plan}}
+    - {say: "मुझे कुछ हल्का खाना चाहिए", tag: hindi, expect: {mode: search}}
+    - {say: "hi", tag: social, expect: {mode: chat}}
+    - {say: "tell me a joke", tag: social, expect: {mode: chat}}
+    - {say: "umm what do you even do", tag: social, expect: {mode: chat}}
+    - {say: "is this free to use", tag: social, expect: {mode: chat}}
+
+- setup: ["vegetarian lunch", "something spicier"]
+  turns:
+    - {say: "explain the first", tag: ordinal, expect: {mode: detail, item: "1"}}
+    - {say: "no wait, I meant the second", tag: ordinal, expect: {mode: detail, item: "2"}}
+    - {say: "which one is quickest", tag: multi, expect: {mode: detail, item: all}}
+    - {say: "what did you suggest before this", tag: recall, expect: {mode: search, recall: true}}
+    - {say: "hmm, not these, show me others", tag: new_request, expect: {mode: search}}

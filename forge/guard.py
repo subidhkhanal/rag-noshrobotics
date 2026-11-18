@@ -16,9 +16,9 @@ from contextvars import ContextVar
 client_ip: ContextVar[str] = ContextVar("client_ip", default="local")
 
 REQ_PER_MIN = int(os.getenv("RATE_REQ_PER_MIN", "40"))
-CLAUDE_PER_IP_HOUR = int(os.getenv("CLAUDE_PER_IP_HOUR", "30"))
-CLAUDE_PER_HOUR = int(os.getenv("CLAUDE_PER_HOUR", "300"))
-CLAUDE_PER_DAY = int(os.getenv("CLAUDE_PER_DAY", "1500"))
+CLAUDE_PER_IP_HOUR = int(os.getenv("CLAUDE_PER_IP_HOUR", "120"))
+CLAUDE_PER_HOUR = int(os.getenv("CLAUDE_PER_HOUR", "600"))
+CLAUDE_PER_DAY = int(os.getenv("CLAUDE_PER_DAY", "4000"))
 
 
 class Window:

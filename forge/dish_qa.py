@@ -39,8 +39,10 @@ def is_dish_question(message: str) -> bool:
                                               or re.search(r"\?\s*$", message)))
 
 
-def answer(engine, idx: int, q: Constraints, message: str) -> list[str]:
-    """Plain-language answers about recipe index `idx` for what the question asks. Empty if it asks nothing we know."""
+def answer(engine, idx: int, q: Constraints, message: str, aspects: tuple | list = ()) -> list[str]:
+    """Plain-language answers about recipe index `idx` for what the question asks. Empty if it asks nothing we know.
+    `aspects` come from the command step ("good for weight loss" -> healthy) and add to what the words show."""
+    asp = set(aspects)
     onto, r = engine.onto, engine.recipes[idx]
     n = len(r["ingredients"])
     out: list[str] = []
@@ -62,9 +64,9 @@ def answer(engine, idx: int, q: Constraints, message: str) -> list[str]:
             out.append(f"No {label} in its ingredient list.")
     feats = engine.features(idx)
     ids = set(r["ingredient_ids"])
-    if "healthy" in q.attributes or ASKS_NUTRITION.search(message):
+    if "healthy" in q.attributes or ASKS_NUTRITION.search(message) or asp & {"healthy", "nutrition"}:
         out.append(_healthiness(engine, idx, feats, ids))
-    if "spicy" in q.attributes or "mild" in q.attributes:
+    if "spicy" in q.attributes or "mild" in q.attributes or asp & {"spicy", "mild"}:
         from .search import SPICE_IDS
         hot = sorted(onto.label(x) for x in ids & SPICE_IDS)
         if not hot:
@@ -72,19 +74,19 @@ def answer(engine, idx: int, q: Constraints, message: str) -> list[str]:
         else:
             level = "quite spicy" if feats["spicy"] >= 0.67 else "medium spicy" if feats["spicy"] >= 0.5 else "mildly spiced"
             out.append(f"It's {level} (heat from {', '.join(hot)}).")
-    if "high_protein" in q.attributes:
+    if "high_protein" in q.attributes or "protein" in asp:
         from .search import PROTEIN_IDS
         src = sorted(onto.label(x) for x in ids & PROTEIN_IDS)
         out.append(f"Protein comes from {', '.join(src)}." if src else "It has no major protein source (no dal, paneer, "
                    "legumes, eggs or meat).")
-    if "creamy" in q.attributes:
+    if "creamy" in q.attributes or "creamy" in asp:
         out.append("Yes, it's on the creamy side." if feats["creamy"] >= 0.5 else "Not especially creamy.")
-    if "quick" in q.attributes or ASKS_TIME.search(message) or q.max_time:
+    if "quick" in q.attributes or ASKS_TIME.search(message) or q.max_time or "time" in asp:
         t = r["total_min"]
         parts = [f"prep {r['prep_min']} min" if r.get("prep_min") else "", f"cook {r['cook_min']} min" if r.get("cook_min") else ""]
         detail = ", ".join(p for p in parts if p)
         out.append(f"It takes about {t} minutes{f' ({detail})' if detail else ''}." if t else "The recipe doesn't give a time.")
-    if ASKS_SERVES.search(message) or q.servings:
+    if ASKS_SERVES.search(message) or q.servings or "servings" in asp:
         s = r["servings"]
         if s and q.servings and q.servings != s:
             out.append(f"It serves {s}; scale it about {q.servings / s:.1f}× for {q.servings}.")

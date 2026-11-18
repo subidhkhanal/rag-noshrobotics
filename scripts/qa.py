@@ -197,8 +197,8 @@ def main():
                          "results": [r["name"][:50] for r in out.get("results", [])],
                          "issues": issues})
             state = out.get("state", state)
-    from forge import router
-    router_on = bool(args.live) or router.enabled()
+    from forge import commander
+    router_on = bool(args.live) or commander.enabled()
     n_everyday = 0
     for conv in EVERYDAY:
         state = None

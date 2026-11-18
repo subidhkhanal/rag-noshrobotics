@@ -10,7 +10,7 @@ from functools import cached_property
 
 import httpx
 
-from . import dish_qa, llm_parser, router
+from . import commander, dish_qa, llm_parser
 from .adapt import adapt
 from .plan import make_plan
 from .ontology import tokenize
@@ -22,6 +22,10 @@ from .translit import COMMON
 
 MAX_SHOWN = 60
 LAST_IDS = 14  # a weekly plan shows up to 14 cards
+RECENT_TURNS = 4
+SMALL_TALK_KINDS = {"greeting", "thanks", "ack", "about", "override", "reset", "bye", "help", "unclear"}
+DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+CARD_LABELS = set(DAYS) | {str(i) for i in range(1, LAST_IDS + 1)}
 
 # Follow-ups about a dish already on screen: "how to make the first one", "what do I need for #2", "that one".
 _ORDINALS = {"first": 0, "1st": 0, "one": 0, "1": 0, "second": 1, "2nd": 1, "two": 1, "2": 1, "third": 2, "3rd": 2,
@@ -35,7 +39,16 @@ REFERENCE = re.compile(
     r"(that|this|it)\s*(?:one|recipe|dish)?)\b(?=\s|$|[?.!,])", re.I)
 ASK_STEPS = re.compile(r"\b(how (do|to|can|should) (i |you |we )?(make|cook|prepare)|steps?|method|instructions?|"
                        r"recipe for|procedure|kaise (banaye|banate|banaen|banau|bane)|vidhi|banane ka tarika|"
-                       r"show me|tell me|full recipe|details?)\b", re.I)
+                       r"show me|tell me|full recipe|details?|explain|describe|more about)\b", re.I)
+# Day names in a weekly plan (English, short, Hinglish, Hindi) -> card label.
+DAY_WORDS = {
+    "Mon": r"monday|mon|somvar|somwar|सोमवार", "Tue": r"tuesday|tues|tue|mangalvar|mangalwar|मंगलवार",
+    "Wed": r"wednesday|wed|budhvar|budhwar|बुधवार", "Thu": r"thursday|thurs|thu|guruvar|guruwar|गुरुवार|बृहस्पतिवार",
+    "Fri": r"friday|fri|shukravar|shukrawar|शुक्रवार", "Sat": r"saturday|sat|shanivar|shaniwar|शनिवार",
+    "Sun": r"sunday|sun|ravivar|raviwar|रविवार|इतवार",
+}
+DAY_RES = {lab: re.compile(rf"(?<![\wऀ-ॿ])({pat})(?:'s)?(?![\wऀ-ॿ])", re.I) for lab, pat in DAY_WORDS.items()}
+NUMBERED = re.compile(r"\b(?:item|number|no\.?|option|recipe|dish|day|#)\s*(\d{1,2})\b|\b(\d{1,2})(?:st|nd|rd|th)\s+day\b", re.I)
 FOOD_STOP = COMMON_WORDS | {"the", "and", "with", "style", "recipe", "over", "start", "made", "home", "make", "easy",
                             "best", "quick", "simple", "classic", "special", "homemade", "delicious", "done", "umm",
                             "hmm", "lol", "actually", "here", "really", "basically", "stuff", "thing", "things",
@@ -43,6 +56,17 @@ FOOD_STOP = COMMON_WORDS | {"the", "and", "with", "style", "recipe", "over", "st
                             "free", "use", "using", "way", "ways", "version", "instant", "minute", "minutes", "mins",
                             "ideas", "tips", "perfect", "favourite", "favorite", "world", "famous", "street",
                             "restaurant", "party", "kids", "baby", "indian", "south", "north", "east", "west"} | COMMON
+DEVA = re.compile(r"[ऀ-ॿ]")
+RECALL_CUE = re.compile(r"\b(again|earlier|before|previous|last time|go back|pichl|pehle|remind|recap|"
+                        r"you (suggested|showed|gave|recommended|mentioned|said)|suggested|recommended)\b", re.I)
+# Cues that a message is about the conversation so far, not a standalone request: references to cards, days,
+# pronouns, "explain/tell me about". With cards on screen, these go to the command step.
+CONVERSATIONAL = re.compile(
+    r"\b(it|its|this|that|these|those|them|one|ones|first|second|third|fourth|fifth|last|middle|top|"
+    r"\d+(st|nd|rd|th)|item|option|number|no\.|day|days|mon(day)?|tue(s|sday)?|wed(nesday)?|thu(rs|rsday)?|"
+    r"fri(day)?|sat(urday)?|sun(day)?|somvar|mangalvar|budhvar|guruvar|shukravar|shanivar|ravivar|"
+    r"explain|describe|tell|show|details?|more about|about the|how (do|to|long|many|much)|"
+    r"ye|yeh|ise|isme|iska|iski|wala|wali|vala|vali|pehla|pehli|dusra|doosra|dusri|teesra|teesre|aakhri)\b", re.I)
 # Words that may point at an on-screen card; when the rules can't resolve them, the router is asked.
 POINTING = re.compile(r"(?<!\w)(one|first|second|third|fourth|fifth|last|that|this|those|these|wala|wali|vala|"
                       r"#\s*\d|number\s+\d|option\s+\d|upar|above|top)(?!\w)", re.I)
@@ -62,6 +86,16 @@ class Session:
     last_top: int | None = None
     last_ids: list[int] = field(default_factory=list)  # the cards of the latest reply, in order ("the first one")
     focus: int | None = None  # the dish last asked about ("is it spicy?" after "how to make the second one")
+    last_labels: list[str] = field(default_factory=list)  # how each card is named on screen: "1".."5" or "Mon".."Sun"
+    recent: list[dict] = field(default_factory=list)  # last few turns [{"u": user text, "b": reply opening}]
+
+    def labels(self) -> list[str]:
+        if len(self.last_labels) == len(self.last_ids):
+            return self.last_labels
+        return [str(i + 1) for i in range(len(self.last_ids))]
+
+    def remember(self, message: str, reply: str) -> None:
+        self.recent = (self.recent + [{"u": message[:200], "b": reply[:160]}])[-RECENT_TURNS:]
 
     def to_dict(self) -> dict:
         st = self.state
@@ -71,6 +105,7 @@ class Session:
             "attributes": sorted(st.attributes), "servings": st.servings, "prefer_non_veg": st.prefer_non_veg,
             "text": st.text, "shown": self.shown[-MAX_SHOWN:], "last_top": self.last_top,
             "last_ids": self.last_ids[:LAST_IDS], "focus": self.focus,
+            "last_labels": self.last_labels[:LAST_IDS], "recent": self.recent[-RECENT_TURNS:],
         }
 
 
@@ -108,8 +143,14 @@ def session_from(engine: Engine, data: dict | None) -> Session:
     last_ids = ([x for x in last_ids if isinstance(x, int) and x in engine.by_id][:LAST_IDS]
                 if isinstance(last_ids, list) else [])
     focus = data.get("focus")
+    labels = data.get("last_labels")
+    labels = [x for x in labels if isinstance(x, str) and x in CARD_LABELS][:LAST_IDS] if isinstance(labels, list) else []
+    recent = data.get("recent")
+    recent = [{"u": str(t.get("u", ""))[:200], "b": str(t.get("b", ""))[:160]}
+              for t in recent if isinstance(t, dict)][-RECENT_TURNS:] if isinstance(recent, list) else []
     return Session(state=st, shown=shown, last_top=last if isinstance(last, int) and last in engine.by_id else None,
-                   last_ids=last_ids, focus=focus if isinstance(focus, int) and focus in engine.by_id else None)
+                   last_ids=last_ids, focus=focus if isinstance(focus, int) and focus in engine.by_id else None,
+                   last_labels=labels if len(labels) == len(last_ids) else [], recent=recent)
 
 
 def merge(prev: Constraints, new: Constraints, message: str, onto=None) -> Constraints:
@@ -174,27 +215,53 @@ class Assistant:
         return s
 
     def chat(self, state: dict | None, message: str, history: list | None = None) -> dict:
+        out = self._chat(state, message, history)
+        # Keep a short transcript in the client-held state, so the next turn is understood in context.
+        st = out.get("state") or {}
+        recent = [t for t in st.get("recent", []) if isinstance(t, dict)]
+        out["state"] = {**st, "recent": (recent + [{"u": message[:200], "b": out.get("reply", "")[:160]}])[-RECENT_TURNS:]}
+        return out
+
+    def _chat(self, state: dict | None, message: str, history: list | None = None) -> dict:
         s = session_from(self.engine, state)
         onto = self.engine.onto
         kind = small_talk_kind(message)
         if kind:
             return self._small_talk_reply(s, kind)
-        if dish_qa.RECALL.search(message):
-            return self._recall_reply(s)
-        asked = self._dish_question(s, message)
-        if asked is not None:
-            return asked
-        target = self._referenced_recipe(s, message)
-        if target is not None:
-            return self._detail_reply(s, target, message)
-        profile = build_profile(self.engine, history)
         parsed = parse(onto, message)
         if "reset" in parsed.intents and not self._has_food_content(parsed, ignore_intents=True):
             return self._small_talk_reply(Session(), "reset")
-        routed = self._route(s, message, parsed)
-        if isinstance(routed, dict):
-            return routed
-        router_says_food = routed == "search"
+
+        # 1. Understanding: Claude reads the turn in context and returns one command (unless the message is an
+        #    obvious standalone request, which the rules handle instantly). 2. Code executes the command.
+        # Certain references are resolved in code first (instant, identical every time); questions about them
+        # ("is monday's dish healthy?") still go to the command step, which knows what's being asked.
+        if not dish_qa.is_dish_question(message):
+            certain = self._explicit_card(s, message)
+            if certain is not None and self._referenced_recipe(s, message) == certain:
+                return self._detail_reply(s, certain, message)
+        cmd = None
+        if commander.enabled() and self._needs_understanding(s, message, parsed):
+            cmd = self._command(s, message)
+        router_says_food = False
+        if cmd is not None:
+            done = self._execute(s, cmd, message)
+            if isinstance(done, dict):
+                return done
+            router_says_food = done == "search"
+            if done == "plan":
+                parsed.intents.add("plan")
+        else:
+            # Fallback when the command step isn't used or isn't available: the rule-based understanding.
+            if dish_qa.RECALL.search(message):
+                return self._recall_reply(s)
+            asked = self._dish_question(s, message)
+            if asked is not None:
+                return asked
+            target = self._referenced_recipe(s, message)
+            if target is not None:
+                return self._detail_reply(s, target, message)
+        profile = build_profile(self.engine, history)
         used_llm = llm_parser.enabled() and llm_parser.should_call(normalize_message(onto, message), parsed.understood)
         if used_llm:
             parsed = llm_parser.combine(onto, parsed, llm_parser.llm_parse(message))
@@ -220,8 +287,10 @@ class Assistant:
             s.shown += [r.recipe["id"] for r in out.results]
             s.last_top = out.results[0].recipe["id"]
             s.last_ids = [r.recipe["id"] for r in out.results]
+            s.last_labels = [str(i + 1) for i in range(len(s.last_ids))]
         elif out.closest:
             s.last_ids = [out.closest.recipe["id"]]
+            s.last_labels = ["1"]
         for b in out.blocked_examples:
             b["adaptation"] = adapt(onto, self.engine.recipes[self.engine.by_id[b["id"]]], st).to_dict(onto)
         cards = []
@@ -249,12 +318,25 @@ class Assistant:
             "trace": out.trace | {"relaxed": out.relaxed, "claude_parser": used_llm},
         }
 
+    def _explicit_card(self, s: Session, message: str) -> int | None:
+        """A card named unambiguously by day ("explain monday", "सोमवार की रेसिपी") or number ("item 2", "day 3")."""
+        if not s.last_ids:
+            return None
+        by_label = dict(zip(s.labels(), s.last_ids))
+        days = [lab for lab, rx in DAY_RES.items() if lab in by_label and rx.search(message)]
+        nums = {int(a or b) for a, b in NUMBERED.findall(message)}
+        hits = {by_label[d] for d in days} | {s.last_ids[n - 1] for n in nums if 1 <= n <= len(s.last_ids)}
+        return hits.pop() if len(hits) == 1 else None
+
     def _referenced_recipe(self, s: Session, message: str) -> int | None:
         """Recipe id a follow-up points at ("how to make the first one", "#2", "the mushroom matar one")."""
         if not s.last_ids:
             return None
         text = message.strip().lower()
         ask = ASK_STEPS.search(text) or ASK_INGREDIENTS.search(text)
+        named = self._explicit_card(s, message)
+        if named is not None and (ask or len(text.split()) <= 4):
+            return named
         m = REFERENCE.search(text)
         if m:
             word = (m.group(1) or m.group(2) or "").lower()
@@ -276,42 +358,68 @@ class Assistant:
                     return best
         return None
 
-    def _route(self, s: Session, message: str, parsed: Constraints) -> dict | str | None:
-        """Ask the Claude router only when the rules couldn't place the message. Returns a reply, "search" when
-        Claude says it's a food request, or None (router not asked or unavailable: the rules decide)."""
-        unclear = self._food_signal(parsed) != "strong"
-        pointing = bool(s.last_ids) and bool(POINTING.search(message)) and not (
-            parsed.intents & {"more", "different", "similar", "plan", "history", "usual"})
-        if not (unclear or pointing) or not router.enabled():
-            return None
-        names = [self.engine.recipes[self.engine.by_id[rid]]["name"] for rid in s.last_ids]
-        r = router.route(message, names)
-        if r is None:
-            return None
-        if r["intent"] == "followup":
-            return self._detail_reply(s, s.last_ids[r["card"]], message, want=r["want"])
-        if r["intent"] == "recall":
-            return self._recall_reply(s)
-        if r["intent"] == "dish_question" and s.last_ids:
-            rid = s.last_ids[r["card"]] if r["card"] is not None else (s.focus or s.last_ids[0])
-            return self._dish_question(s, message, rid=rid) or self._detail_reply(s, rid, message, want="both")
-        if r["intent"] in ("help", "about", "greeting", "thanks", "bye"):
-            return self._small_talk_reply(s, r["intent"])
-        if r["intent"] == "reset":
-            return self._small_talk_reply(Session(), "reset")
-        if r["intent"] == "off_topic":
-            return self._small_talk_reply(s, "unclear")
-        return "search"  # a food request the rules didn't recognise ("street food"): search with its words
+    def _needs_understanding(self, s: Session, message: str, parsed: Constraints) -> bool:
+        """Obvious standalone requests ("jain dinner") skip the LLM; anything conversational goes to it."""
+        if self._food_signal(parsed) != "strong":
+            return True
+        if DEVA.search(message) or dish_qa.RECALL.search(message) or RECALL_CUE.search(message):
+            return True
+        if dish_qa.QUESTION.search(message) and dish_qa.POINTER.search(message):
+            return True  # "is it healthy?" points at a dish even when the screen is empty
+        return bool(s.last_ids) and bool(CONVERSATIONAL.search(message) or dish_qa.QUESTION.search(message))
 
-    def _dish_question(self, s: Session, message: str, rid: int | None = None) -> dict | None:
+    def _command(self, s: Session, message: str) -> dict | None:
+        eng = self.engine
+        labels = s.labels()
+        screen = [(lab, eng.recipes[eng.by_id[rid]]["name"]) for lab, rid in zip(labels, s.last_ids)]
+        focus = next((lab for lab, rid in zip(labels, s.last_ids) if rid == s.focus), None)
+        if focus is None and s.focus is not None:
+            focus = eng.recipes[eng.by_id[s.focus]]["name"]
+        restrictions = [eng.onto.diets[d]["label"] for d in sorted(s.state.diets)] +                        [f"no {eng.onto.label(e)}" for e in sorted(s.state.exclude)]
+        return commander.command(message, screen, focus, restrictions, s.recent)
+
+    def _execute(self, s: Session, cmd: dict, message: str) -> dict | str | None:
+        """Run a validated command. Returns a reply, or "search"/"plan" to continue into the search pipeline."""
+        by_label = dict(zip(s.labels(), s.last_ids))
+        items = [by_label[x] for x in cmd["items"] if x in by_label]
+        default = s.focus if s.focus is not None else (s.last_ids[0] if s.last_ids else None)
+        action = cmd["action"]
+        if action == "show_recipe" and (items or default is not None):
+            return self._detail_reply(s, items[0] if items else default, message, want=cmd["want"])
+        if action == "ask_about" and (items or default is not None):
+            targets = items or [default]
+            asked = self._dish_question(s, message, targets=targets, aspects=cmd["aspects"])
+            if asked is not None:
+                return asked
+            if len(targets) == 1:
+                return self._detail_reply(s, targets[0], message, want="both")
+            return {**self._small_talk_reply(s, "unclear"),
+                    "reply": "I can tell you about these dishes' cooking time, spice level, diets, ingredients, "
+                             "servings and how light or rich they are. Which would you like to know?"}
+        if action == "recall":
+            return self._recall_reply(s)
+        if action == "small_talk":
+            kind = {"off_topic": "unclear", "ack": "ack"}.get(cmd["social"], cmd["social"])
+            if kind == "reset":
+                return self._small_talk_reply(Session(), "reset")
+            return self._small_talk_reply(s, kind if kind in SMALL_TALK_KINDS else "unclear")
+        if action == "clarify":
+            return {**self._small_talk_reply(s, "unclear"), "reply": cmd["clarify"], "suggestions": []}
+        if action == "plan":
+            return "plan"
+        return "search"
+
+    def _dish_question(self, s: Session, message: str, targets: list[int] | None = None,
+                       aspects: list[str] | tuple = ()) -> dict | None:
         """"Is it healthy?", "does the second one have garlic?", "kya ye jain hai?": answer about that dish only."""
         if not (s.last_ids or s.focus):
             return None
-        if rid is None and not dish_qa.is_dish_question(message):
+        rid = None
+        if targets is None and not dish_qa.is_dish_question(message):
             return None
         onto, eng = self.engine.onto, self.engine
         q = parse(onto, message)
-        if rid is None:
+        if targets is None:
             m = REFERENCE.search(message.lower())
             word = (m.group(1) or m.group(2) or "").lower() if m else ""
             if dish_qa.ALL_SHOWN.search(message) and s.last_ids:
@@ -320,9 +428,7 @@ class Assistant:
                 targets = [s.last_ids[_ORDINALS[word]]]
             else:
                 targets = [s.focus if s.focus is not None else s.last_ids[0]]
-        else:
-            targets = [rid]
-        lines = {t: dish_qa.answer(eng, eng.by_id[t], q, message) for t in targets}
+        lines = {t: dish_qa.answer(eng, eng.by_id[t], q, message, aspects) for t in targets}
         if not any(lines.values()):
             return None  # not a question about properties we can answer: let the normal flow handle it
         if len(targets) == 1:
@@ -512,6 +618,7 @@ class Assistant:
                  for d in plan.days]
         s.shown += [d.result.recipe["id"] for d in plan.days]
         s.last_ids = [d.result.recipe["id"] for d in plan.days]
+        s.last_labels = [d.day if d.day in DAYS else str(k + 1) for k, d in enumerate(plan.days)]
         reply = (f"Here's a {len(plan.days)}-day {what if what != 'recipe' else ''} {course} plan. Every dish is verified "
                  f"against your constraints, no main ingredient repeats on consecutive days, cuisines rotate, and at most "
                  f"two rich dishes. The catalogue has no calorie data, so balance here means variety rather than "

@@ -484,6 +484,9 @@ def parse(onto: Ontology, message: str) -> Constraints:
     remainder = FILLER.sub(" ", remainder)
     remainder = re.sub(r"[^a-z0-9ऀ-ॿ ]+", " ", remainder)
     c.text = re.sub(r"\s+", " ", remainder).strip()
+    # Comparatives ("spicier", "lighter") adjust results; they are never dish names.
+    c.text = re.sub(r"\s+", " ", re.sub(r"\b(spicier|milder|creamier|crispier|healthier|lighter|tangier|quicker|faster|"
+                                        r"richer|simpler|easier|heavier)\b", " ", c.text)).strip()
     if "mild" in c.attributes:
         c.text = re.sub(r"\b(spicy|spicier|spice|teekha|tikha|hot)\b", " ", c.text).strip()
     rewrite_swapped_text(onto, c)
