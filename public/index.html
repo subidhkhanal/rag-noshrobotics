@@ -22,65 +22,56 @@
   <script src="config.js"></script>
 </head>
 <body>
-  <header class="top">
-    <div class="top-inner">
-      <div class="brand">
-        <span class="logo" aria-hidden="true">◆</span>
-        <div>
-          <h1>RecipeForge</h1>
-          <p>Diets checked against real ingredients, not recipe names.</p>
-        </div>
-      </div>
-      <nav class="tabs" role="tablist">
-        <button role="tab" data-tab="chat" class="active">Assistant</button>
-        <button role="tab" data-tab="stress">Stress test</button>
-        <button role="tab" data-tab="audit">Label audit</button>
-        <button role="tab" data-tab="how">How it works</button>
-      </nav>
-      <button id="chats-btn" class="chats-btn" aria-haspopup="dialog">Chats</button>
-    </div>
-  </header>
+  <div class="app">
+    <aside class="sidebar" id="sidebar" aria-label="Chats and pages">
+      <div class="side-brand"><span class="logo" aria-hidden="true">◆</span><span>RecipeForge</span></div>
+      <button id="new-chat" class="side-item new-chat"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>New chat</button>
+      <button class="side-item" data-tab="stress"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6L4.5 18.5A2 2 0 0 0 6.2 21.5h11.6a2 2 0 0 0 1.7-3L14 9V3"/></svg>Stress test</button>
+      <button class="side-item" data-tab="how"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>How it works</button>
+      <div class="side-label">Recent chats</div>
+      <ul id="chats-list" class="chats-list"></ul>
+      <p class="side-foot" id="history-note"></p>
+    </aside>
+    <div class="scrim" id="scrim" hidden></div>
 
-  <main>
-    <section id="tab-chat" class="tab active">
-      <div id="messages" class="messages" aria-live="polite">
-        <div class="msg bot intro">
-          <p>Ask for recipes in plain English or Hinglish. Diets and allergies you mention stay locked for the whole conversation, and every result shows the ingredient-level check behind it.</p>
-          <div class="suggest">
-            <button>no onion no garlic vegetarian</button>
-            <button>Jain food options</button>
-            <button>I'm lactose intolerant, quick dinner under 30 mins</button>
-            <button>I have chicken, tomatoes and rice</button>
-            <button>gluten free South Indian breakfast</button>
-            <button>bina pyaz lahsun ka khana</button>
-            <button>plan my week, Jain dinners</button>
-            <button>suggest something different from what I usually make</button>
+    <div class="main-col">
+      <header class="topbar">
+        <button id="menu-btn" class="icon-btn menu-btn" aria-label="Open sidebar" aria-controls="sidebar"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <span class="topbar-title">RecipeForge</span>
+        <button id="top-new" class="icon-btn menu-btn" aria-label="New chat"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+      </header>
+
+      <main>
+        <section id="tab-chat" class="tab active">
+          <div id="messages" class="messages" aria-live="polite">
+            <div class="empty" id="empty">
+              <h2>What should we cook today?</h2>
+              <p>Ask in English, Hinglish or हिंदी. Every diet and allergy is checked against each recipe's real ingredients.</p>
+              <div class="starters">
+                <button data-q="no onion no garlic vegetarian dinner"><b>No onion, no garlic</b><span>vegetarian dinner</span></button>
+                <button data-q="Jain food options"><b>Jain food</b><span>verified, ingredient by ingredient</span></button>
+                <button data-q="I have chicken, tomatoes and rice"><b>Cook with what I have</b><span>chicken, tomatoes and rice</span></button>
+                <button data-q="plan my week, Jain dinners"><b>Plan my week</b><span>7 Jain dinners + shopping list</span></button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-      <div class="composer">
-        <div id="chips" class="chips"></div>
-        <form id="form">
-          <input id="input" autocomplete="off" maxlength="500" placeholder="e.g. vegan high protein lunch, no peanuts">
-          <button type="submit" aria-label="Send">Send</button>
-        </form>
-        <div class="footrow"><button id="reset" class="link">New chat</button><span id="history-note" class="sub"></span></div>
-      </div>
-    </section>
+          <div class="composer">
+            <div id="chips" class="chips"></div>
+            <form id="form">
+              <input id="input" autocomplete="off" maxlength="500" placeholder="Ask for a recipe, e.g. vegan high-protein lunch, no peanuts">
+              <button type="submit" class="send" aria-label="Send"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+            </form>
+            <p class="disclaimer">Diet checks use each recipe's ingredient list. For allergies, also check product labels.</p>
+          </div>
+        </section>
 
-    <section id="tab-stress" class="tab">
-      <h2>Queries from hands-on testing of the Nosh Assistant</h2>
-      <p class="lede">I ran these against the Nosh Companion app in November 2026 and noted what came back. Run each one here to compare. Multi-turn chains run in order in a single session.</p>
-      <div id="stress-list" class="stress"></div>
-    </section>
+        <section id="tab-stress" class="tab page">
+          <h2>Queries from hands-on testing of the Nosh Assistant</h2>
+          <p class="lede">I ran these against the Nosh Companion app in November 2026 and noted what came back. Run each one here to compare. Multi-turn chains run in order in a single session.</p>
+          <div id="stress-list" class="stress"></div>
+        </section>
 
-    <section id="tab-audit" class="tab">
-      <h2>The source dataset's own diet labels, re-checked</h2>
-      <p class="lede">The demo corpus (Archana's Kitchen, 6,218 English recipes, CC BY 4.0) ships with a diet label per recipe. Re-checking those labels against each recipe's actual ingredients shows why tags can't be trusted for dietary safety.</p>
-      <div id="audit"></div>
-    </section>
-
-    <section id="tab-how" class="tab how">
+    <section id="tab-how" class="tab how page">
       <h2>How it works</h2>
       <p class="lede">Follow one request through the system.</p>
       <div class="flow" role="list">
@@ -111,17 +102,9 @@
         <div><b>Never</b><span>does the AI decide what's safe — code does</span></div>
       </div>
     </section>
-  </main>
-
-  <dialog id="chats-dialog" aria-label="Saved chats">
-    <div class="dlg">
-      <button class="close" aria-label="Close">×</button>
-      <h3>Your chats</h3>
-      <p class="sub">Saved on this device only. A new chat remembers the diets and allergies from your latest chat — remove any with ×.</p>
-      <button id="new-chat" class="primary">+ New chat</button>
-      <ul id="chats-list" class="chats-list"></ul>
+      </main>
     </div>
-  </dialog>
+  </div>
 
   <dialog id="recipe-dialog">
     <div class="dlg">

@@ -4,7 +4,6 @@ Run locally: uvicorn forge.api:app --port 8000
 """
 from __future__ import annotations
 
-import json
 import os
 import time
 from pathlib import Path
@@ -18,14 +17,13 @@ from pydantic import BaseModel, Field
 from . import guard, llm_parser, router
 from .adapt import adapt
 from .chat import Assistant, chips, session_from
-from .search import DATA, Engine
+from .search import Engine
 
 ROOT = Path(__file__).resolve().parent.parent
 engine = Engine()
 engine.embed_query("warm up")
 engine.speller  # noqa: B018 - build at startup, not on the first user's request
 assistant = Assistant(engine)
-AUDIT = json.loads((DATA / "audit.json").read_text(encoding="utf-8"))
 
 app = FastAPI(title="RecipeForge", version="0.4.0")
 app.add_middleware(
@@ -126,11 +124,6 @@ def adapt_recipe(rid: int, body: StateIn):
         raise HTTPException(404, "recipe not found")
     st = session_from(engine, body.state).state
     return adapt(engine.onto, engine.recipes[engine.by_id[rid]], st).to_dict(engine.onto)
-
-
-@app.get("/api/audit")
-def audit():
-    return AUDIT
 
 
 web = ROOT / "public"

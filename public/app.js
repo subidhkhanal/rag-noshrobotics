@@ -67,7 +67,7 @@ function renderHistoryNote() {
   const cooked = new Set(loadHistory().filter((e) => e.action === "cooked").map((e) => e.id)).size;
   const rated = loadHistory().filter((e) => e.action !== "cooked").length;
   $("#history-note").innerHTML = cooked || rated
-    ? `Learning your taste from ${cooked} cooked and ${rated} rated on this device · <button class="link" id="clear-history">Clear</button>`
+    ? `Personalising from ${cooked} cooked and ${rated} rated dishes on this device. <button class="link" id="clear-history">Clear</button>`
     : "Mark dishes as cooked, liked or disliked to personalise results. Saved only on this device.";
 }
 
@@ -88,20 +88,33 @@ async function api(path, body) {
 
 // ---------- tabs ----------
 function showTab(name) {
-  document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".side-item[data-tab]").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
   document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.id === `tab-${name}`));
-  if (name === "audit") loadAudit();
+  if (name !== "chat") document.querySelectorAll(".chats-list li").forEach((li) => li.classList.remove("current"));
+  else renderChatList();
+  closeSidebar();
 }
-document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+document.querySelectorAll(".side-item[data-tab]").forEach((b) => b.addEventListener("click", () => showTab(b.dataset.tab)));
+
+// ---------- sidebar (slides in on small screens) ----------
+function openSidebar() { $("#sidebar").classList.add("open"); $("#scrim").hidden = false; }
+function closeSidebar() { $("#sidebar").classList.remove("open"); $("#scrim").hidden = true; }
+$("#menu-btn").addEventListener("click", openSidebar);
+$("#scrim").addEventListener("click", closeSidebar);
 
 // ---------- chat ----------
 const messages = $("#messages");
+
+function updateEmpty() {
+  $("#empty").hidden = !!messages.querySelector(".msg");
+}
 
 function addUser(text) {
   const el = document.createElement("div");
   el.className = "msg user";
   el.textContent = text;
   messages.appendChild(el);
+  updateEmpty();
 }
 
 function checkBadge(c) {
@@ -221,6 +234,7 @@ function addBot(data) {
   }
   el.innerHTML = html;
   messages.appendChild(el);
+  updateEmpty();
 }
 
 function renderChips(chips) {
@@ -238,10 +252,10 @@ async function send(text) {
   addUser(text);
   const typing = document.createElement("div");
   typing.className = "msg bot typing";
-  typing.textContent = "Checking ingredients…";
+  typing.innerHTML = '<span class="dots"><i></i><i></i><i></i></span><span class="typing-text">Checking ingredients</span>';
   messages.appendChild(typing);
   typing.scrollIntoView({ behavior: "smooth", block: "end" });
-  const slow = setTimeout(() => { typing.textContent = "Reading your request carefully…"; }, 1200);
+  const slow = setTimeout(() => { typing.querySelector(".typing-text").textContent = "Reading your request carefully"; }, 1200);
   try {
     const data = await api("/api/chat", { message: text, state, history: loadHistory() });
     state = data.state;
@@ -255,6 +269,7 @@ async function send(text) {
       c.chips = data.constraints;
       c.carried = carried;
     });
+    renderChatList();
   } catch (e) {
     typing.textContent = e.status === 429
       ? "You're sending messages very quickly — please wait a minute and try again."
@@ -274,6 +289,8 @@ $("#form").addEventListener("submit", (e) => {
   input.value = "";
 });
 messages.addEventListener("click", (e) => {
+  const starter = e.target.closest(".starters button[data-q]");
+  if (starter) return send(starter.dataset.q);
   const s = e.target.closest(".suggest button");
   if (s) send(s.textContent);
 });
@@ -290,7 +307,8 @@ $("#chips").addEventListener("click", async (e) => {
 });
 
 function clearMessages() {
-  messages.querySelectorAll(".msg:not(.intro)").forEach((m) => m.remove());
+  messages.querySelectorAll(".msg").forEach((m) => m.remove());
+  updateEmpty();
 }
 
 // Start a new chat. Diets and allergy exclusions from the most recent chat carry over (remove with ×).
@@ -300,6 +318,8 @@ async function newChat({ carry = true } = {}) {
   carried = [];
   clearMessages();
   renderChips([]);
+  showTab("chat");
+  $("#input").focus({ preventScroll: true });
   const last = loadChats()[0];
   const seed = carry && last?.state ? { diets: last.state.diets || [], exclude: last.state.exclude || [] } : null;
   if (seed && (seed.diets.length || seed.exclude.length)) {
@@ -329,24 +349,25 @@ function openChat(id) {
 }
 
 function resetChat() { return newChat({ carry: false }); }
-$("#reset").addEventListener("click", () => newChat());
+$("#new-chat").addEventListener("click", () => newChat());
+$("#top-new").addEventListener("click", () => newChat());
 
-// ---------- chat list ----------
-const chatsDialog = $("#chats-dialog");
+// ---------- chat list (sidebar) ----------
 function renderChatList() {
   const chats = loadChats();
+  const onChat = $("#tab-chat").classList.contains("active");
   $("#chats-list").innerHTML = chats.length
-    ? chats.map((c) => `<li class="${c.id === chatId ? "current" : ""}">
-        <button class="open" data-open="${esc(c.id)}"><b>${esc(c.title)}</b><span class="sub">${esc(relTime(c.updated))} · ${Math.ceil(c.turns.length / 2)} message${c.turns.length > 2 ? "s" : ""}${(c.chips || []).filter((x) => x.hard).length ? ` · ${esc(c.chips.filter((x) => x.hard).map((x) => x.label).join(", "))}` : ""}</span></button>
-        <button class="del" data-del="${esc(c.id)}" aria-label="Delete chat">×</button></li>`).join("")
-    : `<li class="sub">No saved chats yet.</li>`;
+    ? chats.map((c) => {
+        const locks = (c.chips || []).filter((x) => x.hard).map((x) => x.label).join(", ");
+        return `<li class="${onChat && c.id === chatId ? "current" : ""}">
+          <button class="open" data-open="${esc(c.id)}" title="${esc(c.title)}${locks ? ` — ${esc(locks)}` : ""} · ${esc(relTime(c.updated))}">${esc(c.title)}</button>
+          <button class="del" data-del="${esc(c.id)}" aria-label="Delete chat “${esc(c.title)}”">×</button></li>`;
+      }).join("")
+    : `<li class="none">Your chats will appear here. They stay on this device.</li>`;
 }
-$("#chats-btn").addEventListener("click", () => { renderChatList(); chatsDialog.showModal(); });
-chatsDialog.addEventListener("click", (e) => {
-  if (e.target === chatsDialog || e.target.closest(".close")) return chatsDialog.close();
-  if (e.target.closest("#new-chat")) { chatsDialog.close(); showTab("chat"); return newChat(); }
+$("#chats-list").addEventListener("click", (e) => {
   const open = e.target.closest("[data-open]");
-  if (open) { chatsDialog.close(); return openChat(open.dataset.open); }
+  if (open) return openChat(open.dataset.open);
   const del = e.target.closest("[data-del]");
   if (del) {
     saveChats(loadChats().filter((c) => c.id !== del.dataset.del));
@@ -424,21 +445,6 @@ $("#stress-list").addEventListener("click", async (e) => {
   showTab("chat");
   for (const q of STRESS[+b.dataset.stress].qs) await send(q);
 });
-
-// ---------- audit ----------
-let auditLoaded = false;
-async function loadAudit() {
-  if (auditLoaded) return;
-  auditLoaded = true;
-  const a = await api("/api/audit");
-  const rows = Object.entries(a.labels).map(([label, v]) => `
-    <tr><td>${esc(label)}</td><td class="num">${v.violations} / ${v.labelled}</td>
-    <td><ul>${v.examples.slice(0, 4).map((x) => `<li><button class="link" data-recipe="${esc(x.id)}">${esc(x.name)}</button>: ${esc(x.reasons[0])}</li>`).join("")}</ul></td></tr>`).join("");
-  const total = Object.values(a.labels).reduce((s, v) => s + v.violations, 0);
-  $("#audit").innerHTML = `
-    <p><b>${total}</b> recipes carry a diet label that their own ingredient list contradicts.</p>
-    <div class="audit-wrap"><table class="audit"><thead><tr><th>Source label</th><th>Contradicted</th><th>Examples (ingredient → reason)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
-}
 
 // ---------- start: reopen the most recent chat on this device, or start a new one ----------
 // A shared link like ?q=jain+dinner opens a fresh chat and runs that request.
