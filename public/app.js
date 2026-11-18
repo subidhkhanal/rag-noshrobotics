@@ -166,11 +166,16 @@ function addBot(data) {
   if (data.mode === "plan" && data.results.length) html += planHtml(data);
   else if (data.results.length) html += `<div class="cards">${data.results.map(cardHtml).join("")}</div>`;
   if (data.closest) html += `<div class="cards">${cardHtml(data.closest)}</div>`;
-  if (data.blocked_examples.length) {
-    html += `<div class="ruled"><b>Ruled out — these matched your words but not your constraints:</b><ul>${data.blocked_examples
-      .map((b) => `<li><button class="link" data-recipe="${esc(b.id)}">${esc(b.name)}</button> — ${esc(b.reason)}${adaptHtml(b.adaptation)}</li>`)
-      .join("")}</ul></div>`;
+  if (data.mode === "detail" && data.detail) {
+    const d = data.detail;
+    if (d.ingredients.length) html += `<div class="detail"><h4>Ingredients</h4><ul>${d.ingredients.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
+    if (d.steps.length) html += `<div class="detail"><h4>Steps</h4><ol>${d.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>`;
   }
+  const ruled = data.blocked_examples?.length
+    ? `<div class="ruled"><b>Ruled out — matched your words but not your constraints:</b><ul>${data.blocked_examples
+      .map((b) => `<li><button class="link" data-recipe="${esc(b.id)}">${esc(b.name)}</button> — ${esc(b.reason)}${adaptHtml(b.adaptation)}</li>`)
+      .join("")}</ul></div>`
+    : "";
   const t = data.trace;
   if (data.mode === "search" && t.corpus) {
     const n = (x) => Number(x).toLocaleString("en-IN");
@@ -187,7 +192,7 @@ function addBot(data) {
       `<b>Picked</b> ${data.results.length} varied dishes`,
     ];
     if (t.relaxed?.length) steps.push(`<b>Note</b> ${esc(t.relaxed.join("; "))}`);
-    html += `<details class="trace"><summary>How I found these</summary><ol class="trace-steps">${steps.map((s) => `<li>${s}</li>`).join("")}</ol>
+    html += `<details class="trace"><summary>How I found these</summary><ol class="trace-steps">${steps.map((s) => `<li>${s}</li>`).join("")}</ol>${ruled}
       <details class="raw"><summary>Raw details</summary><pre>${esc(JSON.stringify({ parsed: data.parsed, trace: t }, null, 2))}</pre></details></details>`;
   }
   el.innerHTML = html;

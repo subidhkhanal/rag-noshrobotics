@@ -19,6 +19,27 @@ from .query import (ATTRIBUTE_RES, COMMON_WORDS, COURSE_RES, CUISINE_GROUPS, Con
 from .search import Engine, Result, SearchOutput
 
 MAX_SHOWN = 60
+LAST_IDS = 14  # a weekly plan shows up to 14 cards
+
+# Follow-ups about a dish already on screen: "how to make the first one", "what do I need for #2", "that one".
+_ORDINALS = {"first": 0, "1st": 0, "one": 0, "1": 0, "second": 1, "2nd": 1, "two": 1, "2": 1, "third": 2, "3rd": 2,
+             "three": 2, "3": 2, "fourth": 3, "4th": 3, "four": 3, "4": 3, "fifth": 4, "5th": 4, "five": 4, "5": 4,
+             "last": -1, "pehla": 0, "pehli": 0, "pehle": 0, "doosra": 1, "dusra": 1, "doosri": 1, "dusri": 1,
+             "teesra": 2, "tisra": 2, "teesri": 2}
+REFERENCE = re.compile(
+    r"(?<!\w)(?:the\s+)?(?:(first|1st|second|2nd|third|3rd|fourth|4th|fifth|5th|last|pehla|pehli|pehle|doosra|dusra|"
+    r"doosri|dusri|teesra|tisra|teesri)\s*(?:one|recipe|dish|wala|wali|vala|vali)?|"
+    r"(?:#|no\.?\s*|number\s+|option\s+|recipe\s+|dish\s+)(one|two|three|four|five|[1-5])|"
+    r"(that|this|it)\s*(?:one|recipe|dish)?)\b(?=\s|$|[?.!,])", re.I)
+ASK_STEPS = re.compile(r"\b(how (do|to|can|should) (i |you |we )?(make|cook|prepare)|steps?|method|instructions?|"
+                       r"recipe for|procedure|kaise (banaye|banate|banaen|banau|bane)|vidhi|banane ka tarika|"
+                       r"show me|tell me|full recipe|details?)\b", re.I)
+# Naming a dish counts as a reference only after a clear ask ("show me something spicy" is a new search).
+ASK_BY_NAME = re.compile(r"\b(how (do|to|can|should) (i |you |we )?(make|cook|prepare)|(recipe|ingredients?|steps?|"
+                         r"method|instructions?) (for|of)|what (do|will|would|should) (i|you|we) need for|"
+                         r"kaise (banaye|banate|banaen|banau|bane))\b", re.I)
+ASK_INGREDIENTS = re.compile(r"\b(ingredients?|what (do|will|would|should) (i|you|we) need|what goes in|"
+                             r"what('s| is) in|shopping|samagri|kya chahiye|kya kya chahiye|need for|items?)\b", re.I)
 
 
 @dataclass
@@ -27,6 +48,7 @@ class Session:
     state: Constraints = field(default_factory=Constraints)
     shown: list[int] = field(default_factory=list)
     last_top: int | None = None
+    last_ids: list[int] = field(default_factory=list)  # the cards of the latest reply, in order ("the first one")
 
     def to_dict(self) -> dict:
         st = self.state
@@ -35,6 +57,7 @@ class Session:
             "pantry_mode": st.pantry_mode, "max_time": st.max_time, "course": st.course, "cuisine": st.cuisine,
             "attributes": sorted(st.attributes), "servings": st.servings, "prefer_non_veg": st.prefer_non_veg,
             "text": st.text, "shown": self.shown[-MAX_SHOWN:], "last_top": self.last_top,
+            "last_ids": self.last_ids[:LAST_IDS],
         }
 
 
@@ -68,7 +91,11 @@ def session_from(engine: Engine, data: dict | None) -> Session:
     shown = data.get("shown")
     shown = [x for x in shown if isinstance(x, int) and x in engine.by_id][-MAX_SHOWN:] if isinstance(shown, list) else []
     last = data.get("last_top")
-    return Session(state=st, shown=shown, last_top=last if isinstance(last, int) and last in engine.by_id else None)
+    last_ids = data.get("last_ids")
+    last_ids = ([x for x in last_ids if isinstance(x, int) and x in engine.by_id][:LAST_IDS]
+                if isinstance(last_ids, list) else [])
+    return Session(state=st, shown=shown, last_top=last if isinstance(last, int) and last in engine.by_id else None,
+                   last_ids=last_ids)
 
 
 def merge(prev: Constraints, new: Constraints, message: str, onto=None) -> Constraints:
@@ -138,6 +165,9 @@ class Assistant:
         kind = small_talk_kind(message)
         if kind:
             return self._small_talk_reply(s, kind)
+        target = self._referenced_recipe(s, message)
+        if target is not None:
+            return self._detail_reply(s, target, message)
         profile = build_profile(self.engine, history)
         parsed = parse(onto, message)
         if "reset" in parsed.intents and not self._has_food_content(parsed, ignore_intents=True):
@@ -166,6 +196,9 @@ class Assistant:
         if out.results:
             s.shown += [r.recipe["id"] for r in out.results]
             s.last_top = out.results[0].recipe["id"]
+            s.last_ids = [r.recipe["id"] for r in out.results]
+        elif out.closest:
+            s.last_ids = [out.closest.recipe["id"]]
         for b in out.blocked_examples:
             b["adaptation"] = adapt(onto, self.engine.recipes[self.engine.by_id[b["id"]]], st).to_dict(onto)
         cards = []
@@ -191,6 +224,66 @@ class Assistant:
             "constraints": chips(onto, st),
             "parsed": parsed.to_dict(),
             "trace": out.trace | {"relaxed": out.relaxed, "claude_parser": used_llm},
+        }
+
+    def _referenced_recipe(self, s: Session, message: str) -> int | None:
+        """Recipe id a follow-up points at ("how to make the first one", "#2", "the mushroom matar one")."""
+        if not s.last_ids:
+            return None
+        text = message.strip().lower()
+        ask = ASK_STEPS.search(text) or ASK_INGREDIENTS.search(text)
+        m = REFERENCE.search(text)
+        if m:
+            word = (m.group(1) or m.group(2) or "").lower()
+            if word in _ORDINALS:
+                idx = _ORDINALS[word]
+                bare = not re.sub(r"\b(the|please|pls|plz|ok|okay|so|and)\b|[?.!,]", " ", text.replace(m.group(0), " ")).strip()
+                if (ask or bare) and -len(s.last_ids) <= idx < len(s.last_ids):
+                    return s.last_ids[idx]
+            elif m.group(3) and ask:  # "that one" / "this recipe" / "it": the top card
+                return s.last_ids[0]
+        if ASK_BY_NAME.search(text):
+            # By name: most of the message's distinctive words appear in one shown recipe's name.
+            words = {w for w in tokenize(text) if len(w) > 3} - COMMON_WORDS - {"make", "cook", "recipe", "need",
+                                                                                 "ingredient", "step", "method"}
+            if words:
+                best = max(s.last_ids, key=lambda rid: len(words & self.engine.name_tokens[self.engine.by_id[rid]]))
+                hit = words & self.engine.name_tokens[self.engine.by_id[best]]
+                if len(hit) >= max(1, (len(words) + 1) // 2):
+                    return best
+        return None
+
+    def _detail_reply(self, s: Session, rid: int, message: str) -> dict:
+        """Ingredients and/or steps of a dish already shown, straight from the recipe record (no generation)."""
+        onto, eng = self.engine.onto, self.engine
+        i = eng.by_id[rid]
+        r, st = eng.recipes[i], s.state
+        want_ing = bool(ASK_INGREDIENTS.search(message))
+        want_steps = bool(ASK_STEPS.search(message)) or not want_ing
+        result = eng._explain(i, 0.0, eng.is_flagged(i, st), st)
+        cd = card(result)
+        if result.flagged:
+            cd["safer"] = adapt(onto, r, st).to_dict(onto)["safer"]
+        steps = [x.strip() for x in re.split(r"(?<=[.!?])\s*(?=[A-Z])", r["instructions"]) if len(x.strip()) > 3]
+        bits = [f"{r['total_min']} min" if r["total_min"] else "", f"serves {r['servings']}" if r["servings"] else ""]
+        meta = ", ".join(b for b in bits if b)
+        what = "Here's how to make" if want_steps and not want_ing else (
+            "Here's what you need for" if want_ing and not want_steps else "Here's")
+        reply = f"{what} {r['name']}{f' ({meta})' if meta else ''}."
+        if st.diets or st.exclude:
+            reply += (" It passed your checks: " + ", ".join(c["label"] for c in result.checks if c["status"] == "pass")
+                      + "." if not result.flagged else " Note: it has a ⚠ flag — see the card.")
+        return {
+            "mode": "detail",
+            "state": s.to_dict(),
+            "reply": reply,
+            "results": [cd],
+            "detail": {"ingredients": [x["line"] for x in r["ingredients"]] if want_ing or want_steps else [],
+                       "steps": steps[:30] if want_steps else [], "url": r["url"]},
+            "closest": None,
+            "blocked_examples": [],
+            "constraints": chips(onto, st),
+            "trace": {},
         }
 
     @cached_property
@@ -278,6 +371,7 @@ class Assistant:
         cards = [{**card(d.result), "day": d.day, "base": onto.label(d.base) if d.base in onto.ingredients else d.base}
                  for d in plan.days]
         s.shown += [d.result.recipe["id"] for d in plan.days]
+        s.last_ids = [d.result.recipe["id"] for d in plan.days]
         reply = (f"Here's a {len(plan.days)}-day {what if what != 'recipe' else ''} {course} plan. Every dish is verified "
                  f"against your constraints, no main ingredient repeats on consecutive days, cuisines rotate, and at most "
                  f"two rich dishes. The catalogue has no calorie data, so balance here means variety rather than "
