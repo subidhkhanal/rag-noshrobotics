@@ -67,8 +67,8 @@ function renderHistoryNote() {
   const cooked = new Set(loadHistory().filter((e) => e.action === "cooked").map((e) => e.id)).size;
   const rated = loadHistory().filter((e) => e.action !== "cooked").length;
   $("#history-note").innerHTML = cooked || rated
-    ? `Your history on this device: ${cooked} cooked, ${rated} rated · <button class="link" id="clear-history">clear</button>`
-    : "Tap “Cooked it”, 👍 or 👎 on a dish and I'll learn your taste (stored only on this device).";
+    ? `Learning your taste from ${cooked} cooked and ${rated} rated on this device · <button class="link" id="clear-history">Clear</button>`
+    : "Mark dishes as cooked, liked or disliked to personalise results. Saved only on this device.";
 }
 
 const $ = (sel, root = document) => root.querySelector(sel);
@@ -105,8 +105,8 @@ function addUser(text) {
 }
 
 function checkBadge(c) {
-  const icon = c.status === "pass" ? "✓" : c.status === "flag" ? "⚠" : "✕";
-  return `<span class="check ${esc(c.status)}" title="${esc(c.detail)}">${icon} ${esc(c.label)}</span>`;
+  const mark = c.status === "pass" ? "✓" : c.status === "flag" ? "!" : "✕";
+  return `<span class="check ${esc(c.status)}" title="${esc(c.detail)}"><b>${mark}</b>${esc(c.label)}</span>`;
 }
 
 function sourceName(url) {
@@ -127,25 +127,49 @@ function adaptHtml(a) {
     <ul>${swapList(a.swaps)}${swapList(a.safer)}</ul><div class="sub">The adapted recipe was re-checked against every active constraint.</div></details>`;
 }
 
+// Outline icons (Lucide, ISC licence), inlined so the page has no extra requests.
+const ICON = {
+  clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  ext: '<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3"/>',
+  cooked: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+  up: '<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>',
+  down: '<path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/>',
+  alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>',
+};
+const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
+
 function cardHtml(r) {
   const flagNotes = r.checks.filter((c) => c.status === "flag").map((c) => `${esc(c.label)}: ${esc(c.detail)}`);
+  // Servings (and scaling for the group size) belong in the meta line, not in the reasons.
+  const serveNote = r.why.find((w) => /^serves\b/i.test(w));
+  const reasons = r.why.filter((w) => w !== serveNote);
+  const serves = serveNote
+    ? serveNote.replace(/^serves (\d+)/i, "Serves $1").replace(" · make about ", " · ≈").replace(" · make ", " · ").replace(" people", "")
+    : r.servings ? `Serves ${r.servings}` : "";
+  const meta = [esc(r.cuisine), esc(r.course)].filter(Boolean).join('<span class="dot">·</span>');
   return `
-    <article class="card">
-      <header><h3>${r.flagged ? "⚠ " : ""}${esc(r.name)}</h3><span class="meta">${esc(r.total_min)} min</span></header>
-      <div class="sub">${esc(r.cuisine)} · ${esc(r.course)}${r.servings ? ` · serves ${esc(r.servings)}` : ""}</div>
+    <article class="card${r.flagged ? " flagged" : ""}">
+      <header>
+        <h3>${r.flagged ? `<span class="warn" title="Check the note below">${icon("alert")}</span>` : ""}${esc(r.name)}</h3>
+        ${r.total_min ? `<span class="time">${icon("clock")}${esc(r.total_min)} min</span>` : ""}
+      </header>
+      <div class="meta">${meta}${serves ? `<span class="dot">·</span><span class="serves">${icon("users")}${esc(serves)}</span>` : ""}</div>
       ${r.checks.length ? `<div class="checks">${r.checks.map(checkBadge).join("")}</div>` : ""}
-      ${r.why.length ? `<ul class="why">${r.why.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
+      ${reasons.length ? `<p class="why">${reasons.map((w) => esc(w.charAt(0).toUpperCase() + w.slice(1))).join('<span class="dot">·</span>')}</p>` : ""}
       ${flagNotes.length ? `<div class="flagnote">${flagNotes.join("<br>")}</div>` : ""}
       ${r.safer?.length ? `<details class="adapt"><summary>Safer swap</summary><ul>${swapList(r.safer)}</ul></details>` : ""}
-      <div class="actions">
-        <button class="link" data-recipe="${esc(r.id)}">Ingredient check</button>
-        ${r.url ? `<a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">Full recipe ↗</a><span class="source">Source: ${esc(sourceName(r.url))}</span>` : ""}
-        <span class="taste">
-          <button class="pill" data-act="cooked" data-id="${esc(r.id)}">Cooked it</button>
-          <button class="pill" data-act="like" data-id="${esc(r.id)}" aria-label="Like">👍</button>
-          <button class="pill" data-act="dislike" data-id="${esc(r.id)}" aria-label="Dislike">👎</button>
+      <footer class="actions">
+        <button class="ghost" data-recipe="${esc(r.id)}">${icon("list")}Ingredients</button>
+        ${r.url ? `<a class="ghost" href="${esc(r.url)}" target="_blank" rel="noopener">${icon("ext")}Recipe</a>
+          <span class="source">${esc(sourceName(r.url))}</span>` : ""}
+        <span class="taste" role="group" aria-label="Your feedback">
+          <button class="icon-btn" data-act="cooked" data-id="${esc(r.id)}" title="I cooked this" aria-label="I cooked this">${icon("cooked")}</button>
+          <button class="icon-btn" data-act="like" data-id="${esc(r.id)}" title="More like this" aria-label="More like this">${icon("up")}</button>
+          <button class="icon-btn" data-act="dislike" data-id="${esc(r.id)}" title="Less like this" aria-label="Less like this">${icon("down")}</button>
         </span>
-      </div>
+      </footer>
     </article>`;
 }
 
@@ -334,8 +358,14 @@ messages.addEventListener("click", (e) => {
   const b = e.target.closest("button[data-act]");
   if (!b) return;
   recordAction(Number(b.dataset.id), b.dataset.act);
-  b.closest(".taste").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
-  b.textContent = b.dataset.act === "cooked" ? "Cooked ✓" : b.textContent;
+  const group = b.closest(".taste");
+  if (b.dataset.act === "cooked") {
+    b.classList.add("on");
+  } else {
+    // Like and dislike are exclusive; "cooked" stays marked.
+    group.querySelectorAll('[data-act="like"], [data-act="dislike"]').forEach((x) => x.classList.toggle("on", x === b));
+  }
+  group.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x.classList.contains("on")));
 });
 document.addEventListener("click", (e) => {
   if (e.target.id !== "clear-history") return;
@@ -411,8 +441,16 @@ async function loadAudit() {
 }
 
 // ---------- start: reopen the most recent chat on this device, or start a new one ----------
-{
+// A shared link like ?q=jain+dinner opens a fresh chat and runs that request.
+(async () => {
+  const q = new URLSearchParams(location.search).get("q");
+  if (q && q.trim()) {
+    await newChat({ carry: false });
+    history.replaceState(null, "", location.pathname);
+    send(q.trim().slice(0, 500));
+    return;
+  }
   const recent = loadChats()[0];
   if (recent) openChat(recent.id);
   else newChat();
-}
+})();
