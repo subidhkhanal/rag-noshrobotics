@@ -1,47 +1,47 @@
 {
  "summary": {
   "en": {
-   "hit@5": 0.8666666666666667,
-   "mrr@10": 0.6999470899470899,
-   "ndcg@10": 0.5603855557476931,
-   "p@5": 0.5766666666666667,
+   "hit@5": 0.8833333333333333,
+   "mrr@10": 0.7527513227513227,
+   "ndcg@10": 0.6120173005308313,
+   "p@5": 0.6166666666666667,
    "n": 60,
    "ndcg_ci": [
-    0.4623452603421982,
-    0.6569459231378313
+    0.5161740094067695,
+    0.7059242169877028
    ]
   },
   "hinglish": {
-   "hit@5": 0.95,
-   "mrr@10": 0.9223809523809524,
-   "ndcg@10": 0.7571803378855524,
-   "p@5": 0.7899999999999999,
+   "hit@5": 1.0,
+   "mrr@10": 0.9777777777777777,
+   "ndcg@10": 0.8101423268233652,
+   "p@5": 0.85,
    "n": 60,
    "ndcg_ci": [
-    0.6855920270893263,
-    0.8213330935175811
+    0.7530366555629215,
+    0.8623736219931643
    ]
   },
   "devanagari": {
-   "hit@5": 0.95,
-   "mrr@10": 0.8540277777777778,
-   "ndcg@10": 0.7595388377948121,
-   "p@5": 0.7866666666666667,
+   "hit@5": 0.9333333333333333,
+   "mrr@10": 0.8736111111111111,
+   "ndcg@10": 0.7951591180999125,
+   "p@5": 0.8133333333333332,
    "n": 60,
    "ndcg_ci": [
-    0.6767989920175329,
-    0.8372129968505959
+    0.7105725601877942,
+    0.8669266531284306
    ]
   },
   "all": {
-   "hit@5": 0.9222222222222223,
-   "mrr@10": 0.8254519400352734,
-   "ndcg@10": 0.6923682438093525,
-   "p@5": 0.7177777777777777,
+   "hit@5": 0.9388888888888889,
+   "mrr@10": 0.8680467372134039,
+   "ndcg@10": 0.739106248484703,
+   "p@5": 0.76,
    "n": 180,
    "ndcg_ci": [
-    0.6458796117270394,
-    0.7403750318996339
+    0.6945087559672847,
+    0.7854660136817914
    ]
   }
  },
@@ -50,14 +50,14 @@
    "id": "khichdi",
    "lang": "en",
    "query": "rice and lentil one pot comfort meal for dinner",
-   "hit@5": 0.0,
-   "mrr@10": 0.14285714285714285,
-   "ndcg@10": 0.07336392209936005,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.5631102580041938,
+   "p@5": 0.6,
    "top3": [
+    "Khatua (Bhojpuri Style Khichdi)",
     "South Indian One Pot Sambar Rice",
-    "Dal Chenchki ( Red Lentils with Shallots)",
-    "Poricha Kuzhambu (Tamil Nadu Style Mixed Vegetables and Lentil Stew)"
+    "Masoor Dal And Palak Khichdi"
    ]
   },
   {
@@ -70,8 +70,8 @@
    "p@5": 1.0,
    "top3": [
     "Khatti Meethi Palak Khichdi",
-    "Amaranth Leaves Khichdi",
-    "Khatua (Bhojpuri Style Khichdi)"
+    "Foxtail Millet Khichdi with Batata Aloo Nu Shaak",
+    "Amaranth Leaves Khichdi"
    ]
   },
   {
@@ -85,7 +85,7 @@
    "top3": [
     "Khatti Meethi Palak Khichdi",
     "Amaranth Leaves Khichdi",
-    "Shahjahani Khichdi - Spiked Green Moong Dal Khichdi"
+    "Foxtail Millet Khichdi with Batata Aloo Nu Shaak"
    ]
   },
   {
@@ -94,12 +94,12 @@
    "query": "vegetable biryani",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7624164915943118,
-   "p@5": 0.8,
+   "ndcg@10": 0.8006937664098819,
+   "p@5": 1.0,
    "top3": [
     "One Pot Vegetable Biryani In Preethi Electric Pressure Cooker",
     "Hyderabadi Vegetable Biryani",
-    "Vegetable Handi Biryani"
+    "Hyderabad Soy Biryani With Vegetables & Palak"
    ]
   },
   {
@@ -111,8 +111,8 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Paneer Butter Masala Biryani - Layered Paneer Butter Masala Biryani",
     "Kathal Biryani- Raw Jackfruit Biryani Topped with Caramelised Onions",
+    "Bengaluru Style Brinjal Gravy - For Biryani",
     "Paneer Malai Makhani Biryani"
    ]
   },
@@ -125,9 +125,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Kerala Style Prawns & Shrimp Biryani -Chemmeen Biryani",
-    "Kathal Biryani- Raw Jackfruit Biryani Topped with Caramelised Onions",
-    "Pakki Mutton Biryani"
+    "Bengaluru Style Brinjal Gravy - For Biryani",
+    "Prawns Biryani",
+    "Chicken Donne Biryani - Bangalore Shivaji Military Style"
    ]
   },
   {
@@ -136,12 +136,12 @@
    "query": "spinach and cottage cheese curry",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8579809428223729,
+   "ndcg@10": 0.9266360779006398,
    "p@5": 1.0,
    "top3": [
     "Palak Paneer Bhurji -Spiced Cottage Cheese Scramble With Spinach",
-    "Palak Paneer Kathi Roll -High Protein Spinach Cottage Cheese Wraps",
-    "Cheesy Garlic Spinach Corn Paneer Sandwich"
+    "Spinach Paneer Kofta Curry",
+    "Palak Paneer Kathi Roll -High Protein Spinach Cottage Cheese Wraps"
    ]
   },
   {
@@ -150,11 +150,11 @@
    "query": "palak paneer",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8669479898642709,
+   "ndcg@10": 0.9216017310213246,
    "p@5": 1.0,
    "top3": [
     "Palak Paneer",
-    "Stuffed Palak Paneer Paratha",
+    "Palak Paneer Kathi Roll -High Protein Spinach Cottage Cheese Wraps",
     "Palak Paneer Bhurji -Spiced Cottage Cheese Scramble With Spinach"
    ]
   },
@@ -164,11 +164,11 @@
    "query": "पालक पनीर",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8669479898642709,
+   "ndcg@10": 0.9216017310213246,
    "p@5": 1.0,
    "top3": [
     "Palak Paneer",
-    "Stuffed Palak Paneer Paratha",
+    "Palak Paneer Kathi Roll -High Protein Spinach Cottage Cheese Wraps",
     "Palak Paneer Bhurji -Spiced Cottage Cheese Scramble With Spinach"
    ]
   },
@@ -178,7 +178,7 @@
    "query": "potato cauliflower dry sabzi",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.43231813227099475,
+   "ndcg@10": 0.42257499837058643,
    "p@5": 0.4,
    "top3": [
     "Potato And Cauliflower In Peanut Curry",
@@ -192,7 +192,7 @@
    "query": "aloo gobhi ki sabzi",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.42520843362602373,
+   "ndcg@10": 0.3589542101716347,
    "p@5": 0.4,
    "top3": [
     "Whole Masala Gobhi - Spiced Whole Roasted Cauliflower Masala",
@@ -206,7 +206,7 @@
    "query": "आलू गोभी की सब्जी",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.42257499837058643,
+   "ndcg@10": 0.3589542101716347,
    "p@5": 0.4,
    "top3": [
     "Whole Masala Gobhi - Spiced Whole Roasted Cauliflower Masala",
@@ -220,12 +220,12 @@
    "query": "kidney bean curry with rice",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.933745776545611,
+   "ndcg@10": 0.9216017310213246,
    "p@5": 1.0,
    "top3": [
     "Spiced Rajma Pulao - Spiced Kidney Bean Rice",
     "Cajun Kidney beans Rice With Soya Chunks",
-    "Mexican Style Sopa De Frijol - Red Kidney Beans Soup"
+    "Kashmiri Style Rajma Gogji - Kidney Beans and Turnip Curry"
    ]
   },
   {
@@ -239,7 +239,7 @@
    "top3": [
     "Spiced Rajma Pulao - Spiced Kidney Bean Rice",
     "Cajun Kidney beans Rice With Soya Chunks",
-    "Chatpata Rajma Salad - Kidney Beans Salad"
+    "One Pot Punjabi Rajma Masala"
    ]
   },
   {
@@ -266,8 +266,8 @@
    "p@5": 1.0,
    "top3": [
     "Vegan Chickpeas And Broccoli Curry",
-    "Punjabi Black Chickpea Curry - Kale Chane Ki Sabzi",
-    "Tandoori Chickpea & Cauliflower Curry (Vegan Curry)"
+    "Tandoori Chickpea & Cauliflower Curry (Vegan Curry)",
+    "Garlic Chickpeas And Spinach Curry"
    ]
   },
   {
@@ -279,9 +279,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Dhania Chole Masala - Chickpeas In Fresh Coriander Gravy",
-    "Sukhe Chole - Dry Masala Chickpeas",
-    "Chole Pindi (Spicy Chickpea Curry)"
+    "Chickpea Coconut Milk Curry",
+    "Traditional Amritsari Chole | Punjabi Chole Masala",
+    "Sukhe Chole - Dry Masala Chickpeas"
    ]
   },
   {
@@ -293,8 +293,8 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Dhania Chole Masala - Chickpeas In Fresh Coriander Gravy",
     "Sukhe Chole - Dry Masala Chickpeas",
+    "Dhania Chole Masala - Chickpeas In Fresh Coriander Gravy",
     "Chole Pindi (Spicy Chickpea Curry)"
    ]
   },
@@ -303,13 +303,13 @@
    "lang": "en",
    "query": "crispy rice crepe for breakfast",
    "hit@5": 1.0,
-   "mrr@10": 1.0,
-   "ndcg@10": 0.33013764944712026,
-   "p@5": 0.4,
+   "mrr@10": 0.3333333333333333,
+   "ndcg@10": 0.1884441521277154,
+   "p@5": 0.2,
    "top3": [
-    "Mangalorean Neer Dosa-Savory Rice & Coconut Crepe",
+    "Maharashtrian Ghavan - Rice Flour Crepes",
     "Nutella & Kiwifruit Filled Whole Wheat Crepe",
-    "Aval Dosa | Poha Dosa (Savory Flattened Rice Crepe)"
+    "Mangalorean Neer Dosa-Savory Rice & Coconut Crepe"
    ]
   },
   {
@@ -321,9 +321,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Masala Paniyaram With Leftover Idli/Dosa Batter",
     "Kanchipuram Masala Dosa With Soya Dosa Batter",
-    "Mushroom Corn Masala Dosa Using Ragi Idli Dosa Batter"
+    "Mushroom Corn Masala Dosa Using Ragi Idli Dosa Batter",
+    "Mysore Masala Dosa Made With Yeast Dosa Batter"
    ]
   },
   {
@@ -335,9 +335,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Masala Paniyaram With Leftover Idli/Dosa Batter",
     "Kanchipuram Masala Dosa With Soya Dosa Batter",
-    "Mushroom Corn Masala Dosa Using Ragi Idli Dosa Batter"
+    "Mushroom Corn Masala Dosa Using Ragi Idli Dosa Batter",
+    "Mysore Masala Dosa Made With Yeast Dosa Batter"
    ]
   },
   {
@@ -345,8 +345,8 @@
    "lang": "en",
    "query": "steamed rice cakes breakfast",
    "hit@5": 1.0,
-   "mrr@10": 0.2,
-   "ndcg@10": 0.15457433957839825,
+   "mrr@10": 0.25,
+   "ndcg@10": 0.16421958630632802,
    "p@5": 0.2,
    "top3": [
     "Kerala Style Vattayappam (Steamed Coconut Rice Cakes)",
@@ -360,7 +360,7 @@
    "query": "idli sambhar",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9363792118010481,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
     "Idli Tikka With Sambar",
@@ -386,14 +386,14 @@
    "id": "upma",
    "lang": "en",
    "query": "savoury semolina breakfast",
-   "hit@5": 0.0,
-   "mrr@10": 0.1111111111111111,
-   "ndcg@10": 0.06625422345438903,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 0.5,
+   "ndcg@10": 0.13886244387355454,
+   "p@5": 0.2,
    "top3": [
     "Semolina Porridge Fruit & Nut Breakfast Bowl",
-    "Rava Kakdi Thalipeeth (Maharashtrian Style Semolina-Cucumber Flatbread)",
-    "Semolina Vegetable Chilla"
+    "Rava Upma With Peanuts, Peas & Corn",
+    "Pudina Sooji & Oats Dhokla - Steamed Semolina Cake With Oats & Mint Leaves"
    ]
   },
   {
@@ -402,12 +402,12 @@
    "query": "rava upma nashte me",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.42257499837058643,
+   "ndcg@10": 0.5009732673492617,
    "p@5": 0.4,
    "top3": [
     "Rava Upma With Peanuts, Peas & Corn",
     "Kothamalli Rava Upma - Coriander Semolina Pudding",
-    "Rava Kakdi Thalipeeth (Maharashtrian Style Semolina-Cucumber Flatbread)"
+    "Khara Bhath-South Indian Rava Bhath"
    ]
   },
   {
@@ -420,8 +420,8 @@
    "p@5": 1.0,
    "top3": [
     "Puli Upma - Tamarind & Reese Rao Upma",
-    "Puffed Rice Upma - Murmura Upma",
-    "Puli Upma in Ragi Pachai - Ragi Flower Upma"
+    "Puli Upma in Ragi Pachai - Ragi Flower Upma",
+    "Aval Upma - South Indian Style Poha"
    ]
   },
   {
@@ -430,11 +430,11 @@
    "query": "flattened rice breakfast",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8205228949141826,
+   "ndcg@10": 0.8165901947515999,
    "p@5": 0.8,
    "top3": [
-    "Aval Dosa | Poha Dosa (Savory Flattened Rice Crepe)",
     "Matar Poha (Flattened Rice Stir Fry with Green Peas)",
+    "Aval Dosa | Poha Dosa (Savory Flattened Rice Crepe)",
     "Karnataka Style Sabsige Soppu Akki Rotti (Dill leaves and flattened Rice Bread)"
    ]
   },
@@ -447,9 +447,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Dadpe Pohe (Maharashtrian Poha)",
     "Matar Poha",
-    "Aloo Poha - Potato Poha"
+    "Dadpe Pohe (Maharashtrian Poha)",
+    "Indori Poha"
    ]
   },
   {
@@ -461,9 +461,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Poha Stars (Poha Potato Fritters Flavoured With Kasuri Methi)",
     "Maharashtrian Gopalkala (Curd Poha With Fruits)",
-    "Aval Dosa | Poha Dosa (Savory Flattened Rice Crepe)"
+    "Poha Stars (Poha Potato Fritters Flavoured With Kasuri Methi)",
+    "Matar Poha"
    ]
   },
   {
@@ -471,13 +471,13 @@
    "lang": "en",
    "query": "stuffed flatbread for breakfast",
    "hit@5": 1.0,
-   "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.17630010660342912,
-   "p@5": 0.2,
+   "mrr@10": 0.5,
+   "ndcg@10": 0.7015099647232445,
+   "p@5": 0.8,
    "top3": [
-    "Ari Pathiri | Malabar Rice Flatbread",
     "Spiced Indian Potato Flatbread",
-    "Palak Paratha-Spiced Spinach Flatbread"
+    "Egg Stuffed Paratha",
+    "Paneer Methi Paratha"
    ]
   },
   {
@@ -486,7 +486,7 @@
    "query": "aloo parantha",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 1.0,
+   "ndcg@10": 0.8701249883466592,
    "p@5": 1.0,
    "top3": [
     "Bathua Aloo Paratha",
@@ -500,11 +500,11 @@
    "query": "आलू पराठा",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8364586133797036,
-   "p@5": 0.8,
+   "ndcg@10": 0.8603818544462508,
+   "p@5": 1.0,
    "top3": [
     "Millet Potato Paratha",
-    "Healthy Vegetable Paratha Rolls",
+    "Corn Stuffed Paratha",
     "Bathua Aloo Paratha"
    ]
   },
@@ -517,7 +517,7 @@
    "ndcg@10": 0.13886244387355454,
    "p@5": 0.2,
    "top3": [
-    "KhiraSaku ( Odiya Style Rice Pan Cake)",
+    "Goan Style Sando (Steamed Rice Cakes Filled With Sweet Coconut)",
     "Thandai Phirni - A Delicious Indian Rice Dessert",
     "Sutlac - Rose Infused Turkish Rice Pudding"
    ]
@@ -526,14 +526,14 @@
    "id": "kheer",
    "lang": "hinglish",
    "query": "chawal ki kheer",
-   "hit@5": 0.0,
-   "mrr@10": 0.0,
-   "ndcg@10": 0.0,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 0.3333333333333333,
+   "ndcg@10": 0.11004588314904008,
+   "p@5": 0.2,
    "top3": [
     "Nolen Chawal Bhog (Rice Pudding With Nolen Jaggery)",
-    "Chak-Hao Amubi (Black Rice Pudding)",
-    "Rajasthani Style Oliya (Sweetened Rice Yogurt Pudding)"
+    "Rajasthani Style Oliya (Sweetened Rice Yogurt Pudding)",
+    "Thandai Flavoured Rice Kheer"
    ]
   },
   {
@@ -545,23 +545,23 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Andey Ki Kheer - Egg White Kheer",
     "Chironji and Makhane Kheer",
-    "Vermicelli & Oats Kheer"
+    "Kheer Puli Pitha | Bengali Pitha",
+    "Andey Ki Kheer - Egg White Kheer"
    ]
   },
   {
    "id": "halwa",
    "lang": "en",
    "query": "carrot halwa dessert",
-   "hit@5": 1.0,
-   "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.19518900079066107,
-   "p@5": 0.4,
+   "hit@5": 0.0,
+   "mrr@10": 0.1,
+   "ndcg@10": 0.06362078819895171,
+   "p@5": 0.0,
    "top3": [
-    "Carrot Custard Pudding",
     "Leftover Carrot Cake Mini Trifle",
-    "Papaya and Carrot Halwa"
+    "Carrot Cake Parfait With Custard And Strawberries",
+    "Caramelized Carrots & Pumpkin Seeds Cake"
    ]
   },
   {
@@ -570,7 +570,7 @@
    "query": "gajar ka halwa",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.5423640154200348,
+   "ndcg@10": 0.5326208815196265,
    "p@5": 0.6,
    "top3": [
     "Easy Gajar Halwa With Khoya Made In A Pressure Cooker",
@@ -582,14 +582,14 @@
    "id": "halwa",
    "lang": "devanagari",
    "query": "गाजर का हलवा",
-   "hit@5": 1.0,
-   "mrr@10": 0.25,
-   "ndcg@10": 0.16421958630632802,
-   "p@5": 0.2,
+   "hit@5": 0.0,
+   "mrr@10": 0.0,
+   "ndcg@10": 0.0,
+   "p@5": 0.0,
    "top3": [
-    "Carrot Cashew Smoothie",
+    "Beetroot Carrot Tomato & Ginger Juice",
     "Carrot Ginger Juice",
-    "Carrot Custard Pudding"
+    "Carrot Cashew Smoothie"
    ]
   },
   {
@@ -598,12 +598,12 @@
    "query": "festive sweet balls",
    "hit@5": 1.0,
    "mrr@10": 0.2,
-   "ndcg@10": 0.08514311764162098,
+   "ndcg@10": 0.2329726085570736,
    "p@5": 0.2,
    "top3": [
-    "Sakkare Achhu (Festive Sugar Figurines)",
     "Indian Festive Sweet Rice And Jamun Bhog",
-    "Instant Kalakand -Indian Festive Sweet"
+    "Sakkare Achhu (Festive Sugar Figurines)",
+    "Andi Unda (Kerala Special Cashew & Rice Balls)"
    ]
   },
   {
@@ -612,12 +612,12 @@
    "query": "besan ke laddoo",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8364586133797036,
+   "ndcg@10": 0.8512360941594272,
    "p@5": 0.8,
    "top3": [
     "Almond And Besan Ladoo",
     "Besan Oats Ladoo",
-    "Karnatak Style Hurigadale Tambittu - Gram Flour Ladoo"
+    "Besan Laddu"
    ]
   },
   {
@@ -626,12 +626,12 @@
    "query": "बेसन के लड्डू",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.3589542101716347,
-   "p@5": 0.4,
+   "ndcg@10": 0.5352543167750637,
+   "p@5": 0.6,
    "top3": [
     "Almond And Besan Ladoo",
     "Besan Laddu",
-    "Dairy Free Balsamic Strawberry Ice-cream"
+    "Besan Oats Ladoo"
    ]
   },
   {
@@ -644,8 +644,8 @@
    "p@5": 1.0,
    "top3": [
     "Pumpkin Dal With Garlic Tadka",
-    "Moong Dal Palak Cheela (Yellow Lentil And Spinach Crepes)",
-    "Gujarati Trevti Dal (Creamy Lentils Cooked In Mild Spices)"
+    "Lahsuni Palak Dal (Spinach & Lentil Curry with Garlic)",
+    "Moong Dal Palak Cheela (Yellow Lentil And Spinach Crepes)"
    ]
   },
   {
@@ -654,12 +654,12 @@
    "query": "dal tadka",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9266360779006398,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
     "Dal Tadka Flavored with Lemon and Coriander",
-    "Bengali Style Dimer Torka (Egg Tadka Dal)",
-    "Dhaba Style Green Moong Dal Tadka"
+    "Dhaba Style Green Moong Dal Tadka",
+    "Bengali Style Dimer Torka (Egg Tadka Dal)"
    ]
   },
   {
@@ -668,12 +668,12 @@
    "query": "दाल तड़का",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9266360779006398,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
     "Dal Tadka Flavored with Lemon and Coriander",
-    "Bengali Style Dimer Torka (Egg Tadka Dal)",
-    "Dhaba Style Green Moong Dal Tadka"
+    "Dhaba Style Green Moong Dal Tadka",
+    "Bengali Style Dimer Torka (Egg Tadka Dal)"
    ]
   },
   {
@@ -699,7 +699,7 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Murungai Keerai Sambar - Drumstick Leaves Sambar",
+    "Sprouted Kollu Sambar - Horse Gram Sambar With Vegetables",
     "Drumstick Fennel Spinach Sambar-Drumstick & Greens Sambar",
     "Tamil Nadu Style Vengaya Sambar - Pearl Onion Sambar"
    ]
@@ -713,7 +713,7 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Murungai Keerai Sambar - Drumstick Leaves Sambar",
+    "Sprouted Kollu Sambar - Horse Gram Sambar With Vegetables",
     "Drumstick Fennel Spinach Sambar-Drumstick & Greens Sambar",
     "Tamil Nadu Style Vengaya Sambar - Pearl Onion Sambar"
    ]
@@ -723,13 +723,13 @@
    "lang": "en",
    "query": "tangy tamarind pepper soup from the south",
    "hit@5": 1.0,
-   "mrr@10": 0.25,
-   "ndcg@10": 0.09478836436955078,
-   "p@5": 0.2,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.933745776545611,
+   "p@5": 1.0,
    "top3": [
-    "Spicy & Tangy Pakodi Chaat",
-    "Spicy & Tangy Goan Chicken Stew With Vegetables",
-    "Andhra Style Pulihora (Spicy & Tangy Tamarind Rice)"
+    "Milagu Rasam - Village Style Pepper Rasam",
+    "Jeera Milagu Rasam - South Indian Pepper Cumin Rasam",
+    "Roasted Bell Pepper Rasam"
    ]
   },
   {
@@ -742,8 +742,8 @@
    "p@5": 1.0,
    "top3": [
     "Veppam Poo Rasam (Neem flower Rasam)",
-    "Jeera Milagu Rasam - South Indian Pepper Cumin Rasam",
-    "Kandathippili Rasam - Long Pepper Rasam"
+    "Kandathippili Rasam - Long Pepper Rasam",
+    "Jeera Milagu Rasam - South Indian Pepper Cumin Rasam"
    ]
   },
   {
@@ -756,8 +756,8 @@
    "p@5": 1.0,
    "top3": [
     "Veppam Poo Rasam (Neem flower Rasam)",
-    "Jeera Milagu Rasam - South Indian Pepper Cumin Rasam",
-    "Kandathippili Rasam - Long Pepper Rasam"
+    "Kandathippili Rasam - Long Pepper Rasam",
+    "Jeera Milagu Rasam - South Indian Pepper Cumin Rasam"
    ]
   },
   {
@@ -766,12 +766,12 @@
    "query": "yogurt and gram flour curry",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.42838543210841196,
+   "ndcg@10": 0.3589542101716347,
    "p@5": 0.4,
    "top3": [
     "Marwadi Gatte Ki Kadhi - Gram Flour Dumpling In Yogurt Curry",
     "Punjabi Bhindi Kadhi - Roasted Okra In Yogurt Curry",
-    "Spinach Khandvi - Savory Gram Flour Pinwheels With Spinach"
+    "Dahi Turai Ki Sabzi (Ridge Gourd Simmered In Yogurt Curry)"
    ]
   },
   {
@@ -799,7 +799,7 @@
    "top3": [
     "Kale Chane Ki Kadhi - Black Chickpea Kadhi",
     "Rajasthani Pyaaz Ki Kadhi - Onion Kadhi",
-    "Aamras Ki Kadhi - Mango Kadhi"
+    "Karwar Style Lasani Kadhi - Kokum And Coconut Milk Curry"
    ]
   },
   {
@@ -808,11 +808,11 @@
    "query": "okra stir fry",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 1.0,
+   "ndcg@10": 0.9266360779006398,
    "p@5": 1.0,
    "top3": [
     "Moongphali Bhindi - Okra and Peanut Stir Fry",
-    "Okra Bamia",
+    "Vedakkai Thoran - Kerala Style Bhindi Stir Fry",
     "Pyaz Wali Bhindi | Bhindi Do Pyaza - Okra Onion Stir Fry"
    ]
   },
@@ -827,7 +827,7 @@
    "top3": [
     "Bhindi Masala Gravy - Ladies Finger In Tomato Onion Gravy",
     "Bendekayi Koddel/Bolu Huli - Mangalorean Style Bhindi Sambar",
-    "Maharastrian Style Bharli Bhindi - Stuffed Bhindi With Coconut"
+    "Crispy Fried Kurkuri Bhindi Spiced With Cumin & Chaat Masala"
    ]
   },
   {
@@ -841,7 +841,7 @@
    "top3": [
     "Bhindi Masala Gravy - Ladies Finger In Tomato Onion Gravy",
     "Bendekayi Koddel/Bolu Huli - Mangalorean Style Bhindi Sambar",
-    "Maharastrian Style Bharli Bhindi - Stuffed Bhindi With Coconut"
+    "Crispy Fried Kurkuri Bhindi Spiced With Cumin & Chaat Masala"
    ]
   },
   {
@@ -853,9 +853,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Baingan Bharta - Smoked Roasted Eggplant with Green Chillies and Ginger",
-    "Kosamalli (Chettinad Style Brinjal and Potato Mash)",
-    "Roasted Eggplant Parmigiana"
+    "Baingan Bharta - Brinjal Bharta",
+    "Dhugare Baingan - Dhungare Baingan",
+    "Chargrilled Eggplant Tabbouleh"
    ]
   },
   {
@@ -895,9 +895,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Kaju Karela - Bitter Gourd And Cashew Nuts Stir Fry",
+    "Manipuri Style Karotkhabi Kanghou - Bitter Gourd & Potato Stir Fry",
     "Andhra Style Kakarakaya Vepudu - Bitter Gourd Stir Fry",
-    "Manipuri Style Karotkhabi Kanghou - Bitter Gourd & Potato Stir Fry"
+    "Kaju Karela - Bitter Gourd And Cashew Nuts Stir Fry"
    ]
   },
   {
@@ -906,12 +906,12 @@
    "query": "karele ki sabzi",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9363792118010481,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
     "Masala Karela",
     "Awadhi Style Karela Ka Dulma - Stuffed Bitter Gourd In Yogurt Gravy",
-    "Kaju Karela - Bitter Gourd And Cashew Nuts Stir Fry"
+    "Healthy Bharwa Karela - Stuffed Bitter Gourd"
    ]
   },
   {
@@ -920,12 +920,12 @@
    "query": "करेले की सब्जी",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9363792118010481,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
     "Masala Karela",
     "Awadhi Style Karela Ka Dulma - Stuffed Bitter Gourd In Yogurt Gravy",
-    "Kaju Karela - Bitter Gourd And Cashew Nuts Stir Fry"
+    "Healthy Bharwa Karela - Stuffed Bitter Gourd"
    ]
   },
   {
@@ -948,7 +948,7 @@
    "query": "lauki ki sabzi",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.6489315753318465,
+   "ndcg@10": 0.7222954974312066,
    "p@5": 1.0,
    "top3": [
     "Lauki Wadi Tarkari - Bengali Style Moong Dal Dumplings & Bottle Gourd Sabzi",
@@ -962,7 +962,7 @@
    "query": "लौकी की सब्जी",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.6489315753318465,
+   "ndcg@10": 0.7222954974312066,
    "p@5": 1.0,
    "top3": [
     "Lauki Wadi Tarkari - Bengali Style Moong Dal Dumplings & Bottle Gourd Sabzi",
@@ -976,12 +976,12 @@
    "query": "paneer and green peas curry",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8486026589039899,
+   "ndcg@10": 0.8389574121760601,
    "p@5": 0.8,
    "top3": [
-    "Green Peas, Potato and Paneer Tikki",
     "Matar Besan And Paneer Cheela -Green Peas & Paneer Crepes",
-    "Matar Paneer Kachori Korma - Green Peas And Paneer Kachori Curry"
+    "Matar Paneer Kachori Korma - Green Peas And Paneer Kachori Curry",
+    "Green Peas, Potato and Paneer Tikki"
    ]
   },
   {
@@ -990,12 +990,12 @@
    "query": "matar paneer",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8553475075669356,
-   "p@5": 1.0,
+   "ndcg@10": 0.8512360941594272,
+   "p@5": 0.8,
    "top3": [
     "Matar Besan And Paneer Cheela -Green Peas & Paneer Crepes",
     "Paneer Matar Butter Masala (Indian Cottage Cheese and Peas Masala With Butter)",
-    "Matar Paneer Kachori Korma - Green Peas And Paneer Kachori Curry"
+    "Paneer Matar Keema"
    ]
   },
   {
@@ -1004,12 +1004,12 @@
    "query": "मटर पनीर",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8553475075669356,
-   "p@5": 1.0,
+   "ndcg@10": 0.8512360941594272,
+   "p@5": 0.8,
    "top3": [
     "Matar Besan And Paneer Cheela -Green Peas & Paneer Crepes",
     "Paneer Matar Butter Masala (Indian Cottage Cheese and Peas Masala With Butter)",
-    "Matar Paneer Kachori Korma - Green Peas And Paneer Kachori Curry"
+    "Paneer Matar Keema"
    ]
   },
   {
@@ -1018,12 +1018,12 @@
    "query": "fenugreek leaf flatbread",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8572048559638626,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Fenugreek cream cheese",
-    "Methi Kumro - Bengali Style Fenugreek Leaves and Pumpkin Stir Fry",
-    "Mangalorean Style Bella Metthe Dosa (Jaggery & Fenugreek Seed Pancakes)"
+    "Mangalorean Style Bella Metthe Dosa (Jaggery & Fenugreek Seed Pancakes)",
+    "Menthe / Fenugreek Seeds Tambli (Karnataka Recipes)",
+    "Methi Kumro - Bengali Style Fenugreek Leaves and Pumpkin Stir Fry"
    ]
   },
   {
@@ -1058,14 +1058,14 @@
    "id": "pakora",
    "lang": "en",
    "query": "crispy fritters for evening tea",
-   "hit@5": 0.0,
-   "mrr@10": 0.0,
-   "ndcg@10": 0.0,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.46945447024602915,
+   "p@5": 0.6,
    "top3": [
-    "Orange Peppermint Green Tea Punch",
-    "Diwali Cornflakes Mixture - A Savory Evening Tea Snack",
-    "Ice Tea Sangria"
+    "Mithi Mathri (Crispy Fried Sweet Fritters)",
+    "Cinnamon Spiced Black Lemon Tea",
+    "Jaggery Coffee Without Milk"
    ]
   },
   {
@@ -1074,7 +1074,7 @@
    "query": "pakode banane hain",
    "hit@5": 1.0,
    "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.4327725091963492,
+   "ndcg@10": 0.6410457898283652,
    "p@5": 0.6,
    "top3": [
     "Arbi Ke Patte Ke Pakode - Colocasia Leaf Rolls",
@@ -1088,7 +1088,7 @@
    "query": "पकोड़े",
    "hit@5": 1.0,
    "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.4327725091963492,
+   "ndcg@10": 0.6410457898283652,
    "p@5": 0.6,
    "top3": [
     "Arbi Ke Patte Ke Pakode - Colocasia Leaf Rolls",
@@ -1106,8 +1106,8 @@
    "p@5": 1.0,
    "top3": [
     "Mini Dal Samosa Curry / Sabzi",
-    "Jalapeno Cheese Samosa",
-    "Burmese Samosa Soup"
+    "Burmese Samosa Soup",
+    "Jalapeno Cheese Samosa"
    ]
   },
   {
@@ -1116,8 +1116,8 @@
    "query": "aloo samosa",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7859162856301583,
-   "p@5": 1.0,
+   "ndcg@10": 0.7752387368046298,
+   "p@5": 0.8,
    "top3": [
     "Baked Potato & Peas Samosa With Phyllo Pastry",
     "Gluten Free Samosa",
@@ -1134,8 +1134,8 @@
    "p@5": 1.0,
    "top3": [
     "Mini Dal Samosa Curry / Sabzi",
-    "Jalapeno Cheese Samosa",
-    "Burmese Samosa Soup"
+    "Burmese Samosa Soup",
+    "Jalapeno Cheese Samosa"
    ]
   },
   {
@@ -1143,13 +1143,13 @@
    "lang": "en",
    "query": "steamed gram flour cake from gujarat",
    "hit@5": 1.0,
-   "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.20483424751859086,
-   "p@5": 0.4,
+   "mrr@10": 0.25,
+   "ndcg@10": 0.1610425878239398,
+   "p@5": 0.2,
    "top3": [
-    "Puran Poli | Gujarati & Maharastrian | Sweet Spiced Stuffed Paratha With Jaggery",
-    "Goan Style Sando (Steamed Rice Cakes Filled With Sweet Coconut)",
-    "Pudina Sooji & Oats Dhokla - Steamed Semolina Cake With Oats & Mint Leaves"
+    "Mixed Vegetable Handvo - Savory Rice & Lentil Cake",
+    "Besan Halwa",
+    "Puran Poli | Gujarati & Maharastrian | Sweet Spiced Stuffed Paratha With Jaggery"
    ]
   },
   {
@@ -1163,7 +1163,7 @@
    "top3": [
     "Khaman Dhokla Poha",
     "Instant Khaman Dhokla",
-    "Bhaat Na Rasawala Muthia Dhokla | Gujarati Rasiya Dhokla"
+    "Rasawala Dhokla"
    ]
   },
   {
@@ -1176,8 +1176,8 @@
    "p@5": 1.0,
    "top3": [
     "Khaman Dhokla Poha",
-    "Bhaat Na Rasawala Muthia Dhokla | Gujarati Rasiya Dhokla",
-    "Roasted Pumpkin Rava Dhokla - Sooji Dhokla"
+    "Roasted Pumpkin Rava Dhokla - Sooji Dhokla",
+    "Gujarati Dhokla Pizza"
    ]
   },
   {
@@ -1185,12 +1185,12 @@
    "lang": "en",
    "query": "mildly spiced vegetable rice",
    "hit@5": 1.0,
-   "mrr@10": 0.25,
-   "ndcg@10": 0.31561692740233804,
-   "p@5": 0.4,
+   "mrr@10": 0.5,
+   "ndcg@10": 0.21222636597291458,
+   "p@5": 0.2,
    "top3": [
     "Spicy Mixed Vegetables Rice Cutlet",
-    "Spiced Rice Breakfast Porridge",
+    "Mixed Vegetable Pulao",
     "Vegetable Paella (Spanish Style Vegetable Rice)"
    ]
   },
@@ -1200,12 +1200,12 @@
    "query": "matar pulao",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.5637884576902256,
+   "ndcg@10": 0.6332196796270029,
    "p@5": 0.8,
    "top3": [
     "Matar Millet Pulao - Peas Pulao",
-    "Methi Matar Pulao - Fenugreek Green Peas Pulao",
-    "Peas Pulao - North Indian Matar Pulao"
+    "Peas Pulao - North Indian Matar Pulao",
+    "Methi Matar Pulao - Fenugreek Green Peas Pulao"
    ]
   },
   {
@@ -1214,12 +1214,12 @@
    "query": "मटर पुलाव",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.5637884576902256,
+   "ndcg@10": 0.6332196796270029,
    "p@5": 0.8,
    "top3": [
     "Matar Millet Pulao - Peas Pulao",
-    "Methi Matar Pulao - Fenugreek Green Peas Pulao",
-    "Peas Pulao - North Indian Matar Pulao"
+    "Peas Pulao - North Indian Matar Pulao",
+    "Methi Matar Pulao - Fenugreek Green Peas Pulao"
    ]
   },
   {
@@ -1228,8 +1228,8 @@
    "query": "cucumber yogurt side dish",
    "hit@5": 1.0,
    "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.35266373843404347,
-   "p@5": 0.4,
+   "ndcg@10": 0.39749351961824175,
+   "p@5": 0.2,
    "top3": [
     "Khamang Kakdi - Maharashtrian Cucumber Salad",
     "Russian Radish Cucumber Salad",
@@ -1242,12 +1242,12 @@
    "query": "kheera raita",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.6489315753318465,
-   "p@5": 1.0,
+   "ndcg@10": 0.5541432109622958,
+   "p@5": 0.8,
    "top3": [
     "Dill Cucumber Raita",
-    "Tomato Onion Cucumber Raita",
-    "Grated Carrot Cucumber Tomato Raita"
+    "Grated Cucumber Raita",
+    "Tomato Onion Cucumber Raita"
    ]
   },
   {
@@ -1256,12 +1256,12 @@
    "query": "खीरे का रायता",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8165901947515999,
+   "ndcg@10": 0.8364586133797036,
    "p@5": 0.8,
    "top3": [
-    "Mooli Raita - Radish Raita",
     "Khajur And Pakora Raita - Dates Pakora Raita",
-    "Vermicelli & Oats Kheer"
+    "Makhana Ka Raita",
+    "Burani Raita - Garlic Based Yogurt"
    ]
   },
   {
@@ -1270,12 +1270,12 @@
    "query": "green coriander and mint dip",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.3589542101716347,
+   "ndcg@10": 0.39375843764607193,
    "p@5": 0.4,
    "top3": [
     "Pudina Dahi Chutney- Mint Yoghurt Dip",
-    "Green Chutney - Coriander Mint Chutney",
-    "Hariyali Egg Curry In Coriander and Mint Gravy"
+    "Mint And Pomegranate Raita",
+    "Green Chutney - Coriander Mint Chutney"
    ]
   },
   {
@@ -1284,26 +1284,26 @@
    "query": "hari chutney",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.72891152902702,
-   "p@5": 0.6,
+   "ndcg@10": 0.9305687780632227,
+   "p@5": 1.0,
    "top3": [
+    "Green Chutney - Coriander Mint Chutney",
     "Saunf Wali Hari Gobi Sabzi - Cauliflower Spiced with Fennel and Green Chutney",
-    "Lehsun ki Chutney - Spicy Garlic Chutney",
-    "Turai Pyaz Hari Mirch Ki Sabzi-Ridge Gourd Stir Fry With Green Chili And Onions"
+    "Chili Coriander and Capsicum Rusk Chutney"
    ]
   },
   {
    "id": "chutney",
    "lang": "devanagari",
    "query": "हरी चटनी",
-   "hit@5": 1.0,
-   "mrr@10": 0.2,
-   "ndcg@10": 0.08514311764162098,
-   "p@5": 0.2,
+   "hit@5": 0.0,
+   "mrr@10": 0.16666666666666666,
+   "ndcg@10": 0.07839826897867533,
+   "p@5": 0.0,
    "top3": [
-    "Hari Dhania Ki Sabzi ( Fresh Coriander leaves Dry Curry)",
+    "Rajasthani Hari Mirch Ka Maas",
     "Turai Pyaz Hari Mirch Ki Sabzi-Ridge Gourd Stir Fry With Green Chili And Onions",
-    "Rajasthani Hari Mirch Ka Maas"
+    "Saunf Wali Hari Gobi Sabzi"
    ]
   },
   {
@@ -1315,9 +1315,9 @@
    "ndcg@10": 0.07336392209936005,
    "p@5": 0.0,
    "top3": [
-    "Savoury Yogurt Parfait",
     "Banana Yogurt and Walnut Smoothie",
-    "Frozen Strawberry Yogurt"
+    "Pomegranate And Chia Seeds Yogurt Smoothie",
+    "Mishti Doi - Traditional Bengali Sweet Yogurt"
    ]
   },
   {
@@ -1326,12 +1326,12 @@
    "query": "meethi lassi",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.6172839611614818,
+   "ndcg@10": 0.7818048722226499,
    "p@5": 0.8,
    "top3": [
     "Rose Lassi",
-    "Kesar Pista Lassi - Saffron & Pista Lassi",
-    "Khatti Meethi Ragi Masala Roti With Carrots"
+    "Peach Lassi - Peach Yogurt Smoothie",
+    "Kesar Elaichi Lassi"
    ]
   },
   {
@@ -1340,12 +1340,12 @@
    "query": "मीठी लस्सी",
    "hit@5": 1.0,
    "mrr@10": 0.5,
-   "ndcg@10": 0.7162874455029681,
+   "ndcg@10": 0.7799082337019198,
    "p@5": 0.8,
    "top3": [
     "Mithi Mathri (Crispy Fried Sweet Fritters)",
-    "Rose Lassi",
-    "Kesar Pista Lassi - Saffron & Pista Lassi"
+    "Peach Lassi - Peach Yogurt Smoothie",
+    "Rose Lassi"
    ]
   },
   {
@@ -1359,7 +1359,7 @@
    "top3": [
     "Kerala Chicken Curry - Nadan Kozhi Curry",
     "Sri Lankan Chicken Curry",
-    "Chicken Mapas - Chicken in Coconut Milk Curry"
+    "One Pot Pressure Cooker Chicken Curry"
    ]
   },
   {
@@ -1372,7 +1372,7 @@
    "p@5": 1.0,
    "top3": [
     "Murgh Malaiwala - Chicken In Rich Creamy Gravy",
-    "Murgh Aloo Tikki - Chicken & Potato Tikki",
+    "Dum Ka Murgh (Lagan Ka Murgh)",
     "Dum Murgh Kali Mirch - Chicken In Rich White Gravy"
    ]
   },
@@ -1381,13 +1381,13 @@
    "lang": "devanagari",
    "query": "चिकन करी",
    "hit@5": 1.0,
-   "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.6410457898283652,
-   "p@5": 0.6,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.8643145546088337,
+   "p@5": 1.0,
    "top3": [
-    "Nadan Meen Kari (Kerala Style Fish Curry)",
-    "Kothu Kari Kuzhambu - Mutton Keema Curry",
-    "Chicken Ranch Wraps"
+    "Thai Yellow Chicken Curry",
+    "Pineapple Chicken Curry",
+    "Japanese Style Chicken Katsu Curry"
    ]
   },
   {
@@ -1396,25 +1396,25 @@
    "query": "butter chicken",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7837042816946692,
+   "ndcg@10": 0.7899917627398735,
    "p@5": 0.8,
    "top3": [
     "Butter Chicken - The Classic Indian Chicken Gravy",
-    "Butter Chicken With Tandoori Mayo",
-    "Peanut Butter Chicken"
+    "Peanut Butter Chicken",
+    "Butter Chicken With Tandoori Mayo"
    ]
   },
   {
    "id": "butter_chicken",
    "lang": "hinglish",
    "query": "murgh makhni",
-   "hit@5": 0.0,
-   "mrr@10": 0.14285714285714285,
-   "ndcg@10": 0.17437146561008365,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.47912593929448855,
+   "p@5": 0.4,
    "top3": [
+    "Amritsari Murgh Makhani- Chicken Makhani",
     "Chicken Meatballs In A Makhni Gravy",
-    "Lucknowi Murgh Biryani - Awadhi Style Chicken Biryani",
     "Murgh Malaiwala - Chicken In Rich Creamy Gravy"
    ]
   },
@@ -1427,9 +1427,9 @@
    "ndcg@10": 0.0,
    "p@5": 0.0,
    "top3": [
-    "Chicken Crepe Lasagne",
-    "Indo Chinese Crispy Chicken Chilli",
-    "Chicken And Shrimp Bánh Xèo -Vietnamese Stuffed Crepe"
+    "Chicken Sholay Kebab",
+    "Restaurant Style Chicken 555",
+    "Chicken Crepe Lasagne"
    ]
   },
   {
@@ -1442,8 +1442,8 @@
    "p@5": 1.0,
    "top3": [
     "Sri Lankan Style Fried Egg Curry",
-    "Goan Egg Drop Curry",
-    "Quick And Simple Egg Curry"
+    "Egg Curry Masala With Sunny Side Up Eggs",
+    "Goan Egg Drop Curry"
    ]
   },
   {
@@ -1455,9 +1455,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Malvani Anda Curry - Egg Curry With Spicy Malvani Masala",
-    "Fenugreek & Egg Fried Rice (Anda Methi Chawal)",
-    "Anda Bhurji"
+    "Malvani Anda Curry",
+    "Quick And Simple Egg Curry",
+    "Punjabi Style Egg Curry"
    ]
   },
   {
@@ -1466,11 +1466,11 @@
    "query": "अंडा करी",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9363792118010481,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Egg Pakora - Egg Fritters",
-    "Grilled Cheese Sandwich With Scrambled Eggs",
+    "Varutharacha Mutta Curry",
+    "Fried Egg - Sunny Side Up",
     "Deviled Eggs With Mayo And Mustard"
    ]
   },
@@ -1484,8 +1484,8 @@
    "p@5": 1.0,
    "top3": [
     "Nadan Meen Kari (Kerala Style Fish Curry)",
-    "Assamese Narasingh Masor Jhol (Fish In Curry Leaves Gravy)",
-    "Meen Vevichathu - Kottayam Style Fish Curry"
+    "Kerala Style Fish Curry",
+    "Mangalore Fish Curry"
    ]
   },
   {
@@ -1494,12 +1494,12 @@
    "query": "machli ka salan",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.22009176629808017,
-   "p@5": 0.2,
+   "ndcg@10": 0.3589542101716347,
+   "p@5": 0.4,
    "top3": [
     "Lagan Ki Machli - Delicious Pomfret Curry",
-    "Spinach Watermelon Salad With Walnuts",
-    "Zoodles Salad - Zucchini Noodles"
+    "Hariyali Machali - Carp Fish In Green Spinach And Coriander Gravy",
+    "Detox Blueberry Salad"
    ]
   },
   {
@@ -1508,12 +1508,12 @@
    "query": "मछली करी",
    "hit@5": 1.0,
    "mrr@10": 0.5,
-   "ndcg@10": 0.4170606134915054,
+   "ndcg@10": 0.5617131059245698,
    "p@5": 0.6,
    "top3": [
     "Kothu Kari Kuzhambu - Mutton Keema Curry",
     "Lagan Ki Machli - Delicious Pomfret Curry",
-    "Nadan Meen Kari (Kerala Style Fish Curry)"
+    "Hariyali Machali - Carp Fish In Green Spinach And Coriander Gravy"
    ]
   },
   {
@@ -1525,8 +1525,8 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Malvani Mutton Curry",
     "Halli Style Mutton Saaru - South Indian Mutton Curry",
+    "Malvani Mutton Curry",
     "Kerala Style Varutharacha Mutton Curry"
    ]
   },
@@ -1539,9 +1539,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
+    "Dum Pukht Gosht - Slow Cooked Mutton Curry",
     "Roasted Onion Gosht - Mutton Curry with Roasted Onion & Spices",
-    "Badam Nu Gosht - Parsi Style Mutton In Almond Gravy",
-    "Dum Pukht Gosht - Slow Cooked Mutton Curry"
+    "Peshawari Karahi Gosht"
    ]
   },
   {
@@ -1550,12 +1550,12 @@
    "query": "मटन करी",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8899541168509599,
-   "p@5": 0.8,
+   "ndcg@10": 1.0,
+   "p@5": 1.0,
    "top3": [
     "Kothu Kari Kuzhambu - Mutton Keema Curry",
-    "Shredded Mutton With Caramelized Onions",
-    "Nadan Meen Kari (Kerala Style Fish Curry)"
+    "Quick & Spicy Mutton Curry",
+    "Kerala Mutton Roast - Kerala Mutton Masala"
    ]
   },
   {
@@ -1564,8 +1564,8 @@
    "query": "grilled paneer tikka",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7689993538624728,
-   "p@5": 0.6,
+   "ndcg@10": 0.785563216515221,
+   "p@5": 0.8,
    "top3": [
     "Paneer Tikka Saddle Roll",
     "Smoked Tandoori Paneer Tikka",
@@ -1578,12 +1578,12 @@
    "query": "paneer tikka",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9202054614375518,
+   "ndcg@10": 0.9156857657441142,
    "p@5": 1.0,
    "top3": [
     "Paneer Tikka Saddle Roll",
-    "Paneer Tikka Pulao",
-    "Smoked Tandoori Paneer Tikka"
+    "Smoked Tandoori Paneer Tikka",
+    "Paneer Tikka Pulao"
    ]
   },
   {
@@ -1592,12 +1592,12 @@
    "query": "पनीर टिक्का",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9202054614375518,
+   "ndcg@10": 0.9156857657441142,
    "p@5": 1.0,
    "top3": [
     "Paneer Tikka Saddle Roll",
-    "Paneer Tikka Pulao",
-    "Smoked Tandoori Paneer Tikka"
+    "Smoked Tandoori Paneer Tikka",
+    "Paneer Tikka Pulao"
    ]
   },
   {
@@ -1605,13 +1605,13 @@
    "lang": "en",
    "query": "savoury gram flour pancake",
    "hit@5": 1.0,
-   "mrr@10": 0.5,
-   "ndcg@10": 0.2835149363066189,
-   "p@5": 0.2,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.3746661058764784,
+   "p@5": 0.4,
    "top3": [
-    "Savoury Pancakes With Spinach & Paneer Filling",
     "Oats and Besan Cheela (High Protein Spiced Crepes)",
-    "Savoury Carrot And Coriander Pancakes"
+    "Savoury Pancakes With Spinach & Paneer Filling",
+    "Vegan Chickpea Omelette (Spiced Chickpea Flour Pancakes)"
    ]
   },
   {
@@ -1620,12 +1620,12 @@
    "query": "besan ka cheela",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8006937664098819,
+   "ndcg@10": 0.8669479898642709,
    "p@5": 1.0,
    "top3": [
-    "Oats and Besan Cheela (High Protein Spiced Crepes)",
     "Besan Aur Pyaz Ka Cheela - Roz Ka Khana With Figaro Olive Oil",
-    "Matar Besan And Paneer Cheela -Green Peas & Paneer Crepes"
+    "Oats and Besan Cheela (High Protein Spiced Crepes)",
+    "Besan And Green Pea Cheela"
    ]
   },
   {
@@ -1634,12 +1634,12 @@
    "query": "बेसन का चीला",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.424926013816671,
-   "p@5": 0.6,
+   "ndcg@10": 0.37185395737611554,
+   "p@5": 0.2,
    "top3": [
     "Besan Chila Stuffed with Chatap Paneer",
     "Sindhi Dharan Ji Kadhi - Besan Tikkis In Tomato Gravy",
-    "Besan Aur Pyaz Ka Cheela - Roz Ka Khana With Figaro Olive Oil"
+    "Besan Capsicum Ki Sabzi"
    ]
   },
   {
@@ -1651,9 +1651,9 @@
    "ndcg@10": 0.0,
    "p@5": 0.0,
    "top3": [
-    "Gujarati Kachariyu - Spiced Sesame And Coconut Ladoos",
+    "Gujarati Methi Na Dhebra",
     "Puran Poli | Gujarati & Maharastrian | Sweet Spiced Stuffed Paratha With Jaggery",
-    "Vagharelo Bhaat - Gujarati Masala Rice"
+    "Gujarati Kadhi With Milk And Mint"
    ]
   },
   {
@@ -1667,7 +1667,7 @@
    "top3": [
     "Healthy Carrot Methi and Mooli Thepla",
     "Carrot Methi Jowar Thepla",
-    "Methi Lachha Paratha"
+    "Besan methi paratha"
    ]
   },
   {
@@ -1679,23 +1679,23 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Jowar Atta Pyaz Thepla – Sorghum Wheat Onion Thepla",
     "Cabbage Carrot Onion Pudina Thepla",
-    "Healthy Carrot Methi and Mooli Thepla"
+    "Wheat Millet Thepla - Bajra Masala Paratha",
+    "Beetroot & Sesame Thepla"
    ]
   },
   {
    "id": "puri",
    "lang": "en",
    "query": "deep fried puffed bread",
-   "hit@5": 0.0,
-   "mrr@10": 0.0,
-   "ndcg@10": 0.0,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 0.25,
+   "ndcg@10": 0.17993148201117176,
+   "p@5": 0.4,
    "top3": [
     "Bread Batata Vada-Crispy Bread Bonda Stuffed With Spicy Aloo",
     "Crispy Eggless Pinwheels Bread",
-    "Egg and Bread Fried Rice"
+    "Karnataka Style Aralu Sandige - Puffed Paddy Fryums"
    ]
   },
   {
@@ -1704,12 +1704,12 @@
    "query": "aloo puri",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8603818544462508,
-   "p@5": 1.0,
+   "ndcg@10": 0.7600791051976191,
+   "p@5": 0.8,
    "top3": [
     "Aloo Masala Puri",
     "Party Sev Puri Filled With Potato & Pomegranate Mint Mayo",
-    "Hing Pani Puri-Asafoetida Pani Puri"
+    "Aloo Raswala Sabzi"
    ]
   },
   {
@@ -1721,23 +1721,23 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Puri For Pani Puri - Golagappa / Puchka Puri",
-    "Hing Pani Puri-Asafoetida Pani Puri",
-    "Mumbai Style Pani Puri"
+    "Delicious Butter Chicken Pani Puri",
+    "Makki Ki Puri (Maize Flour Fried Indian Bread)",
+    "Rajgira Puri (Navratri Fasting/Vrat)"
    ]
   },
   {
    "id": "roti",
    "lang": "en",
    "query": "whole wheat flatbread",
-   "hit@5": 1.0,
-   "mrr@10": 0.2,
-   "ndcg@10": 0.15850703974098102,
-   "p@5": 0.2,
+   "hit@5": 0.0,
+   "mrr@10": 0.1111111111111111,
+   "ndcg@10": 0.12987501165334076,
+   "p@5": 0.0,
    "top3": [
-    "Sweet Dashami (Maharashtrian Flatbread Made With Wheat Flour & Sugarcane Juice)",
-    "Eggless Ragi & Whole Wheat Crisp Biscuits",
-    "Whole Wheat Flour Puttu"
+    "Whole Wheat Palak Naan",
+    "Whole Wheat Naan",
+    "Whole Wheat Lachha Paratha-Multilayered Layered Indian Flat Bread"
    ]
   },
   {
@@ -1749,9 +1749,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Spicy Whole Wheat Roti Taco Bowls",
     "Crispy Crunchy Roti Ke Papad",
-    "Chilka Roti (Jharkhand Style Rice and Lentil Roti)"
+    "Rajasthani very roti",
+    "Leftover Roti Cutlet"
    ]
   },
   {
@@ -1763,9 +1763,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Spicy Whole Wheat Roti Taco Bowls",
     "Crispy Crunchy Roti Ke Papad",
-    "Chilka Roti (Jharkhand Style Rice and Lentil Roti)"
+    "Rajasthani very roti",
+    "Leftover Roti Cutlet"
    ]
   },
   {
@@ -1779,7 +1779,7 @@
    "top3": [
     "Provençal Tomato Rice Soup",
     "Tomato Noodle Soup",
-    "Roasted Cherry Tomato Soup"
+    "Roasted Tomato & Tortellini Soup"
    ]
   },
   {
@@ -1787,13 +1787,13 @@
    "lang": "hinglish",
    "query": "tamatar ka soup",
    "hit@5": 1.0,
-   "mrr@10": 0.5,
-   "ndcg@10": 0.4330549290057019,
-   "p@5": 0.4,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.6994739030813919,
+   "p@5": 0.8,
    "top3": [
-    "Lauki Tamatar Ki Sabzi",
-    "Provençal Tomato Rice Soup",
-    "Tamatar Chaat Banarasi Style"
+    "Tomato & Beetroot Soup",
+    "Healthy Tomato Carrot Onion Soup",
+    "Tomato Noodle Soup"
    ]
   },
   {
@@ -1801,13 +1801,13 @@
    "lang": "devanagari",
    "query": "टमाटर का सूप",
    "hit@5": 0.0,
-   "mrr@10": 0.125,
-   "ndcg@10": 0.13568544539116628,
+   "mrr@10": 0.0,
+   "ndcg@10": 0.0,
    "p@5": 0.0,
    "top3": [
+    "Maharashtrian Tomato Essence",
     "Tomato Basil Pasta And Pizza Sauce",
-    "Tomato Jam",
-    "Tomato Basil Risotto With Grilled Chicken"
+    "Tomato Jam"
    ]
   },
   {
@@ -1816,12 +1816,12 @@
    "query": "sprouts salad",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9216017310213246,
+   "ndcg@10": 0.9305687780632227,
    "p@5": 1.0,
    "top3": [
-    "Green Moong Sprout Salad With Vegetables- No Onion No Garlic",
     "Mung Bean Sprouts Salad With Brussel Sprouts and Pomegranate",
-    "South Indian Style Green Moong Sprouts, Raw Mango Salad"
+    "South Indian Style Green Moong Sprouts, Raw Mango Salad",
+    "Green Moong Sprout Salad With Vegetables- No Onion No Garlic"
    ]
   },
   {
@@ -1830,7 +1830,7 @@
    "query": "moong sprouts salad",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 1.0,
+   "ndcg@10": 0.8603818544462508,
    "p@5": 1.0,
    "top3": [
     "Green Moong Sprout Salad With Vegetables- No Onion No Garlic",
@@ -1842,14 +1842,14 @@
    "id": "sprouts_salad",
    "lang": "devanagari",
    "query": "अंकुरित मूंग सलाद",
-   "hit@5": 0.0,
-   "mrr@10": 0.16666666666666666,
-   "ndcg@10": 0.07839826897867533,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 0.3333333333333333,
+   "ndcg@10": 0.11004588314904008,
+   "p@5": 0.2,
    "top3": [
-    "Diabetic Friendly Green Moong Dal/ Mung Beans Soup",
-    "Green Moong Dal Cheela - Savory Green Mung Bean Pancakes",
-    "Thai Style Mung Bean Fritter"
+    "Peeled Moong Dal Curry",
+    "Thai Style Mung Bean Fritter",
+    "South Indian Style Green Moong Sprouts, Raw Mango Salad"
    ]
   },
   {
@@ -1861,9 +1861,9 @@
    "ndcg@10": 0.0,
    "p@5": 0.0,
    "top3": [
-    "Mulakootal (Vegetables In Coconut Gravy)",
-    "Mushroom Dumpling With Potatoes (Momos)",
-    "Chicken Momos -Delicious Steamed Chicken Dumplings"
+    "Vegetarian Momo-Steamed Dumplings/A Street Food from the North East India",
+    "Chicken Momos -Delicious Steamed Chicken Dumplings",
+    "Mushroom Dumpling With Potatoes (Momos)"
    ]
   },
   {
@@ -1877,7 +1877,7 @@
    "top3": [
     "Suran Kofta Curry - Yam Kofta Curry",
     "Bengali Style Kanch kolar Kofta Curry (Green Plantain Kofta Curry)",
-    "Raw Jackfruit Kofta Curry - Kathal Kofta Curry"
+    "Vegan Kofta Curry"
    ]
   },
   {
@@ -1885,13 +1885,13 @@
    "lang": "devanagari",
    "query": "कोफ्ता करी",
    "hit@5": 1.0,
-   "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.5747915663739762,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.7097402150304354,
    "p@5": 0.6,
    "top3": [
-    "Kothu Kari Kuzhambu - Mutton Keema Curry",
-    "Nadan Meen Kari (Kerala Style Fish Curry)",
-    "Kancha Peper Kofta Curry-Bengali Green Papaya Kofta Sabzi"
+    "Bengali Style Kanch kolar Kofta Curry (Green Plantain Kofta Curry)",
+    "Gobhi Ke Kofte",
+    "Suran Kofta Curry - Yam Kofta Curry"
    ]
   },
   {
@@ -1900,12 +1900,12 @@
    "query": "cumin rice",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.46927872602275644,
-   "p@5": 0.2,
+   "ndcg@10": 0.7653606369886217,
+   "p@5": 0.4,
    "top3": [
     "Jeera Rice - Cumin And Ghee Flavored Rice",
-    "Egg and Bread Fried Rice",
-    "Curd Rice With Carrots"
+    "Milagu Jeera Curry Leaf Sadam",
+    "Carrot and Capsicum Rice"
    ]
   },
   {
@@ -1919,7 +1919,7 @@
    "top3": [
     "Jeera Rice - Cumin And Ghee Flavored Rice",
     "Milagu Jeera Curry Leaf Sadam",
-    "Curd Rice With Carrots"
+    "One Pot Masala Vegetable Rice"
    ]
   },
   {
@@ -1928,12 +1928,12 @@
    "query": "जीरा राइस",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.46927872602275644,
-   "p@5": 0.2,
+   "ndcg@10": 0.7653606369886217,
+   "p@5": 0.4,
    "top3": [
     "Jeera Rice - Cumin And Ghee Flavored Rice",
-    "Malabar Style Ney Pathiri (Fried Masala Rice Puri)",
-    "Egg and Bread Fried Rice"
+    "Milagu Jeera Curry Leaf Sadam",
+    "Crispy Fried Kurkuri Bhindi Spiced With Cumin & Chaat Masala"
    ]
   },
   {
@@ -1960,8 +1960,8 @@
    "p@5": 1.0,
    "top3": [
     "Aloo Matar Korma In White Gravy",
-    "Sukh Lu Matar Methi Vegetable",
-    "Aloo Gajar Matar Sabzi"
+    "Aloo Matar Masala Khichdi",
+    "No Onion And No Garlic Aloo Gajar Matar Ki Sabzi"
    ]
   },
   {
@@ -1973,9 +1973,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
+    "Potato And Peas Curry In Coconut Milk Gravy",
     "Matar Pudina Oat & Broken Wheat Tikki",
-    "Baked Potato & Peas Samosa With Phyllo Pastry",
-    "Sukh Lu Matar Methi Vegetable"
+    "Vatana Bateta Na Rotla - Gujarati Peas and Potato Roti"
    ]
   },
   {
@@ -1984,12 +1984,12 @@
    "query": "tangy street food snack",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.538431315257452,
-   "p@5": 0.6,
+   "ndcg@10": 1.0,
+   "p@5": 1.0,
    "top3": [
     "Kala Chana Chaat-Chatpata Healthy Street food",
-    "Sev Puri (Papdi Chaat) - Indian Street Food Evening Snack",
-    "Spicy & Tangy Pakodi Chaat"
+    "Spicy & Tangy Pakodi Chaat",
+    "Bhel Puri With Raw Mango"
    ]
   },
   {
@@ -1998,8 +1998,8 @@
    "query": "papdi chaat",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8318477135310891,
-   "p@5": 0.8,
+   "ndcg@10": 0.9266360779006398,
+   "p@5": 1.0,
    "top3": [
     "Dahi Bhalla Papdi Chaat",
     "Sev Puri (Papdi Chaat) - Indian Street Food Evening Snack",
@@ -2011,13 +2011,13 @@
    "lang": "devanagari",
    "query": "चाट",
    "hit@5": 1.0,
-   "mrr@10": 0.25,
-   "ndcg@10": 0.2583297509898471,
-   "p@5": 0.4,
+   "mrr@10": 0.3333333333333333,
+   "ndcg@10": 0.6410457898283652,
+   "p@5": 0.6,
    "top3": [
     "Idly chat",
     "Mini Dal Mature Chat - That Perfect Party Snack",
-    "Oriya Kancha Kadali Bara (Raw Banana Cutlets)"
+    "Khakra Chaat"
    ]
   },
   {
@@ -2026,12 +2026,12 @@
    "query": "pav bhaji",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8936633189697701,
+   "ndcg@10": 0.8847838959703265,
    "p@5": 0.8,
    "top3": [
     "One Pot Pav Bhaji Using Preethi Electric Pressure Cooker",
-    "Paneer Pav Bhaji - Wholesome Weeknight Dinner",
-    "Hariyali Pav Bhaji"
+    "Hariyali Pav Bhaji",
+    "Paneer Pav Bhaji - Wholesome Weeknight Dinner"
    ]
   },
   {
@@ -2040,12 +2040,12 @@
    "query": "pao bhaji",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7202356619815308,
-   "p@5": 0.6,
+   "ndcg@10": 0.8971754588393883,
+   "p@5": 1.0,
    "top3": [
     "One Pot Pav Bhaji Using Preethi Electric Pressure Cooker",
-    "Kung Pao Tofu With Vegetables",
-    "Cheesy Pav Bhaji"
+    "Cheesy Pav Bhaji",
+    "Hariyali Pav Bhaji"
    ]
   },
   {
@@ -2054,12 +2054,12 @@
    "query": "पाव भाजी",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7202356619815308,
-   "p@5": 0.6,
+   "ndcg@10": 0.8971754588393883,
+   "p@5": 1.0,
    "top3": [
     "One Pot Pav Bhaji Using Preethi Electric Pressure Cooker",
-    "Kung Pao Tofu With Vegetables",
-    "Cheesy Pav Bhaji"
+    "Cheesy Pav Bhaji",
+    "Hariyali Pav Bhaji"
    ]
   },
   {
@@ -2071,9 +2071,9 @@
    "ndcg@10": 0.0,
    "p@5": 0.0,
    "top3": [
-    "Lentil Tabbouleh (Middle Eastern Vegetarian Salad With Lentils)",
-    "Foxtail Millet Nucchina Unde (Foxtail Millet and Lentil Dumplings)",
-    "Gujarati Dal"
+    "Herbed Lentil Loaf Using Horsegram",
+    "Dal Fara (Indian Stuffed Lentil Dumplings)",
+    "Lentil Tabbouleh (Middle Eastern Vegetarian Salad With Lentils)"
    ]
   },
   {
@@ -2082,8 +2082,8 @@
    "query": "medu wada",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7084409501232899,
-   "p@5": 0.8,
+   "ndcg@10": 0.9216017310213246,
+   "p@5": 1.0,
    "top3": [
     "Medu Vada (Traditional Fried Urad Dal Vada Using Vada Maker)",
     "Medu Vada With Onion (Savoury Donuts)",
@@ -2096,11 +2096,11 @@
    "query": "मेदु वड़ा",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 1.0,
+   "ndcg@10": 0.9305687780632227,
    "p@5": 1.0,
    "top3": [
-    "Medu Vada (Traditional Fried Urad Dal Vada Using Vada Maker)",
     "Medu Vada With Onion (Savoury Donuts)",
+    "Medu Vada (Traditional Fried Urad Dal Vada Using Vada Maker)",
     "Left Over Vadai Upma"
    ]
   },
@@ -2108,14 +2108,14 @@
    "id": "shrikhand",
    "lang": "en",
    "query": "sweet strained yogurt dessert",
-   "hit@5": 1.0,
-   "mrr@10": 0.25,
-   "ndcg@10": 0.14606834984270645,
-   "p@5": 0.2,
+   "hit@5": 0.0,
+   "mrr@10": 0.1111111111111111,
+   "ndcg@10": 0.10209739512291163,
+   "p@5": 0.0,
    "top3": [
-    "Rajasthani Style Oliya (Sweetened Rice Yogurt Pudding)",
-    "Healthy Fruit & Nut Watermelon Dessert With Greek Yogurt",
-    "Frozen Mango Yogurt-Mango Froyo"
+    "Rose Greek Yogurt Dessert With Pista & Coconut",
+    "Frozen Mango Yogurt-Mango Froyo",
+    "Healthy Fruit & Nut Watermelon Dessert With Greek Yogurt"
    ]
   },
   {
@@ -2128,8 +2128,8 @@
    "p@5": 1.0,
    "top3": [
     "Thandai Srikhand Tart",
-    "Mango Shrikhand Taco - Sweet Mango Yogurt Dip Taco",
-    "Kesar Shrikhand - Greek Yogurt Pudding With Saffron"
+    "Kesar Shrikhand - Greek Yogurt Pudding With Saffron",
+    "Passion Fruit- Shrikhand Shots"
    ]
   },
   {
@@ -2142,8 +2142,8 @@
    "p@5": 1.0,
    "top3": [
     "Thandai Srikhand Tart",
-    "Mango Shrikhand Taco - Sweet Mango Yogurt Dip Taco",
-    "Kesar Shrikhand - Greek Yogurt Pudding With Saffron"
+    "Kesar Shrikhand - Greek Yogurt Pudding With Saffron",
+    "Passion Fruit- Shrikhand Shots"
    ]
   },
   {
@@ -2155,9 +2155,9 @@
    "ndcg@10": 0.09478836436955078,
    "p@5": 0.2,
    "top3": [
+    "Shakarkandi Ka Halwa (Sweet Potato Halwa)",
     "Sweet Potato Flatbread - Sweet Potato Chapati",
-    "Ragi Halwa | Healthy Indian Sweet Made With Ragi",
-    "Shakarkandi Ka Halwa (Sweet Potato Halwa)"
+    "Shakkarkandi ke Laddu | Sweet Potato Laddu"
    ]
   },
   {
@@ -2166,12 +2166,12 @@
    "query": "gulaab jamun",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.4505655760587972,
+   "ndcg@10": 0.5333765831998211,
    "p@5": 0.4,
    "top3": [
     "Healthy & Delicious Jamun Fruit Smoothie - Black Plum Smoothie",
     "Fruit Kebabs",
-    "Fruit Sandwich"
+    "Healthy Jamun Cooler (Black Plum Juice)"
    ]
   },
   {
@@ -2183,9 +2183,9 @@
    "ndcg@10": 0.09478836436955078,
    "p@5": 0.2,
    "top3": [
+    "Shakarkandi Ka Halwa (Sweet Potato Halwa)",
     "Sweet Potato Flatbread - Sweet Potato Chapati",
-    "Ragi Halwa | Healthy Indian Sweet Made With Ragi",
-    "Shakarkandi Ka Halwa (Sweet Potato Halwa)"
+    "Shakkarkandi ke Laddu | Sweet Potato Laddu"
    ]
   },
   {
@@ -2194,7 +2194,7 @@
    "query": "sago dish for fasting",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8006937664098819,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
     "Sago Khichdi (Savory Tapioca Pearls Stir Fry)",
@@ -2208,11 +2208,11 @@
    "query": "sabudana khichdi vrat ke liye",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9363792118010481,
-   "p@5": 1.0,
+   "ndcg@10": 0.905211635630449,
+   "p@5": 0.8,
    "top3": [
-    "Sabudana Khichdi With Vegetables (No Onion No Garlic Fasting/Vrat Recipes)",
     "Sago Khichdi (Savory Tapioca Pearls Stir Fry)",
+    "Sabudana Khichdi With Vegetables (No Onion No Garlic Fasting/Vrat Recipes)",
     "Dahi Sabudana (Savory Tapioca Pearls Seasoned with Yogurt)"
    ]
   },
@@ -2222,12 +2222,12 @@
    "query": "साबूदाना खिचड़ी",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 1.0,
-   "p@5": 1.0,
+   "ndcg@10": 0.914856882358379,
+   "p@5": 0.8,
    "top3": [
     "Sabudana Khichdi With Vegetables (No Onion No Garlic Fasting/Vrat Recipes)",
-    "Sabakki Upittu (South Indian Style Sabudana Khichdi)",
-    "Sago Khichdi (Savory Tapioca Pearls Stir Fry)"
+    "Sago Khichdi (Savory Tapioca Pearls Stir Fry)",
+    "Sabakki Upittu (South Indian Style Sabudana Khichdi)"
    ]
   },
   {
@@ -2236,12 +2236,12 @@
    "query": "vegetable kebab starter",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.6975961695061491,
+   "ndcg@10": 0.7467045958894681,
    "p@5": 0.6,
    "top3": [
+    "Dal And Vegetable Kebab",
     "Baked Vegetable Seekh Kebab",
-    "Mixed Vegetable Curry Roll",
-    "Dal And Vegetable Kebab"
+    "Oats and Vegetable Kebab"
    ]
   },
   {
@@ -2250,12 +2250,12 @@
    "query": "hara bhara kabab",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7605591431973847,
-   "p@5": 0.8,
+   "ndcg@10": 0.8669479898642709,
+   "p@5": 1.0,
    "top3": [
     "Restaurant Style Hara Bhara Kebab - Vegetarian Green Patties",
     "Hara Bhara Kebab with Millets",
-    "Chicken Malai Kabab"
+    "Haryali Seekh Kebab"
    ]
   },
   {
@@ -2264,12 +2264,12 @@
    "query": "हरा भरा कबाब",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7605591431973847,
-   "p@5": 0.8,
+   "ndcg@10": 0.8669479898642709,
+   "p@5": 1.0,
    "top3": [
     "Restaurant Style Hara Bhara Kebab - Vegetarian Green Patties",
     "Hara Bhara Kebab with Millets",
-    "Chicken Malai Kabab"
+    "Haryali Seekh Kebab"
    ]
   },
   {
@@ -2277,13 +2277,13 @@
    "lang": "en",
    "query": "creamy black lentils",
    "hit@5": 1.0,
-   "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.11004588314904008,
+   "mrr@10": 0.5,
+   "ndcg@10": 0.27454788926472085,
    "p@5": 0.2,
    "top3": [
     "One Pot Creamy Spinach Lentils",
-    "Gujarati Trevti Dal (Creamy Lentils Cooked In Mild Spices)",
-    "Creamy Dal Makhani"
+    "Creamy Dal Makhani",
+    "Gujarati Trevti Dal (Creamy Lentils Cooked In Mild Spices)"
    ]
   },
   {
@@ -2292,12 +2292,12 @@
    "query": "dal makhni",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.22009176629808017,
-   "p@5": 0.2,
+   "ndcg@10": 0.6489315753318465,
+   "p@5": 1.0,
    "top3": [
     "Masoor Dal Makhni",
-    "Panchratan Dal Paniyaram",
-    "Bengali Style Cholar Dal-Chana Dal"
+    "Jain Style Dal Makhani",
+    "Dal Makhani Without Onion And Garlic"
    ]
   },
   {
@@ -2306,12 +2306,12 @@
    "query": "दाल मखनी",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.22009176629808017,
-   "p@5": 0.2,
+   "ndcg@10": 0.6489315753318465,
+   "p@5": 1.0,
    "top3": [
     "Masoor Dal Makhni",
-    "Panchratan Dal Paniyaram",
-    "Bengali Style Cholar Dal-Chana Dal"
+    "Jain Style Dal Makhani",
+    "Dal Makhani Without Onion And Garlic"
    ]
   },
   {
@@ -2320,12 +2320,12 @@
    "query": "masala tea",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8512360941594272,
-   "p@5": 0.8,
+   "ndcg@10": 0.4265076985331692,
+   "p@5": 0.2,
    "top3": [
-    "Ice Cream Tea Float",
-    "Apple Tea Latte",
-    "Ice Tea Sangria"
+    "Adrak Chai - Indian Style Ginger Tea",
+    "Chukku Kaapi - Dry Ginger Coffee",
+    "Qahwa | Arabic Coffee"
    ]
   },
   {
@@ -2334,7 +2334,7 @@
    "query": "masala chai",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.5637884576902256,
+   "ndcg@10": 0.623574432899073,
    "p@5": 0.8,
    "top3": [
     "Masala Chai",
@@ -2348,12 +2348,12 @@
    "query": "मसाला चाय",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.5541432109622958,
-   "p@5": 0.8,
+   "ndcg@10": 0.424926013816671,
+   "p@5": 0.6,
    "top3": [
     "Masala Chai",
-    "Masala Chai Kulfi With Bourbon Chocolate Syrup",
-    "Chai Ka Masala - Homemade Spice Powder for Tea"
+    "How To Make Homemade Kashmiri Masala/ Spice Mix",
+    "Masala Chai Kulfi With Bourbon Chocolate Syrup"
    ]
   },
   {
@@ -2365,9 +2365,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Potato Vegetable - Lu Tomato Key Vegetable",
     "Vegetarian Potato Hash",
-    "Baby Potatoes In Tomato Gravy"
+    "Kachi Tikya - Chicken In Tomato Gravy With Potatoes",
+    "Potato Vegetable - Lu Tomato Key Vegetable"
    ]
   },
   {
@@ -2376,12 +2376,12 @@
    "query": "aloo tamatar wala kuch",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7819835854675755,
+   "ndcg@10": 0.9363792118010481,
    "p@5": 1.0,
    "top3": [
-    "Tamatar Chaat Banarasi Style",
     "Potato Vegetable - Lu Tomato Key Vegetable",
-    "Aloo Bilahi Maas - Assamese Fish Curry With Potatoes And Tomatoes"
+    "Tamatar Chaat Banarasi Style",
+    "Banarasi Tomato Chart - Spicy Tomato Chaat"
    ]
   },
   {
@@ -2404,12 +2404,12 @@
    "query": "paneer with bell peppers",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 1.0,
+   "ndcg@10": 0.933745776545611,
    "p@5": 1.0,
    "top3": [
-    "Dhokla Sandwich With Capsicum And Paneer",
     "Paneer Capsicum Sandwich",
-    "Paneer Jalfrezi"
+    "Dhokla Sandwich With Capsicum And Paneer",
+    "Chilli Paneer -Indo Chinese"
    ]
   },
   {
@@ -2417,13 +2417,13 @@
    "lang": "hinglish",
    "query": "paneer shimla mirch",
    "hit@5": 1.0,
-   "mrr@10": 0.2,
-   "ndcg@10": 0.36284762021041433,
-   "p@5": 0.2,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.4537425745411855,
+   "p@5": 0.6,
    "top3": [
-    "Shimla Mirch Ki Launji",
-    "Arbi Shimla Mirch Sabzi – Colocasia Capsicum Sabzi",
-    "Achari Gobi Shimla Mirch Ki Sabzi - Capsicum And Cauliflower Sabzi"
+    "Stuffed Capsicum Makhani",
+    "Paneer Capsicum Sandwich",
+    "Shimla Mirch Ki Launji"
    ]
   },
   {
@@ -2432,7 +2432,7 @@
    "query": "पनीर शिमला मिर्च",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.9305687780632227,
+   "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
     "Paneer Capsicum Sandwich",
@@ -2446,11 +2446,11 @@
    "query": "spinach lentils",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8512360941594272,
-   "p@5": 0.8,
+   "ndcg@10": 0.9266360779006398,
+   "p@5": 1.0,
    "top3": [
     "One Pot Creamy Spinach Lentils",
-    "Foxtail Millet Paruppu Adai With Keerai - Foxtail Millet and Lentil Crepes with Spinach",
+    "Lahsuni Palak Dal (Spinach & Lentil Curry with Garlic)",
     "Moong Dal Palak Cheela (Yellow Lentil And Spinach Crepes)"
    ]
   },
@@ -2463,9 +2463,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Palak Chana Dal - Healthy Spinach Gram Dal",
     "Dhaba Style Dal Palak",
-    "Palak Pappu - Andhra Style Palakura Pappu - Dal Palak"
+    "Palak Chana Dal - Healthy Spinach Gram Dal",
+    "Lahsuni Palak Dal (Spinach & Lentil Curry with Garlic)"
    ]
   },
   {
@@ -2477,9 +2477,9 @@
    "ndcg@10": 1.0,
    "p@5": 1.0,
    "top3": [
-    "Palak Chana Dal - Healthy Spinach Gram Dal",
     "Dhaba Style Dal Palak",
-    "Palak Pappu - Andhra Style Palakura Pappu - Dal Palak"
+    "Palak Chana Dal - Healthy Spinach Gram Dal",
+    "Lahsuni Palak Dal (Spinach & Lentil Curry with Garlic)"
    ]
   },
   {
@@ -2488,26 +2488,26 @@
    "query": "coconut rice",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.914856882358379,
+   "ndcg@10": 0.8364586133797036,
    "p@5": 0.8,
    "top3": [
-    "Coconut Rice Pulao With Coconut Cream",
     "Thai Coconut Garlic Rice",
-    "Mangalorean Neer Dosa-Savory Rice & Coconut Crepe"
+    "Coconut Rice Pulao With Coconut Cream",
+    "Andhra Style Coconut Flavored Rice Upma"
    ]
   },
   {
    "id": "coconut_rice",
    "lang": "hinglish",
    "query": "nariyal chawal",
-   "hit@5": 0.0,
-   "mrr@10": 0.16666666666666666,
-   "ndcg@10": 0.27770450256879337,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.5321408435198608,
+   "p@5": 0.6,
    "top3": [
-    "Vagharela Chawal - Parsi Style Brown Rice",
-    "Aloo & Nariyal Ki Kachori (Pan Fried Farali Aloo Vada)",
-    "Sindhi Bhuga Chawal - Sindhi Style Browned Rice Pulao"
+    "Thai Coconut Garlic Rice",
+    "Thengai Saadam (Spiced Coconut Rice)",
+    "Lemongrass Coconut Rice"
    ]
   },
   {
@@ -2516,12 +2516,12 @@
    "query": "नारियल चावल",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.914856882358379,
+   "ndcg@10": 0.8364586133797036,
    "p@5": 0.8,
    "top3": [
-    "Coconut Rice Pulao With Coconut Cream",
     "Thai Coconut Garlic Rice",
-    "Mangalorean Neer Dosa-Savory Rice & Coconut Crepe"
+    "Coconut Rice Pulao With Coconut Cream",
+    "Andhra Style Coconut Flavored Rice Upma"
    ]
   },
   {
@@ -2530,12 +2530,12 @@
    "query": "egg fried rice",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.8701249883466592,
+   "ndcg@10": 0.7859162856301583,
    "p@5": 1.0,
    "top3": [
+    "Chinese Egg Fried Rice With Oats",
     "Fenugreek & Egg Fried Rice (Anda Methi Chawal)",
-    "Egg and Bread Fried Rice",
-    "Chinese Egg Fried Rice With Oats"
+    "Egg and Bread Fried Rice"
    ]
   },
   {
@@ -2544,11 +2544,11 @@
    "query": "anda chawal",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.4351098955930419,
-   "p@5": 0.4,
+   "ndcg@10": 0.5894280199323518,
+   "p@5": 0.6,
    "top3": [
     "Fenugreek & Egg Fried Rice (Anda Methi Chawal)",
-    "Vagharela Chawal - Parsi Style Brown Rice",
+    "Egg and Bread Fried Rice",
     "Meethe Chawal - Zarda Pulao"
    ]
   },
@@ -2558,12 +2558,12 @@
    "query": "अंडा चावल",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 1.0,
+   "ndcg@10": 0.9363792118010481,
    "p@5": 1.0,
    "top3": [
-    "Fenugreek & Egg Fried Rice (Anda Methi Chawal)",
     "Egg and Bread Fried Rice",
-    "Chinese Egg Fried Rice With Oats"
+    "Fenugreek & Egg Fried Rice (Anda Methi Chawal)",
+    "Spicy Schezwan Indo-Chinese Egg Fried Rice"
    ]
   }
  ]

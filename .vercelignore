@@ -11,3 +11,4 @@ Dockerfile
 requirements-full.txt
 data/processed/recipes.jsonl
 finetune
+data/processed/descriptions.jsonl

@@ -114,7 +114,22 @@ class BM25:
 
 def doc_text(r: dict) -> str:
     names = ", ".join(dict.fromkeys(i["name"] for i in r["ingredients"]))
-    return f"{r['name']}. {r['cuisine']} {r['course']}. Ingredients: {names}. {r['instructions'][:300]}"
+    about = f" Also called {', '.join(r['aka'])}." if r.get("aka") else ""
+    about += f" {r['description']}" if r.get("description") else ""
+    return f"{r['name']}.{about} {r['cuisine']} {r['course']}. Ingredients: {names}. {r['instructions'][:300]}"
+
+
+def load_recipes(data_dir: Path = DATA) -> list[dict]:
+    """Recipes plus their search descriptions (scripts/enrich.py). Descriptions only feed ranking: diet checks
+    use the ingredient lines."""
+    recipes = [json.loads(l) for l in (data_dir / "recipes.jsonl").read_text(encoding="utf-8").splitlines()]
+    desc_path = data_dir / "descriptions.jsonl"
+    if desc_path.exists():
+        desc = {d["id"]: d for d in map(json.loads, desc_path.read_text(encoding="utf-8").splitlines()) if d}
+        for r in recipes:
+            if r["id"] in desc:
+                r["aka"], r["description"] = desc[r["id"]]["aka"], desc[r["id"]]["description"]
+    return recipes
 
 
 class StaticEmbedder:
@@ -154,7 +169,7 @@ class Engine:
                 index = pickle.loads(idx_path.read_bytes())
             finally:
                 gc.enable()
-            if src.exists() and index.get("source_lines") != count_lines(src):
+            if src.exists() and index.get("source_lines") != source_signature(data_dir):
                 index = None
         if index is None:
             index = build_index(self.onto, data_dir)
@@ -592,13 +607,20 @@ def count_lines(path: Path) -> int:
     return path.read_bytes().count(b"\n")
 
 
+def source_signature(data_dir: Path = DATA) -> tuple[int, int]:
+    """Recipes and descriptions line counts: the index is rebuilt when either changes."""
+    desc = data_dir / "descriptions.jsonl"
+    return count_lines(data_dir / "recipes.jsonl"), count_lines(desc) if desc.exists() else 0
+
+
 def build_index(onto: Ontology, data_dir: Path = DATA, write: bool = False) -> dict:
-    recipes = [json.loads(l) for l in (data_dir / "recipes.jsonl").read_text(encoding="utf-8").splitlines()]
+    recipes = load_recipes(data_dir)
     union = lambda sets: frozenset().union(*sets) if sets else frozenset()
     index = {
-        "source_lines": count_lines(data_dir / "recipes.jsonl"),
+        "source_lines": source_signature(data_dir),
         "recipes": recipes,
-        "postings": BM25.build([tokenize((r["name"] + " ") * 3 + doc_text(r)) for r in recipes]).postings,
+        "postings": BM25.build([tokenize((r["name"] + " ") * 3 + (" ".join(r.get("aka", [])) + " ") * 2 + doc_text(r))
+                                for r in recipes]).postings,
         "lineages": [union([onto.lineage(i) for i in r["ingredient_ids"]]) for r in recipes],
         "tags": [union([onto.effective_tags(i) for i in r["ingredient_ids"]]) for r in recipes],
         "name_tokens": [frozenset(tokenize(r["name"])) for r in recipes],
@@ -612,7 +634,7 @@ def build_index(onto: Ontology, data_dir: Path = DATA, write: bool = False) -> d
 
 
 def build_embeddings(profile: str, data_dir: Path = DATA) -> None:
-    recipes = [json.loads(l) for l in (data_dir / "recipes.jsonl").read_text(encoding="utf-8").splitlines()]
+    recipes = load_recipes(data_dir)
     docs = [doc_text(r) for r in recipes]
     if profile == "full":
         from fastembed import TextEmbedding
