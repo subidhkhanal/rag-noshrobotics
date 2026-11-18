@@ -124,7 +124,8 @@ class Assistant:
         onto = self.engine.onto
         profile = build_profile(self.engine, history)
         parsed = parse(onto, message)
-        if llm_parser.enabled():
+        used_llm = llm_parser.enabled() and llm_parser.should_call(message)
+        if used_llm:
             parsed = llm_parser.combine(onto, parsed, llm_parser.llm_parse(message))
         s.state = merge(s.state, parsed, message)
         st = s.state
@@ -169,7 +170,7 @@ class Assistant:
             "blocked_examples": out.blocked_examples,
             "constraints": chips(onto, st),
             "parsed": parsed.to_dict(),
-            "trace": out.trace | {"relaxed": out.relaxed},
+            "trace": out.trace | {"relaxed": out.relaxed, "claude_parser": used_llm},
         }
 
     def _base_response(self, s: Session, parsed: Constraints, reply: str, results: list[dict], **extra) -> dict:

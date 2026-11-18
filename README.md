@@ -7,6 +7,9 @@ Built as a working answer to failures observed in a production cooking-robot ass
 ## What it does
 
 - **Understands the request.** English, Hinglish and Devanagari ("bina pyaz lahsun ka khana", "kuch spicy banana hai") are parsed into hard constraints (diet, allergy, "no X", time limit) and soft preferences (ingredients on hand, course, cuisine, spicy/creamy/healthy…).
+  - A fast rule parser handles every message.
+  - When a message has phrasing the rules can miss ("hold the onions", "my kid can't eat peanuts", "ready in 25"), Claude also parses it with structured output.
+  - The two results are combined so Claude can only add restrictions, never remove one.
 - **Knows what is in each dish.** Every ingredient line in 6,109 recipes is mapped to one of 249 canonical ingredients through 2,200+ aliases (99.98% line coverage). Compound items are expanded: ginger garlic paste → ginger + garlic, schezwan sauce → garlic + chilli. Brand-dependent items carry explicit "may contain" risk: ketchup and instant-noodle tastemakers (onion/garlic), compounded hing (wheat).
 - **Cross-checks the cooking steps.** If a method uses garlic, onion, egg, chicken, fish, shellfish or mushroom that the ingredient list omits, the recipe is flagged instead of passing. This catches source-data errors such as a "Garlic-and-Oil" pasta whose list says "cloves (laung)" while the method says "add the minced garlic".
 - **Enforces diets in code.** 17 rule sets (vegetarian, eggetarian, vegan, Jain, sattvic, no-onion-no-garlic, lactose-free, dairy-free, gluten-free, nut / tree-nut / peanut / egg / soy / sesame / shellfish / fish-free) give each recipe a pass / flag / block verdict with the offending line as the reason.
@@ -34,8 +37,9 @@ Built as a working answer to failures observed in a production cooking-robot ass
 | Recipes whose cooking steps use a diet-relevant ingredient missing from their list | 94, flagged |
 | Independent regex audit of every recipe passing no-onion-garlic / Jain / vegan | 0 leaks |
 | Silent constraint violations, 50 constrained queries × top 5 × 4 configurations | 0 (see `reports/evaluation.md`) |
-| Deployed profile latency / engine load | ~20 ms median per query / ~0.7 s |
-| Tests | 70 passing |
+| Parsed requests that would let a ruled-out recipe through, 70 hand-written queries | rules 10% → rules + Claude **0%** (see `reports/parser_benchmark.md`) |
+| Deployed profile latency / engine load | ~20 ms median per query (about 2 s when Claude is consulted) / ~0.7 s |
+| Tests | 76 passing |
 
 Compliance is measured by an independent regex checker over raw ingredient text, deliberately separate from the ontology the system itself uses.
 
@@ -73,6 +77,8 @@ python -m forge.search index      # precomputed index.pkl for fast cold starts
 
 **Deploy to Vercel:** import the repo. `app.py` exposes the FastAPI app, `public/` is served from the CDN, and `.vercelignore` keeps the function bundle small.
 **Docker (full profile):** `docker build -t recipeforge . && docker run -p 8000:8000 recipeforge`.
+
+Claude parser: set `ANTHROPIC_API_KEY` (and optionally `CLAUDE_PARSER_MODEL`, default `claude-opus-5-5`). Without it, the app runs rules-only.
 
 Optional: set `LLM_BASE_URL`, `LLM_API_KEY` and `LLM_MODEL` (any OpenAI-compatible endpoint) to let an LLM reword the reply's intro. Its output is discarded if it mentions a recipe that wasn't validated or drops any number. Recipe cards and every compliance decision stay deterministic.
 

@@ -24,3 +24,14 @@ def test_model_fills_rule_gaps():
 def test_failed_model_call_leaves_rules_untouched():
     rules = parse(onto, "jain breakfast")
     assert combine(onto, rules, None) is rules
+
+
+def test_model_words_are_mapped_to_ontology_ids():
+    c = combine(onto, parse(onto, "dinner"), normalize({"exclude": ["onions", "kaju", "unicorn"], "include": ["chana"]}))
+    assert c.exclude == {"onion", "cashew"} and c.include == ["chickpeas"]
+
+
+def test_gate_skips_plain_queries():
+    from forge.llm_parser import should_call
+    assert not should_call("paneer butter masala")
+    assert should_call("hold the onions please") and should_call("lahsun pyaz ke bina")
