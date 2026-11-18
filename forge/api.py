@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -30,6 +31,14 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Content-Type"],
 )
+
+
+@app.middleware("http")
+async def server_timing(request, call_next):
+    t = time.perf_counter()
+    response = await call_next(request)
+    response.headers["Server-Timing"] = f"app;dur={1000 * (time.perf_counter() - t):.1f}"
+    return response
 
 
 class ChatIn(BaseModel):

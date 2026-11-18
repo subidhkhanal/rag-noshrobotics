@@ -7,3 +7,4 @@ data/raw/
 .env
 research_notes/
 reports/Food RAG dietary constraint architecture.md
+finetune/data/
