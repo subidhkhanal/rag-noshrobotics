@@ -124,3 +124,8 @@ def test_gate_and_parser_share_normalisation():
     from forge.query import normalize_message
     for msg in ["I'm allergic to sesame", "I've got no eggs, she's vegan", "kuch spicy banana hai"]:
         assert not should_call(normalize_message(onto, msg), parse(onto, msg).understood), msg
+
+
+def test_dish_word_sets_course_but_stays_searchable():
+    c = parse(onto, "carrot halwa dessert")
+    assert c.course == "dessert" and "halwa" in c.text and "dessert" not in c.text
