@@ -156,7 +156,8 @@ def check(engine, message, out, state_diets, state_exclude, include):
             v = engine.exclusion_status(e)[engine.by_id[rec["id"]]]
             if v.status == "block":
                 issues.append(f"VIOLATION no {e}: {rec['name']}")
-    if include and out.get("results") and out.get("mode") == "search":
+    # Skip when the reply already said the robot can't make that dish and offered cookable alternatives.
+    if include and out.get("results") and out.get("mode") == "search" and "Nosh One can't make" not in reply:
         covered = [card for card in out["results"]
                    if engine is None or set(include) & engine.lineages[engine.by_id[card["id"]]]]
         if len(covered) < min(3, len(out["results"])):

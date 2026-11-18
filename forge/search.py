@@ -22,6 +22,7 @@ import numpy as np
 from .ontology import Ontology, load, tokenize
 from .profile import STAPLES
 from .query import COMMON_WORDS, CUISINE_GROUPS, HINGLISH_WORDS, Constraints
+from .robot import assess as robot_fit, batches as robot_batches
 from .translit import Speller
 
 KEEP_WORDS = COMMON_WORDS | HINGLISH_WORDS
@@ -55,7 +56,9 @@ DISH_SYNONYMS = [(re.compile(rx, re.I), names) for rx, names in [
     (r"\b(tamarind|pepper) soup\b", "rasam"),
 ]]
 
-DATA = Path(__file__).resolve().parent.parent / "data" / "processed"
+# Which recipe catalogue to serve: the demo corpus by default, or an imported one (scripts/import_catalogue.py),
+# e.g. FORGE_DATA_DIR=data/catalogues/nosh.
+DATA = Path(os.getenv("FORGE_DATA_DIR") or Path(__file__).resolve().parent.parent / "data" / "processed")
 M2V_DIR = Path(__file__).resolve().parent.parent / "data" / "models" / "potion-base-8M"
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 RERANK_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2"
@@ -207,6 +210,9 @@ class Engine:
         self.lineages = index["lineages"]
         self.tags = index["tags"]
         self.name_tokens = index["name_tokens"]
+        self.robot = index.get("robot") or [robot_fit(r) for r in self.recipes]
+        for r, fit in zip(self.recipes, self.robot):
+            r["robot_fit"] = fit
         self.aka_tokens = index.get("aka_tokens") or [frozenset(tokenize(" ".join(r.get("aka", [])))) for r in self.recipes]
         self.desc_tokens = index.get("desc_tokens") or [frozenset(tokenize(r.get("description", ""))) for r in self.recipes]
         self.name_ids = index["name_ids"]
@@ -282,6 +288,8 @@ class Engine:
                         break
             if not reason and c.max_time and not skip_time and not (0 < r["total_min"] <= c.max_time):
                 reason = (f"under {c.max_time} min", f"takes {r['total_min']} min")
+            if not reason and c.robot_only and self.robot[i]["fit"] != "robot":
+                reason = ("Nosh One cookable", self.robot[i]["reason"])
             if reason:
                 removed[reason[0]] += 1
                 blocked_reason[i] = f"{reason[0]}: {reason[1]}"
@@ -609,6 +617,8 @@ class Engine:
                            f"serves {r['servings']} · make about {factor:.1f}× for {c.servings} people")
             else:
                 why.append(f"serves {r['servings']}")
+        if c.robot_only and c.servings and robot_batches(c.servings) > 1:
+            why.append(f"Nosh One: cook in {robot_batches(c.servings)} batches for {c.servings} people")
         if profile is not None and not profile.empty:
             if c.intents & {"different", "usual"}:
                 if r["cuisine"] not in profile.cuisines:
@@ -622,7 +632,7 @@ class Engine:
         return Result(recipe=r, score=round(score, 3), checks=checks, why=why, flagged=bool(flags))
 
     def _blocked_examples(self, qtext, qvec, blocked_reason, c, n: int = 3) -> list[dict]:
-        if not blocked_reason or not (c.diets or c.exclude):
+        if not blocked_reason or not (c.diets or c.exclude or c.robot_only):
             return []
         idx = np.array([i for i, why in blocked_reason.items() if not why.startswith("under ")])
         if len(idx) == 0:
@@ -671,6 +681,7 @@ def build_index(onto: Ontology, data_dir: Path = DATA, write: bool = False) -> d
         "tags": [union([onto.effective_tags(i) for i in r["ingredient_ids"]]) for r in recipes],
         "name_tokens": [frozenset(tokenize(r["name"])) for r in recipes],
         "aka_tokens": [frozenset(tokenize(" ".join(r.get("aka", [])))) for r in recipes],
+        "robot": [robot_fit(r) for r in recipes],
         "desc_tokens": [frozenset(tokenize(r.get("description", ""))) for r in recipes],
         "name_ids": [frozenset(m.ingredient for m in onto.match(r["name"])) for r in recipes],
         "vocab": build_vocab(onto, recipes),

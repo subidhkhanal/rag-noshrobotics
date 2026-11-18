@@ -175,6 +175,7 @@ class Constraints:
     generic: bool = False
     unsupported: list[str] = field(default_factory=list)
     understood: list[str] = field(default_factory=list)  # message spans the rules turned into constraints
+    robot_only: bool = False  # only dishes the Nosh One can cook (on by default in the app, off in evals)
 
     def has_soft_content(self) -> bool:
         return bool(self.include or self.course or self.cuisine or self.text.strip() or self.prefer_non_veg)

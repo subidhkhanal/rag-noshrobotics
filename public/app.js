@@ -153,6 +153,25 @@ const ICON = {
 };
 const icon = (name) => `<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICON[name]}</svg>`;
 
+// Nosh One fit: badge, what you prep by hand, and the 8 spice slots.
+function robotBadge(rb) {
+  if (!rb) return "";
+  return rb.fit === "robot"
+    ? `<span class="check robot" title="The Nosh One can cook this">🤖 Nosh One</span>`
+    : `<span class="check manual" title="${esc(rb.reason)}">✋ Manual: ${esc(rb.reason.replace(/ \(.*\)$/, ""))}</span>`;
+}
+function robotLine(rb) {
+  if (!rb || rb.fit !== "robot") return "";
+  const bits = [];
+  bits.push(rb.prep.length ? `You prep: ${rb.prep.length} step${rb.prep.length > 1 ? "s" : ""}${rb.prep_min ? ` (~${rb.prep_min} min)` : ""}` : "No hand prep listed");
+  if (rb.spices.length) {
+    bits.push(rb.extra_spices
+      ? `<span class="warn-text">${rb.spices.length} spices: ${rb.extra_spices} more than the 8 slots, add by hand</span>`
+      : `${rb.spices.length} of 8 spice slots`);
+  }
+  return `<p class="robot-line">${bits.join('<span class="dot">·</span>')}</p>`;
+}
+
 function cardHtml(r) {
   const flagNotes = r.checks.filter((c) => c.status === "flag").map((c) => `${esc(c.label)}: ${esc(c.detail)}`);
   // Servings (and scaling for the group size) belong in the meta line, not in the reasons.
@@ -169,7 +188,8 @@ function cardHtml(r) {
         ${r.total_min ? `<span class="time">${icon("clock")}${esc(r.total_min)} min</span>` : ""}
       </header>
       <div class="meta">${meta}${serves ? `<span class="dot">·</span><span class="serves">${icon("users")}${esc(serves)}</span>` : ""}</div>
-      ${r.checks.length ? `<div class="checks">${r.checks.map(checkBadge).join("")}</div>` : ""}
+      ${r.checks.length || r.robot ? `<div class="checks">${robotBadge(r.robot)}${r.checks.map(checkBadge).join("")}</div>` : ""}
+      ${robotLine(r.robot)}
       ${reasons.length ? `<p class="why">${reasons.map((w) => esc(w.charAt(0).toUpperCase() + w.slice(1))).join('<span class="dot">·</span>')}</p>` : ""}
       ${flagNotes.length ? `<div class="flagnote">${flagNotes.join("<br>")}</div>` : ""}
       ${r.safer?.length ? `<details class="adapt"><summary>Safer swap</summary><ul>${swapList(r.safer)}</ul></details>` : ""}
@@ -227,7 +247,18 @@ function addBot(data) {
   if (data.mode === "detail" && data.detail) {
     const d = data.detail;
     if (d.ingredients.length) html += `<div class="detail"><h4>Ingredients</h4><ul>${d.ingredients.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
-    if (d.steps.length) html += `<div class="detail"><h4>Steps</h4><ol>${d.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>`;
+    const rb = data.results?.[0]?.robot;
+    if (d.steps.length && rb?.fit === "robot" && rb.prep.length) {
+      // Split the method: what you do by hand, then what the Nosh One does.
+      const prep = new Set(rb.prep);
+      const mine = d.steps.filter((x) => prep.has(x));
+      const robot = d.steps.filter((x) => !prep.has(x));
+      html += `<div class="detail prep-steps"><h4>✋ Your prep</h4><ol>${mine.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
+        <p class="sub">Chop and measure these, then load the ingredient tray, oil and water.</p></div>`;
+      html += `<div class="detail"><h4>🤖 Nosh One cooks</h4><ol>${robot.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>`;
+    } else if (d.steps.length) {
+      html += `<div class="detail"><h4>Steps</h4><ol>${d.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>`;
+    }
   }
   const ruled = data.blocked_examples?.length
     ? `<div class="ruled"><b>Ruled out — matched your words but not your constraints:</b><ul>${data.blocked_examples

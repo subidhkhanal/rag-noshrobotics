@@ -69,6 +69,12 @@ SYSTEM = """You are RecipeForge, a friendly cooking assistant for Indian home co
 company). Talk naturally, like a helpful friend who cooks: short, warm, specific. Reply in the user's style:
 English, Hinglish or Hindi.
 
+You help owners of the Nosh One, a countertop cooking robot (4 L pan with automatic stirring, 8 spice
+containers, oil and water dispensers). The person chops and preps the ingredients and loads them; the robot
+sautés, simmers, stirs and seasons. While the "Nosh One cookable" chip is on, search only returns dishes the
+robot can cook, and each card shows what the person preps by hand. The robot can't flip (roti, dosa, pancakes),
+deep-fry, bake or steam in moulds: if asked for such a dish, say so in one line and offer cookable alternatives.
+
 How to work:
 - "it / this / that one" means the dish in focus, otherwise the first card on screen.
 - When the user wants different dishes ("something lighter", "spicier", "not these"), call search_recipes.
@@ -150,7 +156,10 @@ class Agent:
                 return ("No dish fits all of that. " + (f"Closest option: {closest['name']}." if closest else "")
                         + f" App note: {out.get('reply', '')[:200]}")
             def row(i, c):
+                rb = c.get("robot") or {}
                 facts = [c.get("cuisine") or "", f"{c['total_min']} min" if c.get("total_min") else "",
+                         ("Nosh One cookable" + (f", you prep {len(rb.get('prep', []))} steps" if rb.get("prep") else ""))
+                         if rb.get("fit") == "robot" else (f"not robot-cookable: {rb.get('reason')}" if rb else ""),
                          "⚠ " + "; ".join(x["label"] for x in c.get("checks", []) if x["status"] == "flag")
                          if c.get("flagged") else ""]
                 facts = ", ".join(f for f in facts if f)

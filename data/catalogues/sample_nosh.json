@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "name": "SAMPLE Jeera Aloo",
+    "cuisine": "North Indian", "course": "Dinner", "servings": 4, "prep_min": 10, "cook_min": 20,
+    "diet_label": "SAMPLE recipe written for the importer demo, not Nosh's data",
+    "ingredients": ["3 potatoes, boiled and cubed", "1 tsp cumin seeds", "1/2 tsp turmeric powder",
+                    "1 tsp red chilli powder", "2 tbsp oil", "Salt to taste", "Coriander leaves, chopped"],
+    "steps": ["Boil, peel and cube the potatoes.", "Chop the coriander leaves.", "Heat oil and add the cumin seeds.",
+              "Add the potatoes, turmeric, chilli powder and salt and stir for 6 minutes.", "Garnish with coriander."],
+    "robot": {"cookable": true, "prep_steps": ["Boil, peel and cube the potatoes.", "Chop the coriander leaves."], "prep_min": 10}
+  },
+  {
+    "id": 2,
+    "name": "SAMPLE Moong Dal Khichdi",
+    "cuisine": "Gujarati", "course": "Dinner", "servings": 3, "prep_min": 15, "cook_min": 25,
+    "diet_label": "SAMPLE recipe written for the importer demo, not Nosh's data",
+    "ingredients": ["1/2 cup rice", "1/2 cup moong dal", "1 tsp ghee", "1/2 tsp cumin seeds", "1/4 tsp asafoetida",
+                    "1/2 tsp turmeric powder", "Salt to taste", "3 cups water"],
+    "steps": ["Wash and soak the rice and dal for 15 minutes.", "Heat ghee, add cumin and asafoetida.",
+              "Add rice, dal, turmeric, salt and water and simmer, stirring, until soft."]
+  },
+  {
+    "id": 3,
+    "name": "SAMPLE Phulka",
+    "cuisine": "North Indian", "course": "Dinner", "servings": 4, "prep_min": 15, "cook_min": 15,
+    "diet_label": "SAMPLE recipe written for the importer demo, not Nosh's data",
+    "ingredients": ["2 cups whole wheat flour", "Water as needed"],
+    "steps": ["Knead a soft dough.", "Roll into thin circles.", "Cook on a hot tawa, flipping once, then puff over flame."],
+    "robot": {"cookable": false, "reason": "needs rolling and flipping"}
+  }
+]

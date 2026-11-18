@@ -23,6 +23,8 @@ from .translit import COMMON
 MAX_SHOWN = 60
 LAST_IDS = 14  # a weekly plan shows up to 14 cards
 RECENT_TURNS = 4
+# The app is a Nosh One assistant: new chats only show dishes the robot can cook (chip × turns it off).
+NOSH_MODE = os.getenv("NOSH_MODE", "1") != "0"
 # Signs a message is conversation, not a bare request ("hi! I'm tired after work").
 CHATTY = re.compile(r"\b(hi|hello|hey|tired|bored|stressed|sick|feeling|today was|after work|husband|wife|kids?|"
                     r"family|friends?|guests?|party|why|because|should i|do you|can you|could you|would you|"
@@ -109,7 +111,7 @@ class Session:
             "diets": sorted(st.diets), "exclude": sorted(st.exclude), "include": list(st.include),
             "pantry_mode": st.pantry_mode, "max_time": st.max_time, "course": st.course, "cuisine": st.cuisine,
             "attributes": sorted(st.attributes), "servings": st.servings, "prefer_non_veg": st.prefer_non_veg,
-            "text": st.text, "shown": self.shown[-MAX_SHOWN:], "last_top": self.last_top,
+            "text": st.text, "shown": self.shown[-MAX_SHOWN:], "last_top": self.last_top, "robot_only": st.robot_only,
             "last_ids": self.last_ids[:LAST_IDS], "focus": self.focus,
             "last_labels": self.last_labels[:LAST_IDS], "recent": self.recent[-RECENT_TURNS:],
         }
@@ -118,7 +120,7 @@ class Session:
 def session_from(engine: Engine, data: dict | None) -> Session:
     """Rebuild a session from client-supplied state, keeping only values the server recognises."""
     if not isinstance(data, dict):
-        return Session()
+        return Session(state=Constraints(robot_only=NOSH_MODE))
     onto = engine.onto
 
     def ids(key, allowed):
@@ -140,6 +142,7 @@ def session_from(engine: Engine, data: dict | None) -> Session:
         attributes=set(ids("attributes", ATTRIBUTE_RES)),
         servings=bounded_int("servings", 1, 100),
         prefer_non_veg=data.get("prefer_non_veg") is True,
+        robot_only=data.get("robot_only", NOSH_MODE) is True,
         text=re.sub(r"[^a-z0-9ऀ-ॿ ]", " ", str(data.get("text", ""))[:300].lower()).strip(),
     )
     shown = data.get("shown")
@@ -162,6 +165,7 @@ def session_from(engine: Engine, data: dict | None) -> Session:
 def merge(prev: Constraints, new: Constraints, message: str, onto=None) -> Constraints:
     if "reset" in new.intents:
         new.intents.discard("reset")
+        new.robot_only = prev.robot_only  # a fresh start keeps the Nosh One setting (only its chip turns it off)
         return new
     merged = _merge(prev, new, message)
     if onto is not None:
@@ -177,6 +181,7 @@ def _merge(prev: Constraints, new: Constraints, message: str) -> Constraints:
         exclude=prev.exclude | new.exclude,
         intents=new.intents,
         servings=new.servings or prev.servings,
+        robot_only=prev.robot_only or new.robot_only,
     )
     # "different from what I usually make" is about the user's habits, not the last results: start soft prefs fresh.
     if is_refinement(message, new) and "usual" not in new.intents:
@@ -236,6 +241,8 @@ class Assistant:
             setattr(st, kind, None)
         elif kind == "attribute":
             st.attributes.discard(value)
+        elif kind == "robot":
+            st.robot_only = False
         elif kind == "text":
             st.text = ""
         return s
@@ -364,6 +371,9 @@ class Assistant:
                 cd["safer"] = adapt(onto, r.recipe, st).to_dict(onto)["safer"]
             cards.append(cd)
         reply = self.compose(st, parsed, out, anchor)
+        robot_note = self._robot_note(st, out)
+        if robot_note:
+            reply = robot_note + " " + reply
         if st.intents & {"different", "usual"}:
             reply = (f"Based on your history ({profile.summary(onto)}), here's something different. " if not profile.empty
                      else "I don't have your cooking history yet — tap “Cooked it” on dishes you make and I'll learn "
@@ -421,6 +431,21 @@ class Assistant:
                 if len(hit) >= max(1, (len(words) + 1) // 2):
                     return best
         return None
+
+    def _robot_note(self, st: Constraints, out) -> str:
+        """If the dish asked for exists but the Nosh One can't cook it, say so instead of silently substituting."""
+        if not st.robot_only or not out.blocked_examples:
+            return ""
+        ex = out.blocked_examples[0]
+        if not ex["reason"].startswith("Nosh One cookable"):
+            return ""
+        asked = {w for w in tokenize(st.text) if len(w) > 2}
+        if not asked or not asked <= set(tokenize(ex["name"])):
+            return ""  # the ruled-out dish isn't what was asked for
+        if any(asked <= set(tokenize(r.recipe["name"])) for r in out.results):
+            return ""  # a cookable version of the asked dish is already in the results
+        why = ex["reason"].split(": ", 1)[-1]
+        return f"The Nosh One can't make {st.text} — it {why.replace('needs', 'needs', 1)}. Here are dishes it can cook instead."
 
     def _needs_understanding(self, s: Session, message: str, parsed: Constraints) -> bool:
         """Obvious standalone requests ("jain dinner") skip the LLM; anything conversational goes to it."""
@@ -841,7 +866,8 @@ def describe(onto, st: Constraints) -> str:
 
 
 def chips(onto, st: Constraints) -> list[dict]:
-    out = [{"kind": "diet", "value": d, "label": onto.diets[d]["label"], "hard": True} for d in sorted(st.diets)]
+    out = [{"kind": "robot", "value": "1", "label": "Nosh One cookable", "hard": True}] if st.robot_only else []
+    out += [{"kind": "diet", "value": d, "label": onto.diets[d]["label"], "hard": True} for d in sorted(st.diets)]
     out += [{"kind": "exclude", "value": e, "label": f"no {onto.label(e)}", "hard": True} for e in sorted(st.exclude)]
     if st.max_time:
         out.append({"kind": "max_time", "value": str(st.max_time), "label": f"≤ {st.max_time} min", "hard": True})
@@ -861,7 +887,7 @@ def card_from_recipe(rec: dict) -> dict:
         "id": rec["id"], "name": rec["name"], "cuisine": rec["cuisine"], "course": rec["course"],
         "total_min": rec["total_min"], "servings": rec["servings"], "url": rec["url"],
         "ingredients": [i["name"] for i in rec["ingredients"]][:14],
-        "checks": [], "why": [], "flagged": False, "score": 0,
+        "checks": [], "why": [], "flagged": False, "score": 0, "robot": rec.get("robot_fit"),
     }
 
 

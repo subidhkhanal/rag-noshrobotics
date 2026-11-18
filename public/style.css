@@ -476,3 +476,9 @@ body { display: block; height: 100dvh; overflow: hidden; }
 }
 .followups button:hover { border-color: var(--accent); background: var(--surface-2); }
 .followups button::before { content: "↳ "; color: var(--muted); }
+/* Nosh One fit on cards */
+.check.robot { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.check.manual { background: var(--surface-2); color: var(--muted); }
+.robot-line { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; }
+.robot-line .warn-text { color: var(--flag); }
+.detail.prep-steps { border-left: 3px solid var(--accent); }

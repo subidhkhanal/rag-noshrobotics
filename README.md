@@ -27,6 +27,14 @@ Built as a working answer to failures observed in a production cooking-robot ass
   - no desserts, drinks, condiments or baby food posing as dinner (source course labels are unreliable);
   - a combined shopping list.
 - **Fails honestly.** When nothing qualifies, it says so and offers the closest option that still meets every dietary rule. It never relaxes a dietary or allergy constraint to fill the gap.
+- **Built for the Nosh One.** New chats only show dishes the robot can cook, under a removable "Nosh One cookable" chip.
+  - Each recipe gets a robot-fit verdict with a reason. One-pot sauté, simmer and stir dishes pass. Flipping (roti, dosa), deep-frying, baking, steaming in moulds and no-cook dishes don't.
+  - Cards show the hand-prep steps (chop, soak, grind) separately from what the robot cooks, and whether the dry spices fit its 8 containers.
+  - Large groups get a "cook in N batches" note.
+  - Asking for a dish the robot can't make gets "The Nosh One can't make roti — it needs flipping…" plus cookable alternatives.
+  - The hardware figures come from public reports, not from Nosh, and are environment settings. See [forge/robot.py](forge/robot.py).
+- **Runs on your own catalogue.** `scripts/import_catalogue.py` loads a JSON export of a robot maker's recipes, including its own robot data, which overrides the rule-based guesses. It maps every ingredient to the ontology and builds the index. Format: [docs/catalogue_format.md](docs/catalogue_format.md).
+- **Talks like an assistant.** Claude holds the conversation and writes the replies, which stream as they're written. Every fact comes from tools over the code above: search, recipe details, dish checks, ingredient checks, weekly plans and recall. Safety stays in code: locked restrictions apply inside the search tool, only the chip × removes one, and replies may only name dishes the tools returned. Obvious requests ("jain dinner") skip the model and answer instantly.
 
 ## Results
 
