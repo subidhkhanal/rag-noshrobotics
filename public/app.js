@@ -189,9 +189,30 @@ function cardHtml(r) {
 function planHtml(data) {
   const days = data.results.map((r) => `<div class="day"><div class="dayname">${esc(r.day)}</div>${cardHtml(r)}</div>`).join("");
   const s = data.shopping;
-  const list = s ? `<details class="shopping" open><summary>Shopping list (${s.items.length} items)</summary>
-      <ul>${s.items.map((x) => `<li><b>${esc(x.item)}</b> <span class="sub">— ${esc(x.for.join(", "))}</span></li>`).join("")}</ul>
-      <div class="sub">Pantry staples assumed: ${esc(s.staples.join(", "))}</div></details>` : "";
+  if (!s || !s.items.length) return `<div class="plan">${days}</div>`;
+  // Shopping rows name days ("Mon · Wed"), not long recipe titles; day chips filter the list.
+  const dayOf = Object.fromEntries(data.results.map((r) => [r.name, r.day]));
+  const short = (name) => esc(name.split(/ [-|(]/)[0].replace(/^(.{34}).+$/, "$1…"));
+  const chips = data.results.map((r) => `
+    <button class="shop-day on" data-day="${esc(r.day)}" aria-pressed="true"><b>${esc(r.day)}</b>${short(r.name)}</button>`).join("");
+  const rows = s.items.map((x) => {
+    const ds = [...new Set(x.for.map((n) => dayOf[n]).filter(Boolean))];
+    return `<li data-days="${esc(ds.join(","))}"><button class="shop-item" aria-pressed="false"><span class="box" aria-hidden="true"></span>
+      <span class="name">${esc(x.item.charAt(0).toUpperCase() + x.item.slice(1))}</span></button>
+      <span class="days">${esc(ds.join(" · "))}</span></li>`;
+  }).join("");
+  const list = `
+    <details class="shopping">
+      <summary><span class="shop-title">Shopping list</span><span class="shop-count">${s.items.length} items for ${data.results.length} dishes</span></summary>
+      <div class="shop-body">
+        <div class="shop-filter"><span class="sub">Showing items for:</span>
+          <button class="shop-all" data-set="all">All</button><button class="shop-all" data-set="none">None</button></div>
+        <div class="shop-days">${chips}</div>
+        <ul class="shop-items">${rows}</ul>
+        <p class="shop-empty sub" hidden>Pick at least one dish to see its ingredients.</p>
+        <p class="sub shop-staples">Not listed (assumed in your kitchen): ${esc(s.staples.join(", "))}.</p>
+      </div>
+    </details>`;
   return `<div class="plan">${days}</div>${list}`;
 }
 
@@ -288,7 +309,32 @@ $("#form").addEventListener("submit", (e) => {
   send(input.value);
   input.value = "";
 });
+// Shopping list: filter by the dishes you'll actually cook, tick items off as you buy them.
+function refreshShopping(shop) {
+  const on = new Set([...shop.querySelectorAll(".shop-day.on")].map((b) => b.dataset.day));
+  let shown = 0;
+  shop.querySelectorAll(".shop-items li").forEach((li) => {
+    const show = li.dataset.days.split(",").some((d) => on.has(d));
+    li.hidden = !show;
+    shown += show;
+  });
+  shop.querySelector(".shop-empty").hidden = shown > 0;
+  shop.querySelector(".shop-count").textContent = `${shown} item${shown === 1 ? "" : "s"} for ${on.size} dish${on.size === 1 ? "" : "es"}`;
+}
 messages.addEventListener("click", (e) => {
+  const shop = e.target.closest(".shopping");
+  if (shop) {
+    const day = e.target.closest(".shop-day");
+    const all = e.target.closest(".shop-all");
+    const item = e.target.closest(".shop-item");
+    if (day) { day.classList.toggle("on"); day.setAttribute("aria-pressed", day.classList.contains("on")); }
+    if (all) shop.querySelectorAll(".shop-day").forEach((b) => {
+      b.classList.toggle("on", all.dataset.set === "all"); b.setAttribute("aria-pressed", all.dataset.set === "all");
+    });
+    if (item) { item.classList.toggle("done"); item.setAttribute("aria-pressed", item.classList.contains("done")); }
+    if (day || all) refreshShopping(shop);
+    return;
+  }
   const starter = e.target.closest(".starters button[data-q]");
   if (starter) return send(starter.dataset.q);
   const s = e.target.closest(".suggest button");
