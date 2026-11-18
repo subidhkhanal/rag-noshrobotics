@@ -355,7 +355,9 @@ def parse(onto: Ontology, message: str) -> Constraints:
             whole = m.group(0)
             end = whole.find(surfaces[0]) + len(surfaces[0]) if surfaces and surfaces[0] in whole else len(whole)
             consumed.append(whole[:end])
-            consumed.extend(surfaces[1:])
+            for extra in surfaces[1:]:
+                hit = re.search(r"(?:\b(?:no|not|without|or|and|nor)\s+)?" + re.escape(extra), whole)
+                consumed.append(hit.group(0) if hit else extra)
     for m in HINDI_EXCLUDE_RE.finditer(low):
         ids = _ingredients_in(onto, m.group(1))
         if ids:
