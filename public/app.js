@@ -150,6 +150,7 @@ function addBot(data) {
   const el = document.createElement("div");
   el.className = "msg bot";
   let html = `<p>${esc(data.reply)}</p>`;
+  if (data.suggestions?.length) html += `<div class="suggest">${data.suggestions.map((s) => `<button>${esc(s)}</button>`).join("")}</div>`;
   if (data.mode === "plan" && data.results.length) html += planHtml(data);
   else if (data.results.length) html += `<div class="cards">${data.results.map(cardHtml).join("")}</div>`;
   if (data.closest) html += `<div class="cards">${cardHtml(data.closest)}</div>`;

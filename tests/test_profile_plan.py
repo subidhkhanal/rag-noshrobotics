@@ -75,3 +75,23 @@ def test_usual_request_drops_previous_soft_prefs_but_keeps_diet(engine):
     out = a.chat(first["state"], "suggest something different from what I usually make", history(engine))
     assert out["state"]["include"] == [] and out["state"]["diets"] == ["jain"]
     assert sum("paneer" in r["name"].lower() for r in out["results"]) <= 1
+
+
+@pytest.mark.parametrize("msg,mode", [
+    ("hi", "chat"), ("Hello there!", "chat"), ("thanks", "chat"), ("what can you do?", "chat"),
+    ("what's the weather today", "chat"), ("bye", "chat"),
+    ("biryani", "search"), ("paneer", "search"), ("make it spicy", "search"), ("jain", "search"),
+    ("hi, jain dinner please", "search"),
+])
+def test_small_talk_and_off_topic_never_dump_random_recipes(engine, msg, mode):
+    out = Assistant(engine).chat(None, msg)
+    assert out["mode"] == mode
+    if mode == "chat":
+        assert out["results"] == []
+
+
+def test_greeting_keeps_active_constraints(engine):
+    a = Assistant(engine)
+    first = a.chat(None, "jain dinner")
+    hi = a.chat(first["state"], "hi")
+    assert hi["state"]["diets"] == ["jain"] and "Jain" in hi["reply"]

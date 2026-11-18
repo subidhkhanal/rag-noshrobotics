@@ -5,12 +5,14 @@ import os
 import re
 import time
 from dataclasses import dataclass, field, replace
+from functools import cached_property
 
 import httpx
 
 from . import llm_parser
 from .adapt import adapt
 from .plan import make_plan
+from .ontology import tokenize
 from .profile import build_profile
 from .query import ATTRIBUTE_RES, COURSE_RES, CUISINE_GROUPS, Constraints, is_refinement, parse
 from .search import Engine, Result, SearchOutput
@@ -122,11 +124,16 @@ class Assistant:
     def chat(self, state: dict | None, message: str, history: list | None = None) -> dict:
         s = session_from(self.engine, state)
         onto = self.engine.onto
+        kind = small_talk_kind(message)
+        if kind:
+            return self._small_talk_reply(s, kind)
         profile = build_profile(self.engine, history)
         parsed = parse(onto, message)
         used_llm = llm_parser.enabled() and llm_parser.should_call(message)
         if used_llm:
             parsed = llm_parser.combine(onto, parsed, llm_parser.llm_parse(message))
+        if not self._has_food_content(parsed):
+            return self._small_talk_reply(s, "unclear")
         s.state = merge(s.state, parsed, message)
         st = s.state
 
@@ -172,6 +179,45 @@ class Assistant:
             "parsed": parsed.to_dict(),
             "trace": out.trace | {"relaxed": out.relaxed, "claude_parser": used_llm},
         }
+
+    @cached_property
+    def _food_vocab(self) -> frozenset:
+        """Words that signal a food request: recipe-name words and ontology aliases."""
+        words = set().union(*self.engine.name_tokens)
+        for ing in self.engine.onto.ingredients.values():
+            for a in ing.aliases:
+                words.update(tokenize(a))
+        return frozenset(w for w in words if len(w) > 2 and w not in {"the", "and", "with", "style", "recipe"})
+
+    def _has_food_content(self, c: Constraints) -> bool:
+        if (c.diets or c.exclude or c.include or c.max_time or c.course or c.cuisine or c.attributes or c.servings
+                or c.prefer_non_veg or c.intents or c.conflicts):
+            return True
+        return bool(set(tokenize(c.text)) & self._food_vocab)
+
+    def _small_talk_reply(self, s: Session, kind: str) -> dict:
+        onto = self.engine.onto
+        active = describe(onto, s.state) if (s.state.diets or s.state.exclude) else ""
+        keeping = f" I'm still keeping {active} in mind for this chat." if active else ""
+        replies = {
+            "greeting": "Hi! I find recipes that genuinely fit how you eat — every ingredient is checked, not just "
+                        "the recipe name. Tell me your diet or allergies, what's in your fridge, or what you're "
+                        "craving." + keeping,
+            "thanks": "You're welcome! Want something else — another meal, a weekly plan, or a different cuisine?"
+                      + keeping,
+            "bye": "Happy cooking! Your chats and cooking history stay saved on this device.",
+            "help": "I recommend recipes from 6,000+ Indian and world dishes, checking every ingredient against "
+                    "your diet (Jain, sattvic, no onion-garlic, vegan, lactose-free, gluten-free) and allergies. "
+                    "I can also plan a week of meals, suggest swaps, and learn from dishes you mark as cooked."
+                    + keeping,
+            "unclear": "I'm a recipe assistant, so I couldn't find a food request in that. Try telling me a diet, "
+                       "an ingredient you have, a cuisine, or how much time you've got." + keeping,
+        }
+        suggestions = ["no onion no garlic vegetarian", "I have paneer and peas", "quick South Indian breakfast",
+                       "plan my week, Jain dinners"]
+        return {"mode": "chat", "state": s.to_dict(), "reply": replies[kind], "results": [], "closest": None,
+                "blocked_examples": [], "constraints": chips(onto, s.state), "parsed": {}, "trace": {},
+                "suggestions": [] if kind == "bye" else suggestions}
 
     def _base_response(self, s: Session, parsed: Constraints, reply: str, results: list[dict], **extra) -> dict:
         return {"state": s.to_dict(), "reply": reply, "results": results, "closest": None, "blocked_examples": [],
@@ -297,6 +343,25 @@ class Assistant:
         if not all(num in text for num in re.findall(r"\d[\d,]*", reply)):
             return None
         return text
+
+
+_SMALL_TALK = [
+    ("greeting", r"(hi+|hello+|hey+|hiya|helo|namaste|namaskar|hola|yo|sup|good\s+(morning|afternoon|evening|day))"
+                 r"(\s+(there|nosh|bot|recipeforge|ji|friend))?"),
+    ("thanks", r"(no,?\s+)?(thanks|thank\s*you|thx|ty|dhanyavad|shukriya|ok(ay)?|cool|great|nice|awesome|perfect|got it)"
+               r"(\s+(so much|a lot|you))?"),
+    ("bye", r"(bye|goodbye|see you|good\s*night|tata)"),
+    ("help", r"(help|what can you do|how (do|does) (you|this|it) work|who are you|what are you|what is this)"),
+]
+
+
+def small_talk_kind(message: str) -> str | None:
+    text = re.sub(r"[\s!.?,:)(]+$", "", message.strip().lower())
+    for kind, pat in _SMALL_TALK:
+        if re.fullmatch(rf"{pat}(\s*[!.?,]+\s*{pat})*", text) or (kind == "help" and re.search(rf"\b{pat}\b", text)
+                                                                     and len(text.split()) <= 6):
+            return kind
+    return None
 
 
 def describe(onto, st: Constraints) -> str:
