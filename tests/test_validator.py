@@ -121,3 +121,11 @@ def test_method_cross_check_ignores_serving_suggestions_and_negations():
     steps = ("To begin making the Dal Recipe in no onion no garlic style, boil the dal. "
              "Serve with egg mayo sandwich recipe and onion raita.")
     assert method_only_ingredients(onto, "Dal", steps, ings) == []
+
+
+def test_excluding_a_class_ingredient_catches_its_derivatives():
+    ings = parse_ingredients(onto, "2 tablespoons Classic Mayonnaise (with egg), 1 tbsp Fish sauce, 1 tbsp Groundnut oil")
+    assert onto.exclusion_verdict("egg", ings[:1]).status == "block"
+    assert onto.exclusion_verdict("fish", ings[1:2]).status == "block"
+    assert onto.exclusion_verdict("peanut", ings[2:]).status == "block"
+    assert onto.exclusion_verdict("paneer", parse_ingredients(onto, "1 cup Fresh cream")).status == "pass"

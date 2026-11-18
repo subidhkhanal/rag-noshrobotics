@@ -8,3 +8,4 @@ data/raw/
 research_notes/
 reports/Food RAG dietary constraint architecture.md
 finetune/data/
+finetune/kaggle/data/*.jsonl

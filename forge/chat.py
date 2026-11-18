@@ -8,6 +8,7 @@ from dataclasses import dataclass, field, replace
 
 import httpx
 
+from . import llm_parser
 from .adapt import adapt
 from .plan import make_plan
 from .profile import build_profile
@@ -123,6 +124,8 @@ class Assistant:
         onto = self.engine.onto
         profile = build_profile(self.engine, history)
         parsed = parse(onto, message)
+        if llm_parser.enabled():
+            parsed = llm_parser.combine(onto, parsed, llm_parser.llm_parse(message))
         s.state = merge(s.state, parsed, message)
         st = s.state
 

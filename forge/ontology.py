@@ -9,6 +9,8 @@ from pathlib import Path
 import yaml
 
 ONTOLOGY_DIR = Path(__file__).resolve().parent.parent / "data" / "ontology"
+# Tags that define an ingredient class: excluding egg/fish/peanut/... excludes everything carrying that tag.
+CLASS_DEFINING_TAGS = {"egg", "fish", "shellfish", "peanut", "sesame", "soy", "fungi", "honey", "gelatin", "alcohol"}
 
 _TOKEN_SPLIT = re.compile(r"[^0-9a-zऀ-ॿ]+")
 _CONSONANT_Y = re.compile(r"(?<=[^aeiou])y$")
@@ -186,10 +188,12 @@ class Ontology:
     def exclusion_verdict(self, excluded: str, ingredients: list[dict]) -> Verdict:
         """User-specified exclusion of one ingredient (and its family/compounds)."""
         risky_tags = self.effective_tags(excluded) - {"root_veg"}
+        # "No egg" must also catch mayonnaise; "no fish" must catch fish sauce.
+        class_tags = risky_tags if risky_tags and risky_tags <= CLASS_DEFINING_TAGS else set()
         blocks, flags = [], []
         for item in ingredients:
             for iid in item["ids"]:
-                if excluded in self.lineage(iid):
+                if excluded in self.lineage(iid) or self.effective_tags(iid) & class_tags:
                     blocks.append(f"{item['line']} → {self.label(excluded)}")
                 elif self.effective_may(iid) & risky_tags:
                     flags.append(f"{item['line']} may contain {self.label(excluded)}")

@@ -10,3 +10,4 @@ Dockerfile
 .dockerignore
 requirements-full.txt
 data/processed/recipes.jsonl
+finetune
