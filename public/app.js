@@ -105,6 +105,13 @@ function checkBadge(c) {
   return `<span class="check ${esc(c.status)}" title="${esc(c.detail)}">${icon} ${esc(c.label)}</span>`;
 }
 
+function sourceName(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    return host === "archanaskitchen.com" ? "Archana's Kitchen" : host;
+  } catch { return "original recipe"; }
+}
+
 function swapList(swaps) {
   return swaps.map((s) => `<li><b>${esc(s.replace)} → ${esc(s.with.join(" + "))}</b>: ${esc(s.how)}</li>`).join("");
 }
@@ -128,7 +135,7 @@ function cardHtml(r) {
       ${r.safer?.length ? `<details class="adapt"><summary>Safer swap</summary><ul>${swapList(r.safer)}</ul></details>` : ""}
       <div class="actions">
         <button class="link" data-recipe="${esc(r.id)}">Ingredient check</button>
-        ${r.url ? `<a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">Full recipe ↗</a>` : ""}
+        ${r.url ? `<a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">Full recipe ↗</a><span class="source">Source: ${esc(sourceName(r.url))}</span>` : ""}
         <span class="taste">
           <button class="pill" data-act="cooked" data-id="${esc(r.id)}">Cooked it</button>
           <button class="pill" data-act="like" data-id="${esc(r.id)}" aria-label="Like">👍</button>
@@ -161,15 +168,23 @@ function addBot(data) {
       .join("")}</ul></div>`;
   }
   const t = data.trace;
-  const removed = Object.entries(t.removed_by_constraint || {}).map(([k, v]) => `  ${k}: ${v}`).join("\n") || "  (none)";
-  if (data.mode === "search") {
-    html += `<details class="trace"><summary>Pipeline trace</summary><pre>${esc(
-      `parsed: ${JSON.stringify(data.parsed)}\n` +
-      `corpus: ${t.corpus}\nremoved by hard constraints:\n${removed}\n` +
-      `after hard filter: ${t.after_hard_filter}\nafter course/cuisine/pantry: ${t.after_soft_filters ?? "-"}\n` +
-      `search text: "${t.query_text}"\nfused pool (BM25+dense, RRF): ${t.fused_pool ?? "-"}\n` +
-      `cross-encoder reranked: ${t.reranked ?? "-"}${t.relaxed?.length ? `\nrelaxed: ${t.relaxed.join("; ")}` : ""}`
-    )}</pre></details>`;
+  if (data.mode === "search" && t.corpus) {
+    const n = (x) => Number(x).toLocaleString("en-IN");
+    const understood = (data.constraints || []).map((c) => c.label).join(" · ") || "no specific constraints";
+    const removedTotal = Object.values(t.removed_by_constraint || {}).reduce((a, b) => a + b, 0);
+    const removedBy = Object.entries(t.removed_by_constraint || {}).map(([k, v]) => `${n(v)} for ${k}`).join(", ");
+    const steps = [
+      `<b>Understood</b> ${esc(understood)}${t.claude_parser ? " <span class=\"sub\">(Claude helped read this one)</span>" : ""}`,
+      `<b>Checked</b> ${n(t.corpus)} recipes, ingredient by ingredient${removedTotal
+        ? ` — ruled out ${n(removedTotal)}${Object.keys(t.removed_by_constraint).length > 1 ? ` (${esc(removedBy)})` : ` for ${esc(Object.keys(t.removed_by_constraint)[0])}`}`
+        : ""}`,
+      `<b>Narrowed</b> to ${n(t.after_soft_filters ?? t.after_hard_filter)} that match your course, cuisine and ingredients`,
+      `<b>Searched</b> for “${esc(t.query_text)}” by keywords and meaning, then ranked by your preferences`,
+      `<b>Picked</b> ${data.results.length} varied dishes`,
+    ];
+    if (t.relaxed?.length) steps.push(`<b>Note</b> ${esc(t.relaxed.join("; "))}`);
+    html += `<details class="trace"><summary>How I found these</summary><ol class="trace-steps">${steps.map((s) => `<li>${s}</li>`).join("")}</ol>
+      <details class="raw"><summary>Raw details</summary><pre>${esc(JSON.stringify({ parsed: data.parsed, trace: t }, null, 2))}</pre></details></details>`;
   }
   el.innerHTML = html;
   messages.appendChild(el);

@@ -519,7 +519,9 @@ class Engine:
         if c.servings and r["servings"]:
             factor = c.servings / r["servings"]
             if abs(factor - 1) > 0.01:
-                why.append(f"serves {r['servings']} — scale ×{factor:.1f} for {c.servings}")
+                why.append(f"serves {r['servings']} · make {factor:g}× for {c.servings} people"
+                           if factor == round(factor, 1) else
+                           f"serves {r['servings']} · make about {factor:.1f}× for {c.servings} people")
             else:
                 why.append(f"serves {r['servings']}")
         if profile is not None and not profile.empty:
