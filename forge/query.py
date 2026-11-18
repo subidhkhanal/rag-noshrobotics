@@ -349,7 +349,9 @@ def parse(onto: Ontology, message: str) -> Constraints:
         if ids:
             c.exclude.update(ids)
             # Consume only the refused words, so "no garlic biryani" keeps "biryani" as what the user wants.
-            consumed.append(m.group(0)[: m.start(1) - m.start(0)] + (surfaces[0] if surfaces else ""))
+            whole = m.group(0)
+            end = whole.find(surfaces[0]) + len(surfaces[0]) if surfaces and surfaces[0] in whole else len(whole)
+            consumed.append(whole[:end])
             consumed.extend(surfaces[1:])
     for m in HINDI_EXCLUDE_RE.finditer(low):
         ids = _ingredients_in(onto, m.group(1))
