@@ -111,7 +111,11 @@ def call_live(base, pace: float = 1.7):
 
     def f(message, state):
         time.sleep(pace)  # stay under the site's own per-IP rate limit (40/min)
-        r = client.post(base.rstrip("/") + "/api/chat", json={"message": message, "state": state})
+        try:
+            r = client.post(base.rstrip("/") + "/api/chat", json={"message": message, "state": state})
+        except httpx.RemoteProtocolError:
+            # The server closed an idle keep-alive connection; browsers retry this transparently, so do we.
+            r = client.post(base.rstrip("/") + "/api/chat", json={"message": message, "state": state})
         if r.status_code != 200:
             return {"_status": r.status_code, "_body": r.text[:200]}
         return r.json()
