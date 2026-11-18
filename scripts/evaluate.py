@@ -126,6 +126,7 @@ def run(engine: Engine, name: str):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "reports" / "evaluation.md"))
+    ap.add_argument("--strict", action="store_true", help="exit 1 on any silent violation (CI)")
     args = ap.parse_args()
     t = time.perf_counter()
     fast = Engine(profile="fast")
@@ -172,6 +173,8 @@ def main():
         notes = "\n" + old[old.index("## Reading the table"):]
     out.write_text("\n".join(md) + "\n" + notes, encoding="utf-8")
     print("\n".join(md))
+    if args.strict and any(r["violations"] for r in rows):
+        sys.exit("FAIL: silent diet violations")
 
 
 if __name__ == "__main__":

@@ -21,7 +21,10 @@ import numpy as np
 
 from .ontology import Ontology, load, tokenize
 from .profile import STAPLES
-from .query import CUISINE_GROUPS, Constraints
+from .query import COMMON_WORDS, CUISINE_GROUPS, HINGLISH_WORDS, Constraints
+from .translit import Speller
+
+KEEP_WORDS = COMMON_WORDS | HINGLISH_WORDS
 
 DATA = Path(__file__).resolve().parent.parent / "data" / "processed"
 M2V_DIR = Path(__file__).resolve().parent.parent / "data" / "models" / "potion-base-8M"
@@ -161,6 +164,7 @@ class Engine:
         self.tags = index["tags"]
         self.name_tokens = index["name_tokens"]
         self.name_ids = index["name_ids"]
+        self._vocab = index.get("vocab")
         self.by_id = {r["id"]: i for i, r in enumerate(self.recipes)}
         self.is_baby = [bool(BABY.search(r["name"])) for r in self.recipes]
         self.is_condiment = [bool(CONDIMENT.search(r["name"])) for r in self.recipes]
@@ -175,6 +179,9 @@ class Engine:
         emb_path = data_dir / ("embeddings_bge.npy" if self.profile == "full" else "embeddings_m2v.npy")
         self.emb = np.load(emb_path) if use_dense and emb_path.exists() else None
         self._exclusion_cache: dict[str, list] = {}
+        # Convex 0.5 vs RRF on data/eval/golden.yaml: nDCG@10 0.690 vs 0.668; no worse on either half of the set.
+        self.fusion = os.getenv("FORGE_FUSION", "convex")
+        self.alpha = float(os.getenv("FORGE_ALPHA", "0.5"))
 
     @cached_property
     def embedder(self):
@@ -187,6 +194,11 @@ class Engine:
         if self.profile == "full":
             return np.array(next(iter(self.embedder.query_embed(text))), dtype=np.float32)
         return self.embedder.encode([text])[0]
+
+    @cached_property
+    def speller(self) -> Speller:
+        vocab = self._vocab or build_vocab(self.onto, self.recipes)
+        return Speller(vocab)
 
     @cached_property
     def reranker(self):
@@ -280,6 +292,9 @@ class Engine:
             parts.append(c.cuisine)
         if c.prefer_non_veg:
             parts.append("chicken mutton fish egg")
+        if parts[0]:
+            # Spelling variants the corpus never uses ("biriyani", "sambhar", "chatni") -> the corpus spelling.
+            parts[0] = " ".join(w if w in KEEP_WORDS else self.speller.correct(w) for w in parts[0].split())
         if not any(p.strip() for p in parts):
             # Course is a filter, not a search word ("dinner" would match "Dinner Rolls").
             parts += [self.onto.diets[d]["label"] for d in sorted(c.diets)] + [
@@ -379,19 +394,28 @@ class Engine:
         idx = np.array(cand)
         qtok = tokenize(qtext)
         lex = self.bm25.scores(qtok, idx)
-        lex_order = idx[np.argsort(-lex)]
-        rrf = Counter()
-        for r, i in enumerate(lex_order[:200]):
-            rrf[int(i)] += 1 / (60 + r)
-        if qvec is not None:
-            dense = self.emb[idx] @ qvec
-            for r, i in enumerate(idx[np.argsort(-dense)][:200]):
-                rrf[int(i)] += 1 / (60 + r)
+        dense = self.emb[idx] @ qvec if qvec is not None else None
         novelty = profile is not None and not profile.empty and bool(c.intents & {"different", "usual"})
+        taste = None
         if profile is not None and not profile.empty and profile.liked_vec is not None and len(idx) and not novelty:
             taste = self.emb[idx] @ profile.liked_vec
-            for r, i in enumerate(idx[np.argsort(-taste)][:100]):
-                rrf[int(i)] += 0.5 / (60 + r)
+        rrf = Counter()
+        if self.fusion == "convex" and dense is not None:
+            # Weighted sum of min-max normalised scores (tuned on the golden set; beats RRF once labels exist).
+            fused = self.alpha * _norm(lex) + (1 - self.alpha) * _norm(dense)
+            if taste is not None:
+                fused = fused + 0.15 * _norm(taste)
+            for i, v in zip(idx, fused):
+                rrf[int(i)] = float(v)
+        else:
+            for r, i in enumerate(idx[np.argsort(-lex)][:200]):
+                rrf[int(i)] += 1 / (60 + r)
+            if dense is not None:
+                for r, i in enumerate(idx[np.argsort(-dense)][:200]):
+                    rrf[int(i)] += 1 / (60 + r)
+            if taste is not None:
+                for r, i in enumerate(idx[np.argsort(-taste)][:100]):
+                    rrf[int(i)] += 0.5 / (60 + r)
         pool = [i for i, _ in rrf.most_common(pool_size)] or list(idx[:pool_size])
         trace["fused_pool"] = len(pool)
 
@@ -550,6 +574,19 @@ class Engine:
         return [{"id": self.recipes[i]["id"], "name": self.recipes[i]["name"], "reason": blocked_reason[i]} for i in top]
 
 
+def build_vocab(onto: Ontology, recipes: list[dict]) -> Counter:
+    """Words the corpus actually uses (names, ingredient lines, ontology aliases): the speller's targets."""
+    vocab = Counter()
+    for r in recipes:
+        vocab.update(TOKEN.findall(r["name"].lower()) * 3)
+        for x in r["ingredients"]:
+            vocab.update(TOKEN.findall(x["name"].lower()))
+    for ing in onto.ingredients.values():
+        for a in ing.aliases:
+            vocab.update(TOKEN.findall(a.lower()))
+    return Counter({w: n for w, n in vocab.items() if w.isalpha()})
+
+
 def count_lines(path: Path) -> int:
     """Line-ending-agnostic freshness signature (git may convert LF/CRLF between platforms)."""
     return path.read_bytes().count(b"\n")
@@ -566,6 +603,7 @@ def build_index(onto: Ontology, data_dir: Path = DATA, write: bool = False) -> d
         "tags": [union([onto.effective_tags(i) for i in r["ingredient_ids"]]) for r in recipes],
         "name_tokens": [frozenset(tokenize(r["name"])) for r in recipes],
         "name_ids": [frozenset(m.ingredient for m in onto.match(r["name"])) for r in recipes],
+        "vocab": build_vocab(onto, recipes),
     }
     if write:
         (data_dir / "index.pkl").write_bytes(pickle.dumps(index, protocol=5))

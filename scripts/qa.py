@@ -128,6 +128,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--live")
     ap.add_argument("--out", default=str(ROOT / "reports" / "qa.jsonl"))
+    ap.add_argument("--strict", action="store_true", help="exit 1 if any turn has an automatic issue (CI)")
     args = ap.parse_args()
     from forge.search import Engine
     engine = Engine(profile="fast")
@@ -164,6 +165,8 @@ def main():
     for r in rows:
         if r["issues"]:
             print(f"- {r['msg']!r}: {r['issues'][:2]}")
+    if args.strict and n_issues:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

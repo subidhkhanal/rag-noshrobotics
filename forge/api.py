@@ -22,6 +22,7 @@ from .search import DATA, Engine
 ROOT = Path(__file__).resolve().parent.parent
 engine = Engine()
 engine.embed_query("warm up")
+engine.speller  # noqa: B018 - build at startup, not on the first user's request
 assistant = Assistant(engine)
 AUDIT = json.loads((DATA / "audit.json").read_text(encoding="utf-8"))
 

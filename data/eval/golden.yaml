@@ -1,0 +1,314 @@
+# Retrieval golden set: one concept, asked three ways (English, Hinglish, Devanagari).
+# Relevance is defined by facts about each recipe, never by what the system returns:
+#   name: regex that the recipe's name must match (case-insensitive)
+#   ings: ingredient ids that must all appear in the recipe (with ontology inheritance)
+# A recipe is relevant when every given predicate holds. Queries are written the way people type them;
+# the English line is often a description rather than the dish name, so meaning-based search is tested too.
+# Written by hand, independently of the search code. Do not tune this file to the system's output.
+
+- id: khichdi
+  name: "khi?chd?i|khichri|khichadi"
+  en: rice and lentil one pot comfort meal for dinner
+  hinglish: raat ko halki khichdi
+  devanagari: रात के खाने में खिचड़ी
+- id: biryani
+  name: "biryani|biriyani"
+  en: vegetable biryani
+  hinglish: veg biriyani banana hai
+  devanagari: वेज बिरयानी
+- id: palak_paneer
+  name: "palak|spinach"
+  ings: [spinach, paneer]
+  en: spinach and cottage cheese curry
+  hinglish: palak paneer
+  devanagari: पालक पनीर
+- id: aloo_gobi
+  ings: [potato, cauliflower]
+  en: potato cauliflower dry sabzi
+  hinglish: aloo gobhi ki sabzi
+  devanagari: आलू गोभी की सब्जी
+- id: rajma
+  name: "rajma|kidney bean"
+  en: kidney bean curry with rice
+  hinglish: rajma chawal
+  devanagari: राजमा चावल
+- id: chole
+  name: "chole|chana masala|chickpea|chana"
+  en: chickpea curry
+  hinglish: chole bhature wale chole
+  devanagari: छोले
+- id: dosa
+  name: "dosa"
+  en: crispy rice crepe for breakfast
+  hinglish: masala dosa
+  devanagari: मसाला डोसा
+- id: idli
+  name: "idli"
+  en: steamed rice cakes breakfast
+  hinglish: idli sambhar
+  devanagari: इडली
+- id: upma
+  name: "upma|uppittu"
+  en: savoury semolina breakfast
+  hinglish: rava upma nashte me
+  devanagari: उपमा
+- id: poha
+  name: "poha|aval|avalakki"
+  en: flattened rice breakfast
+  hinglish: kanda poha
+  devanagari: पोहा
+- id: paratha
+  name: "paratha|parantha|parotta"
+  en: stuffed flatbread for breakfast
+  hinglish: aloo parantha
+  devanagari: आलू पराठा
+- id: kheer
+  name: "kheer|payasam|payesh|phirni"
+  en: rice pudding dessert
+  hinglish: chawal ki kheer
+  devanagari: खीर
+- id: halwa
+  name: "halwa|halva|sheera|kesari"
+  en: carrot halwa dessert
+  hinglish: gajar ka halwa
+  devanagari: गाजर का हलवा
+- id: ladoo
+  name: "ladoo|laddu|laddoo|ladu"
+  en: festive sweet balls
+  hinglish: besan ke laddoo
+  devanagari: बेसन के लड्डू
+- id: dal_tadka
+  name: "\\bdal\\b|daal|lentil"
+  en: yellow lentils with tempering
+  hinglish: dal tadka
+  devanagari: दाल तड़का
+- id: sambar
+  name: "sambar|sambhar"
+  en: south indian lentil and vegetable stew
+  hinglish: sambhar
+  devanagari: सांभर
+- id: rasam
+  name: "rasam|saaru"
+  en: tangy tamarind pepper soup from the south
+  hinglish: rasam
+  devanagari: रसम
+- id: kadhi
+  name: "kadhi|kadi|majjige"
+  en: yogurt and gram flour curry
+  hinglish: punjabi kadhi pakora
+  devanagari: कढ़ी
+- id: bhindi
+  name: "bhindi|okra|lady.?s? finger|bhendi"
+  en: okra stir fry
+  hinglish: bhindi ki sabzi
+  devanagari: भिंडी की सब्जी
+- id: baingan
+  name: "baingan|brinjal|eggplant|bharta|vankaya|vangi|kathirikai|begun"
+  en: smoky roasted eggplant mash
+  hinglish: baingan bharta
+  devanagari: बैंगन का भरता
+- id: karela
+  name: "karela|bitter gourd|pavakkai|kakarakaya"
+  en: bitter gourd fry
+  hinglish: karele ki sabzi
+  devanagari: करेले की सब्जी
+- id: lauki
+  name: "lauki|bottle gourd|dudhi|sorakkai|ghiya"
+  en: bottle gourd curry
+  hinglish: lauki ki sabzi
+  devanagari: लौकी की सब्जी
+- id: matar_paneer
+  ings: [paneer, peas]
+  en: paneer and green peas curry
+  hinglish: matar paneer
+  devanagari: मटर पनीर
+- id: methi
+  name: "methi|fenugreek"
+  en: fenugreek leaf flatbread
+  hinglish: methi paratha
+  devanagari: मेथी पराठा
+- id: pakora
+  name: "pakora|pakoda|bhaji|bajji|fritter|bonda"
+  en: crispy fritters for evening tea
+  hinglish: pakode banane hain
+  devanagari: पकोड़े
+- id: samosa
+  name: "samosa"
+  en: samosa
+  hinglish: aloo samosa
+  devanagari: समोसा
+- id: dhokla
+  name: "dhokla|khaman"
+  en: steamed gram flour cake from gujarat
+  hinglish: khaman dhokla
+  devanagari: ढोकला
+- id: pulao
+  name: "pulao|pulav|pilaf|pulihora"
+  en: mildly spiced vegetable rice
+  hinglish: matar pulao
+  devanagari: मटर पुलाव
+- id: raita
+  name: "raita|pachadi|thayir"
+  en: cucumber yogurt side dish
+  hinglish: kheera raita
+  devanagari: खीरे का रायता
+- id: chutney
+  name: "chutney|thogayal|thuvayal|pachadi"
+  en: green coriander and mint dip
+  hinglish: hari chutney
+  devanagari: हरी चटनी
+- id: lassi
+  name: "lassi|buttermilk|chaas|majjige|mor"
+  en: sweet yogurt drink
+  hinglish: meethi lassi
+  devanagari: मीठी लस्सी
+- id: chicken_curry
+  name: "chicken|murgh|kozhi|koli"
+  en: chicken curry
+  hinglish: murgh ka salan
+  devanagari: चिकन करी
+- id: butter_chicken
+  name: "butter chicken|murgh makhani|chicken makhani"
+  en: butter chicken
+  hinglish: murgh makhni
+  devanagari: बटर चिकन
+- id: egg_curry
+  name: "\\beggs?\\b|anda|omelette|mutta"
+  en: egg curry
+  hinglish: anda curry
+  devanagari: अंडा करी
+- id: fish_curry
+  name: "fish|meen|machli|machher|mach\\b|pomfret|surmai|mackerel|salmon|basa|rohu|tilapia|bangda|sardine|seer|tuna"
+  en: fish curry
+  hinglish: machli ka salan
+  devanagari: मछली करी
+- id: mutton
+  name: "mutton|gosht|lamb|kosha mangsho|keema"
+  en: mutton curry
+  hinglish: gosht ka salan
+  devanagari: मटन करी
+- id: paneer_tikka
+  name: "tikka"
+  ings: [paneer]
+  en: grilled paneer tikka
+  hinglish: paneer tikka
+  devanagari: पनीर टिक्का
+- id: cheela
+  name: "cheela|chilla|chila|pudla|pesarattu|adai"
+  en: savoury gram flour pancake
+  hinglish: besan ka cheela
+  devanagari: बेसन का चीला
+- id: thepla
+  name: "thepla"
+  en: gujarati spiced flatbread for travel
+  hinglish: methi thepla
+  devanagari: थेपला
+- id: puri
+  name: "\\bpuris?\\b|poori"
+  en: deep fried puffed bread
+  hinglish: aloo puri
+  devanagari: पूरी
+- id: roti
+  name: "roti|chapati|phulka|bhakri|rotla"
+  en: whole wheat flatbread
+  hinglish: roti
+  devanagari: रोटी
+- id: tomato_soup
+  name: "soup|shorba|saaru|rasam"
+  ings: [tomato]
+  en: tomato soup
+  hinglish: tamatar ka soup
+  devanagari: टमाटर का सूप
+- id: sprouts_salad
+  name: "sprout"
+  en: sprouts salad
+  hinglish: moong sprouts salad
+  devanagari: अंकुरित मूंग सलाद
+- id: kofta
+  name: "kofta"
+  en: vegetable dumplings in gravy
+  hinglish: kofta curry
+  devanagari: कोफ्ता करी
+- id: jeera_rice
+  name: "jeera|cumin"
+  ings: [rice]
+  en: cumin rice
+  hinglish: jeera rice
+  devanagari: जीरा राइस
+- id: aloo_matar
+  ings: [potato, peas]
+  en: potato and peas curry
+  hinglish: aloo matar
+  devanagari: आलू मटर
+- id: chaat
+  name: "chaat|bhel|papdi|sev puri|pani puri|ragda"
+  en: tangy street food snack
+  hinglish: papdi chaat
+  devanagari: चाट
+- id: pav_bhaji
+  name: "pav bhaji|pao bhaji"
+  en: pav bhaji
+  hinglish: pao bhaji
+  devanagari: पाव भाजी
+- id: vada
+  name: "vada|wada|vadai"
+  en: crispy lentil doughnuts
+  hinglish: medu wada
+  devanagari: मेदु वड़ा
+- id: shrikhand
+  name: "shrikhand|srikhand"
+  en: sweet strained yogurt dessert
+  hinglish: shrikhand
+  devanagari: श्रीखंड
+- id: gulab_jamun
+  name: "jamun"
+  en: gulab jamun
+  hinglish: gulaab jamun
+  devanagari: गुलाब जामुन
+- id: sabudana
+  name: "sabudana|sago|tapioca pearl"
+  en: sago dish for fasting
+  hinglish: sabudana khichdi vrat ke liye
+  devanagari: साबूदाना खिचड़ी
+- id: kebab
+  name: "kebab|kabab|tikki|cutlet|galouti|seekh"
+  en: vegetable kebab starter
+  hinglish: hara bhara kabab
+  devanagari: हरा भरा कबाब
+- id: dal_makhani
+  name: "makhani|makhni"
+  en: creamy black lentils
+  hinglish: dal makhni
+  devanagari: दाल मखनी
+- id: chai
+  name: "\\btea\\b|chai|kahwa|kehwa"
+  en: masala tea
+  hinglish: masala chai
+  devanagari: मसाला चाय
+- id: potato_tomato
+  ings: [potato, tomato]
+  en: something with potatoes and tomatoes
+  hinglish: aloo tamatar wala kuch
+  devanagari: आलू टमाटर
+- id: paneer_capsicum
+  ings: [paneer, capsicum]
+  en: paneer with bell peppers
+  hinglish: paneer shimla mirch
+  devanagari: पनीर शिमला मिर्च
+- id: palak_dal
+  name: "\\bdal\\b|daal|lentil|paruppu|pappu"
+  ings: [spinach]
+  en: spinach lentils
+  hinglish: palak dal
+  devanagari: पालक दाल
+- id: coconut_rice
+  ings: [coconut, rice]
+  name: "rice|sadam|annam|bath|chawal|pulao|biryani"
+  en: coconut rice
+  hinglish: nariyal chawal
+  devanagari: नारियल चावल
+- id: egg_rice
+  ings: [egg, rice]
+  en: egg fried rice
+  hinglish: anda chawal
+  devanagari: अंडा चावल

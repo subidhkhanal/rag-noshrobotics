@@ -9,6 +9,7 @@ import re
 from dataclasses import dataclass, field
 
 from .ontology import Ontology
+from .translit import deva_to_latin
 
 DIET_PATTERNS: list[tuple[str, str]] = [
     ("no_onion_garlic",
@@ -294,6 +295,18 @@ def _known_words(onto: Ontology) -> set[str]:
     return _KNOWN_CACHE[key]
 
 
+DEVA_CHAR = re.compile(r"[ऀ-ॿ]")
+_DEVA_ALIAS_CACHE: dict[int, list[tuple[str, str]]] = {}
+
+
+def _deva_aliases(onto: Ontology) -> list[tuple[str, str]]:
+    key = id(onto)
+    if key not in _DEVA_ALIAS_CACHE:
+        pairs = [(a, ing.id) for ing in onto.ingredients.values() for a in ing.aliases if DEVA_CHAR.search(a)]
+        _DEVA_ALIAS_CACHE[key] = sorted(pairs, key=lambda p: -len(p[0]))
+    return _DEVA_ALIAS_CACHE[key]
+
+
 def _targets(onto: Ontology) -> set[str]:
     return CORRECTION_TARGETS
 
@@ -304,6 +317,13 @@ def normalize_message(onto: Ontology, message: str) -> str:
         message = message.replace(e, f" {w} ")
     for d, w in DEVANAGARI.items():
         message = message.replace(d, w)
+    if DEVA_CHAR.search(message):
+        # Ontology aliases first (exact, reviewed), then romanize the rest so "पालक के बिना" refuses spinach.
+        for alias, iid in _deva_aliases(onto):
+            # Whole words only: "राइस" (rice) must not match the alias "राइ" (mustard).
+            message = re.sub(rf"(?<![ऀ-ॿ]){re.escape(alias)}(?![ऀ-ॿ])",
+                             f" {onto.label(iid).lower()} ", message)
+        message = deva_to_latin(message)
     targets = _targets(onto)
     known = _known_words(onto)
 

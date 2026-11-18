@@ -9,3 +9,4 @@ research_notes/
 reports/Food RAG dietary constraint architecture.md
 finetune/data/
 finetune/kaggle/data/*.jsonl
+reports/Production RAG best practices 2026.md
