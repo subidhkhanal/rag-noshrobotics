@@ -1,0 +1,67 @@
+import pytest
+
+from forge.chat import merge
+from forge.ontology import load
+from forge.query import is_refinement, parse
+
+onto = load()
+
+
+@pytest.mark.parametrize(
+    "msg,diets",
+    [
+        ("no onion no garlic vegetarian", {"no_onion_garlic", "vegetarian"}),
+        ("bina pyaz lahsun ka khana", {"no_onion_garlic"}),
+        ("Jain food options", {"jain"}),
+        ("I'm lactose intolerant what can I make", {"lactose_free"}),
+        ("recipes without nuts", {"nut_free"}),
+        ("high protein non veg under 15 mins", set()),
+        ("vegan recipes", {"vegan"}),
+        ("peanut allergy, quick snack", {"peanut_free"}),
+    ],
+)
+def test_diets(msg, diets):
+    assert parse(onto, msg).diets == diets
+
+
+def test_time_course_cuisine():
+    c = parse(onto, "south indian breakfast without coconut under 20 mins")
+    assert (c.max_time, c.course, c.cuisine, c.exclude) == (20, "breakfast", "south indian", {"coconut"})
+    assert parse(onto, "gluten free dessert in half an hour").max_time == 30
+
+
+def test_hinglish_verb_is_not_banana():
+    c = parse(onto, "kuch spicy banana hai")
+    assert c.include == [] and "spicy" in c.attributes
+
+
+def test_conflict_is_swapped_and_text_rewritten():
+    c = parse(onto, "I want butter chicken but I'm vegetarian")
+    assert c.conflicts == ["chicken"] and c.swaps == {"chicken": "paneer"}
+    assert "paneer" in c.include and "paneer" in c.text and "chicken" not in c.text
+    v = parse(onto, "vegan butter chicken")
+    assert v.swaps["chicken"] != "paneer" and "butter" in v.text
+
+
+def test_exclusion_covered_by_diet_is_not_duplicated():
+    assert parse(onto, "no onion no garlic vegetarian").exclude == set()
+
+
+def test_multi_turn_keeps_hard_constraints_and_refines():
+    s1 = parse(onto, "I have chicken tomatoes and rice")
+    st = merge(parse(onto, ""), s1, "I have chicken tomatoes and rice")
+    msg2 = "something similar but spicier"
+    st = merge(st, parse(onto, msg2), msg2)
+    assert st.include == ["chicken", "tomato", "rice"] and "spicy" in st.attributes
+    msg3 = "make it under 15 minutes"
+    st = merge(st, parse(onto, msg3), msg3)
+    assert st.max_time == 15 and st.include == ["chicken", "tomato", "rice"]
+
+
+def test_new_topic_replaces_soft_but_keeps_diet():
+    st = merge(parse(onto, ""), parse(onto, "jain breakfast"), "jain breakfast")
+    msg = "paneer curry for dinner"
+    new = parse(onto, msg)
+    assert not is_refinement(msg, new)
+    st = merge(st, new, msg)
+    assert st.diets == {"jain"} and st.course == "dinner" and st.include == ["paneer"]

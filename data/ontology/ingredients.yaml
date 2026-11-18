@@ -1,0 +1,300 @@
+# Canonical ingredient ontology.
+# Each entry: id: {aliases, tags, may, family, contains, note}
+#   tags     - properties the ingredient definitely has (drive BLOCK verdicts)
+#   may      - properties it may have depending on brand/recipe (drive FLAG verdicts)
+#   family   - parent ingredient for user exclusions ("no onion" also catches shallots)
+#   contains - components of compound items; their tags/families are inherited
+# Aliases are matched on whole tokens, longest phrase first, after light plural stemming.
+
+# ---------------- Alliums (onion / garlic family) ----------------
+onion: {tags: [allium, root_veg], aliases: [onion, onions, red onion, white onion, pyaz, pyaaz, kanda, vengayam, eerulli, ullipaya, प्याज, प्याज़, caramelized onion, pickled onion, fried onion, birista]}
+shallot: {tags: [allium, root_veg], family: onion, aliases: [shallot, shallots, sambar onion, pearl onion, small onion, chinna vengayam, sambar onions]}
+spring_onion: {tags: [allium], family: onion, aliases: [spring onion, spring onions, spring onion greens, green onion, scallion, scallions, hara pyaz, onion greens, onion stalks]}
+leek: {tags: [allium], family: onion, aliases: [leek, leeks]}
+chives: {tags: [allium], family: onion, aliases: [chives, chive]}
+onion_powder: {tags: [allium], family: onion, aliases: [onion powder, onion flakes, dehydrated onion]}
+garlic: {tags: [allium, root_veg], aliases: [garlic, garlic cloves, garlic pods, lahsun, lehsun, lasun, lassan, poondu, vellulli, belluli, लहसुन, garlic paste, chopped garlic, minced garlic, garlic chutney, lahsun ki chutney, red garlic chutney]}
+garlic_powder: {tags: [allium], family: garlic, aliases: [garlic powder, garlic salt, garlic granules, garlic flakes]}
+garlic_butter: {contains: [garlic, butter], aliases: [garlic butter, herb garlic butter]}
+garlic_mayo: {contains: [garlic, mayonnaise], aliases: [garlic mayo, cheesy garlic mayo, garlic mayonnaise]}
+garlic_spread: {contains: [garlic], tags: [dairy], may: [egg], aliases: [garlic spread, garlic oregano spread, garlic and oregano spread]}
+khanda_lasun_masala: {contains: [onion, garlic], aliases: [khanda lasun masala, kolhapuri khanda lasun masala]}
+ginger_garlic_paste: {contains: [ginger, garlic], aliases: [ginger garlic paste, adrak lahsun paste, ginger garlic]}
+
+# ---------------- Roots / tubers / underground ----------------
+ginger: {tags: [root_veg], aliases: [ginger, fresh ginger, adrak, adrakh, inji, allam, shunti, अदरक, ginger paste, ginger juice, ginger root]}
+dry_ginger: {tags: [dry_root_spice], family: ginger, aliases: [dry ginger, dry ginger powder, sonth, saunth, sukku, shunthi, ginger powder]}
+fresh_turmeric: {tags: [root_veg], aliases: [fresh turmeric, fresh turmeric root, turmeric root, kachi haldi, whole turmeric, raw turmeric]}
+potato: {tags: [root_veg], aliases: [potato, potatoes, aloo, alu, batata, urulaikizhangu, bangaladumpa, आलू, baby potato, baby potatoes, potato masala, aloo bhujia, aloo tikki, french fries, potato chips, hash brown]}
+sweet_potato: {tags: [root_veg], family: potato, aliases: [sweet potato, sweet potatoes, shakarkandi, shakarkand, genasu, sakkaravalli kizhangu]}
+carrot: {tags: [root_veg], aliases: [carrot, carrots, gajar, gajjar, गाजर, baby carrot]}
+radish: {tags: [root_veg], aliases: [radish, mooli, mullangi, red radish, red baby radish, daikon, मूली]}
+radish_greens: {aliases: [mooli ke patte, radish greens, radish leaves]}
+beetroot: {tags: [root_veg], aliases: [beetroot, beetroots, beet, beets, chukandar, chakundar, chukander]}
+turnip: {tags: [root_veg], aliases: [turnip, turnips, shalgam]}
+parsnip: {tags: [root_veg], aliases: [parsnip, parsnips]}
+yam: {tags: [root_veg], aliases: [yam, elephant yam, suran, senai, ratalu, jimikand, oal, kand]}
+colocasia_root: {tags: [root_veg], aliases: [colocasia root, arbi, arvi, seppankizhangu, taro, taro root, chamadumpa, arabic]}
+colocasia_leaves: {aliases: [colocasia leaves, arbi leaves, patra leaves, alu leaves, arabic leaves]}
+tapioca: {tags: [root_veg], aliases: [tapioca root, cassava, kappa, maravalli kizhangu]}
+lotus_stem: {tags: [root_veg], aliases: [lotus stem, kamal kakdi, nadru, lotus root]}
+celeriac: {tags: [root_veg], aliases: [celeriac]}
+galangal: {tags: [root_veg], aliases: [galangal]}
+fennel_bulb: {aliases: [fennel bulb]}
+
+# ---------------- Fungi ----------------
+mushroom: {tags: [fungi], aliases: [mushroom, mushrooms, button mushroom, button mushrooms, shiitake, shiitake mushrooms, portobello, oyster mushroom, khumbh, dhingri, kalaan]}
+yeast: {tags: [fungi_yeast], aliases: [yeast, active dry yeast, instant yeast, dry yeast]}
+
+# ---------------- Other vegetables ----------------
+tomato: {aliases: [tomato, tomatoes, tamatar, thakkali, टमाटर, cherry tomato, cherry tomatoes, blanched tomato, sun dried tomato, sun dried tomatoes, tomato puree, homemade tomato puree, tomato paste, canned tomato]}
+chilli: {aliases: [chilli, chillies, mirch, mirchi, chilli pepper]}
+green_chilli: {family: chilli, aliases: [green chilli, green chillies, green chili, hari mirch, हरी मिर्च, pachai milagai, badi hari mirch, large green chilli, green chilli paste, jalapeno, jalapenos, pickled jalapenos, thai red chilli, birds eye chilli, fresh red chilli, fresh red chillies, bhavnagri mirch, mor milagai, dried green chillies, chipotle, chipotle chillies, chipotle peppers]}
+capsicum: {aliases: [capsicum, bell pepper, bell peppers, green bell pepper, red bell pepper, yellow bell pepper, shimla mirch, शिमला मिर्च, paprika pepper]}
+cauliflower: {aliases: [cauliflower, gobi, phool gobi, gobhi]}
+cabbage: {aliases: [cabbage, patta gobi, muttaikose, bandh gobi, purple cabbage, red cabbage, napa cabbage, chinese cabbage, bok choy]}
+broccoli: {aliases: [broccoli]}
+brussels_sprouts: {aliases: [brussel sprouts, brussels sprouts]}
+peas: {aliases: [peas, green peas, matar, mattar, pattani, hare matar, frozen peas]}
+dried_peas: {aliases: [dried green peas, vatana, dried yellow peas, dried white peas, white peas, safed vatana, hara vatana]}
+beans: {aliases: [beans, green beans, french beans, flat green beans, cluster beans, gawar phali, gavar, kothavarangai, goruchikkudu, broad beans, avarekai, avarekalu, lilva beans, double beans, yard long beans, chawli beans, karamani, barbati, haricot beans, gwar pods, chawla pods, sangri]}
+brinjal: {tags: [jain_some_avoid], aliases: [brinjal, baingan, eggplant, aubergine, green aubergine, japanese eggplant, kathirikai, vankaya, badanekai, vangi, small brinjal, long green brinjal, green brinjal]}
+okra: {aliases: [okra, bhindi, lady finger, ladies finger, vendakkai, bendakaya, ladyfinger]}
+spinach: {aliases: [spinach, palak, baby spinach, keerai, palakura, basella, malabar spinach, pasalai keerai]}
+methi_leaves: {aliases: [methi leaves, fenugreek leaves, fresh methi, kasuri methi, dried fenugreek leaves, methi, kasuri fenugreek]}
+greens: {aliases: [greens, amaranth leaves, green amaranth leaves, red amaranth leaves, chaulai, bathua, bathua leaves, sorrel leaves, gongura, mustard greens, sarson, sarson ka saag, kale, arugula, rocket leaves, drumstick leaves, moringa leaves, murungai keerai, lettuce, iceberg lettuce, romaine lettuce, salad leaves, mixed greens, microgreens, dill, dill leaves, suva, shepu, borage, indian borage, doddapatre, betel leaves, paan, neem leaves, neem flowers, banana flower, vazhaipoo, banana stem, plantain stem, alfalfa sprouts, bean sprouts, celery, watercress, spinach basil sauce, batua, seaweed, seaweed sheets, nori, artichokes, artichoke, mustard flowers edible]}
+gourd: {aliases: [gourd, bottle gourd, lauki, dudhi, sorakkai, ridge gourd, turai, peerkangai, beerakaya, snake gourd, pudalangai, pudulangai, ash gourd, white pumpkin, petha, vellai poosanikai, bitter gourd, karela, pavakkai, kakarakaya, pointed gourd, parval, parwal, tinda, apple gourd, sponge gourd, gilka, ivy gourd, tindora, tondli, kovakkai, dondakaya, chayote, chow chow, kachri, wild cucumber, turkey berries, sundakkai, manathakkali, sundkai, kachris]}
+pumpkin: {aliases: [pumpkin, kaddu, red pumpkin, parangikai, pumpkin puree, sitaphal kaddu, butternut squash, squash, yellow squash]}
+cucumber: {aliases: [cucumber, cucumbers, kheera, kakdi, english cucumber, mangalorean cucumber, gherkins, gherkin, pickled cucumber]}
+zucchini: {aliases: [zucchini, green zucchini, yellow zucchini, courgette]}
+corn: {aliases: [corn, sweet corn, corn kernels, corn cob, baby corn, bhutta, makai, makka, whole corn kernels, dry corn kernels, popcorn]}
+drumstick: {aliases: [drumstick, drumsticks, moringa, murungakkai, sahjan, shevga]}
+raw_banana: {aliases: [raw banana, plantain, kacha kela, vazhakkai, raw banana peel]}
+jackfruit: {aliases: [jackfruit, raw jackfruit, kathal, jackfruit seeds, ripe jackfruit, chakka]}
+raw_papaya: {aliases: [raw papaya]}
+asparagus: {aliases: [asparagus]}
+knol_khol: {aliases: [knol khol, kohlrabi, ganth gobi, navalkol, kohl rabi, knoll knoll, knoll knoll leaves]}
+bamboo_shoot: {aliases: [bamboo shoots, bamboo shoot]}
+water_chestnut: {aliases: [water chestnut, singhada, singhade, singoda]}
+olive: {aliases: [olive, olives, black olives, green olives, kalamata olives, kalmatta olives]}
+capers: {aliases: [capers]}
+avocado: {aliases: [avocado, avocados, guacamole]}
+mixed_vegetables: {may: [root_veg], aliases: [mixed vegetables, vegetables, mixed veggies, veggies, vegetable]}
+stone_flower: {aliases: [stone flower, dagad phool, pathar phool, kalpasi]}
+
+# ---------------- Herbs & leaves ----------------
+coriander_leaves: {aliases: [coriander dhania leaves, coriander leaves, coriander, dhania leaves, hara dhania, cilantro, kothamalli, हरा धनिया, coriander stems]}
+curry_leaves: {aliases: [curry leaves, kadi patta, kadhi patta, karuveppilai, कढ़ी पत्ता, curry leaf, kadhi leaves]}
+mint: {aliases: [mint, mint leaves, pudina, pudhina, mint powder, peppermint]}
+basil: {aliases: [basil, basil leaves, thai basil, tulsi, holy basil, dried basil, dried basil leaves]}
+herbs: {aliases: [herbs, fresh herbs, mixed herbs, dried herbs, dry mix herbs, oregano, dried oregano, fresh oregano, thyme, dried thyme, fresh thyme, rosemary, parsley, parsley leaves, sage, tarragon, italian seasoning, pizza seasoning, herbes de provence, za atar, zaatar, sumac, kaffir lime leaves, lemongrass, lemon grass, bay leaf, bay leaves, tej patta, tejpatta, तेज पत्ता, brahmi leaves, heart leaves, pandan leaf, hibiscus, white hibiscus leaves, lavender, lavender flowers, chamomile, dried chamomile, jasmine buds, fresh jasmine buds, rose leaves, mughlai meetha attar, attar]}
+
+# ---------------- Spices (single) ----------------
+salt: {aliases: [salt, namak, sea salt, rock salt, sendha namak, kosher salt, table salt, नमक, salt to taste, black salt, kala namak]}
+turmeric_powder: {aliases: [turmeric, turmeric powder, haldi, manjal, haldi powder, हल्दी, dried turmeric]}
+red_chilli: {family: chilli, aliases: [red chilli, red chilli powder, chilli powder, kashmiri red chilli, kashmiri red chilli powder, kashmiri chilli, lal mirch, लाल मिर्च, dry red chilli, dry red chillies, dried red chilli, byadagi, byadagi chilli, guntur chilli, guntur dried chillies, red chilli flakes, chilli flakes, cayenne, cayenne pepper, paprika, paprika powder, smoked paprika, deggi mirch, red chilli paste, kashmiri dry red chillies, kashmiri dry red chilli, सुखी लाल मिर्च]}
+cumin: {aliases: [cumin, cumin seeds, jeera, jeerakam, zeera, cumin powder, jeera powder, roasted cumin powder, kala jeera, shahi jeera, black cumin, caraway, जीरा]}
+coriander_seed: {aliases: [coriander dhania seeds, coriander dhania powder, coriander seeds, coriander powder, dhania powder, dhania seeds, dhaniya, malli, धनिया पाउडर]}
+mustard_seed: {tags: [mustard], aliases: [rye, mustard seeds, rai, rai kuria, split mustard seeds, yellow mustard seeds, kadugu, sarson seeds, mustard powder, राइ, mustard, mustard flowers]}
+black_pepper: {aliases: [black pepper, pepper, black pepper powder, peppercorns, black peppercorns, whole black peppercorns, whole black pepper corns, black pepper corns, kali mirch, milagu, white pepper, white pepper powder, pepper powder, sichuan peppercorns, काली मिर्च, salt and pepper]}
+asafoetida: {may: [gluten], aliases: [asafoetida, hing, heeng, perungayam, inguva, ssp asafoetida, हींग], note: "Compounded hing is commonly cut with wheat flour"}
+garam_masala: {aliases: [garam masala, garam masala powder, गरम मसाला]}
+cardamom: {aliases: [cardamom, elaichi, green cardamom, cardamom powder, elakkai, black cardamom, badi elaichi, brown cardamom, इलाइची]}
+cinnamon: {aliases: [cinnamon, cinnamon stick, dalchini, dal chini, cinnamon powder, pattai, दालचीनी]}
+cloves: {aliases: [cloves, clove, laung, lavang, krambu, clove powder, लॉन्ग, लौंग, long, bud long, laung buds]}
+fennel: {aliases: [fennel, fennel seeds, saunf, sombu, fennel powder, saunf powder, सौंफ]}
+fenugreek_seed: {aliases: [fenugreek seeds, methi seeds, methi dana, vendayam, methi powder, fenugreek powder, split methi seeds, methi kuria, yellow fenugreek seeds, fenugreek]}
+ajwain: {aliases: [ajwain, carom seeds, omam, ova, ajwain seeds]}
+nigella: {aliases: [nigella, nigella seeds, kalonji, onion seeds, onion nigella seeds, kalojeere]}
+nutmeg: {aliases: [nutmeg, jaiphal, nutmeg powder, mace, javitri, mace powder]}
+star_anise: {aliases: [star anise, chakra phool, badian, star anise, aniseed, anise, saunf star]}
+saffron: {aliases: [saffron, kesar, saffron strands, zafran]}
+poppy_seeds: {aliases: [poppy seeds, khus khus, khuskhus, khas khas, posto, gasagasa, poppy, dry poppy, poppy poppy]}
+amchur: {aliases: [amchur, amchoor, dry mango powder, aamchur]}
+anardana: {aliases: [anardana, anardana powder, pomegranate seed powder, dried pomegranate seeds]}
+kokum: {aliases: [kokum, malabar tamarind, kudampuli, kachampuli]}
+tamarind: {aliases: [tamarind, imli, puli, tamarind paste, tamarind water, tamarind pulp, homemade tamarind paste]}
+long_pepper: {aliases: [long pepper, pippali, peepramul, ganthoda, kandathipli, arisithipli, tailed pepper, kababchini, cubeb]}
+allspice: {aliases: [allspice, all spice powder, all spice]}
+spice_misc: {aliases: [nagkesar, cassia buds, ratan jot, alkanet, marathi moggu, kapok buds, edible camphor, pacha karpooram, dried rose petals, rose petals, gulkand]}
+mustard_sauce: {tags: [mustard], may: [gluten], aliases: [mustard sauce, dijon mustard, kasundi, kasundi mustard sauce, english mustard, honey mustard]}
+
+# ---------------- Spice blends (composition varies by brand) ----------------
+chaat_masala: {aliases: [chaat masala, chaat masala powder]}
+sambar_powder: {may: [gluten], tags: [blend], aliases: [sambar powder, sambar masala, rasam powder, rasam masala, vangi bath powder, bisi bele bhat powder, bisi bele bhat spice powder, idli dosa podi, milagai podi, gunpowder, molagapodi]}
+spice_blend: {tags: [blend], may: [allium, gluten], aliases: [masala, spice mix, spice blend, curry powder, pav bhaji masala, chana masala, chana masala powder, chole masala, biryani masala, biryani masala powder, tandoori masala, tikka masala, kitchen king, sabzi masala, goda masala, maharashtrian goda masala, kolhapuri masala, malwani masala, goan recheado masala, dhansak masala, achari masala, pickle masala, panch phoran, panch phoran masala, bhaja masala, kashmiri masala powder, chinese 5 spice powder, five spice, cajun spice mix, cajun seasoning, taco seasoning, pumpkin pie spice, thandai masala, thandai powder, kesar milk masala, milk masala, raita masala, meat masala, chicken masala, fish masala, aachi fish masala, mutton masala, egg masala, seasoning, spices, puliodarai powder, puliyogare powder, wangi bhat powder, bc belle bhat powder, health mix]}
+maggi_masala: {tags: [blend], may: [allium, gluten], aliases: [maggi masala, maggi noodles masala, maggi masala ae magic, masala ae magic, tastemaker], note: "Instant noodle tastemakers typically list onion and garlic powder"}
+curry_paste: {tags: [blend, allium], may: [shellfish, fish], aliases: [thai red curry paste, thai green curry paste, thai yellow curry paste, curry paste, red curry paste, green curry paste, harissa, harissa paste, harissa sauce, sambal, sambal oelek, sambal paste]}
+
+# ---------------- Sauces & condiments ----------------
+ketchup: {contains: [tomato], may: [allium], aliases: [ketchup, tomato ketchup, tomato sauce], note: "Most commercial ketchups list onion and/or garlic"}
+chilli_sauce: {family: chilli, may: [allium, gluten], aliases: [chilli sauce, red chilli sauce, green chilli sauce, sweet chilli sauce, thai sweet chilli sauce, sweet and spicy red chilli sauce, tomato chilli sauce, hot sauce, tabasco, chilli oil, chili oil, sriracha sauce, sriracha, adobo sauce, habanero sauce, mole sauce, homemade mole sauce, chilly flax]}
+schezwan_sauce: {tags: [allium], contains: [chilli], aliases: [schezwan sauce, szechuan sauce, schezwan chutney]}
+soy_sauce: {tags: [soy, gluten], aliases: [soy sauce, soya sauce, light soy sauce, dark soy sauce, teriyaki sauce, ginger teriyaki sauce]}
+oyster_sauce: {tags: [shellfish], aliases: [oyster sauce]}
+fish_sauce: {tags: [fish], aliases: [fish sauce]}
+hoisin_sauce: {tags: [soy], may: [gluten, allium], aliases: [hoisin sauce, homemade hoisin sauce, bean paste, black bean sauce]}
+worcestershire: {tags: [fish], may: [gluten, allium], aliases: [worcestershire sauce, worcestershire]}
+vinegar: {aliases: [vinegar, white vinegar, apple cider vinegar, rice vinegar, rice wine vinegar, balsamic vinegar, malt vinegar, white wine vinegar, chilli vinegar, red wine vinaigrette, vinaigrette]}
+pasta_sauce: {contains: [tomato], may: [allium], aliases: [pasta sauce, pizza sauce, pizza and pasta sauce, homemade pizza and pasta sauce, marinara, marinara sauce, homemade marinara sauce, arrabbiata sauce, roasted tomato pasta sauce, tomato basil pasta sauce, salsa, tomato salsa, barbeque sauce, bbq sauce, chipotle sauce, pomegranate sauce, pomegranate molasses, enchilada sauce]}
+pesto: {tags: [dairy], may: [tree_nut, allium], aliases: [pesto, basil pesto, homemade basil pesto, sun dried tomato pesto]}
+mayonnaise: {tags: [egg], aliases: [mayonnaise, mayo, classic mayonnaise, mint mayo, tandoori mayo, achari mayo, tartare dip, tartar sauce, sandwich spread, carrot cucumber sandwich spread]}
+eggless_mayonnaise: {tags: [dairy], aliases: [eggless mayonnaise, eggless mayo, veg mayonnaise, vegan mayonnaise]}
+dip: {tags: [dairy], may: [allium], aliases: [cheesy dip, cheese dip, tzatziki, ranch]}
+hummus: {tags: [sesame], may: [allium], aliases: [hummus, homemade hummus]}
+tahini: {tags: [sesame], aliases: [tahini, sesame paste]}
+chutney_green: {may: [allium], aliases: [green chutney, coriander mint chutney, mint chutney, coriander chutney]}
+chutney_sweet: {aliases: [sweet chutney, date tamarind chutney, imli chutney, saunth chutney]}
+pickle: {may: [allium], tags: [mustard], aliases: [pickle, achar, mango pickle, punjabi style mango pickle, lemon pickle, lime pickle]}
+jam: {aliases: [jam, fruit jam, marmalade, orange marmalade, compote, strawberry compote, fruit preserve]}
+syrup: {aliases: [syrup, maple syrup, date syrup, sugar syrup, chocolate sauce, caramel sauce, rose syrup, rooh afza, grenadine]}
+food_colour: {aliases: [food colour, food color, food colouring, yellow food colour, red food color, green food colour, orange color, edible color]}
+essence: {aliases: [essence, vanilla essence, vanilla extract, vanilla, rose water, rose essence, kewra water, kewra essence, almond essence, pineapple essence, natural bourbon vanilla, extract of natural bourbon vanilla]}
+leavening: {aliases: [baking powder, baking soda, cooking soda, soda bicarbonate, eno, enos fruit salt, fruit salt, citric acid, citric acid crystals, cream of tartar, agar agar, china grass]}
+gelatin: {tags: [gelatin], aliases: [gelatin, gelatine]}
+
+# ---------------- Oils & fats ----------------
+oil: {aliases: [oil, sunflower oil, vegetable oil, refined oil, canola oil, rice bran oil, cooking oil, olive oil, extra virgin olive oil, pure olive oil, light olive oil, coconut oil, corn oil, avocado oil, तेल, emami rice bran oil, figaro pure olive oil]}
+mustard_oil: {tags: [mustard], aliases: [mustard oil, sarson ka tel, kachi ghani]}
+sesame_oil: {tags: [sesame], aliases: [sesame oil, gingelly oil, til oil, nallennai, toasted sesame oil]}
+peanut_oil: {tags: [peanut], aliases: [peanut oil, groundnut oil, moongphali tel]}
+ghee: {tags: [dairy, trace_lactose], aliases: [ghee, desi ghee, clarified butter, नेय्, घी]}
+butter: {tags: [dairy, trace_lactose], aliases: [butter, unsalted butter, salted butter, makkhan, white butter, chilled butter, herb butter, मक्खन]}
+margarine: {may: [dairy], aliases: [margarine, nutralite, nutralite classic spread, table spread]}
+cocoa_butter: {aliases: [cocoa butter]}
+lard: {tags: [meat], aliases: [lard, bacon fat, tallow]}
+
+# ---------------- Dairy ----------------
+milk: {tags: [dairy, lactose], aliases: [milk, whole milk, full cream milk, toned milk, skimmed milk, low fat milk, doodh, paal, दूध, cold milk, warm milk, boiled milk]}
+curd: {tags: [dairy, lactose], aliases: [curd vada, dahi vada, dahi bhalla, curd, curds, dahi, yogurt, yoghurt, greek yogurt, hung curd, thayir, perugu, दही, plain yogurt]}
+buttermilk: {tags: [dairy, lactose], aliases: [buttermilk, butter milk, chaas, chaach, majjige, moru]}
+cream: {tags: [dairy, lactose], aliases: [cream, fresh cream, heavy cream, whipping cream, heavy whipping cream, double cream, single cream, malai, sour cream, cooking cream, whipped cream]}
+paneer: {tags: [dairy, lactose], aliases: [paneer, cottage cheese, homemade cottage cheese, chenna, chhena, पनीर]}
+cheese: {tags: [dairy, lactose], aliases: [cheese, cheese spread, cheese slices, cheese slice, cheese cubes, cheese block, processed cheese, mozzarella, mozzarella cheese, cream cheese, ricotta, ricotta cheese, mascarpone, mascarpone cheese, feta, feta cheese, goat cheese, brie, brie cheese, swiss cheese, britannia cheezza, cheezza, cheesy]}
+aged_cheese: {tags: [dairy, trace_lactose], family: cheese, aliases: [parmesan, parmesan cheese, parmigiano reggiano, parmigiano reggiano cheese, cheddar, cheddar cheese, gouda, gouda cheese, gruyere, gruyere cheese, pecorino]}
+khoya: {tags: [dairy, lactose], aliases: [khoya, khoa, mawa, khova, rabri, rabdi, basundi]}
+condensed_milk: {tags: [dairy, lactose], aliases: [condensed milk, sweetened condensed milk, milkmaid, evaporated milk]}
+milk_powder: {tags: [dairy, lactose], aliases: [milk powder, dairy whitener, whitener]}
+ice_cream: {tags: [dairy, lactose], may: [egg], aliases: [ice cream, vanilla ice cream, kulfi]}
+custard: {tags: [dairy, lactose], aliases: [vanilla custard, custard]}
+custard_powder: {may: [dairy], aliases: [custard powder]}
+whey: {tags: [dairy, lactose], aliases: [whey, whey protein, casein]}
+shrikhand: {tags: [dairy, lactose], aliases: [shrikhand, amrakhand, aamras with cream]}
+
+# ---------------- Dairy alternatives ----------------
+coconut: {aliases: [coconut, fresh coconut, grated coconut, desiccated coconut, dessicated coconut, dry coconut, kopra, copra, coconut flakes, sweetened coconut flakes, tender coconut, tender coconut meat, nariyal, thengai, नारियल]}
+coconut_milk: {aliases: [coconut milk, thick coconut milk, thin coconut milk, coconut cream, coconut milk powder, coconut yogurt, coconut curd, नारियल का दूध]}
+coconut_water: {aliases: [coconut water, tender coconut water]}
+almond_milk: {tags: [tree_nut], family: almond, aliases: [almond milk, badam milk]}
+soy_milk: {tags: [soy], aliases: [soy milk, soya milk]}
+oat_milk: {may: [gluten], aliases: [oat milk]}
+tofu: {tags: [soy], aliases: [tofu, bean curd, silken tofu, firm tofu]}
+soy_chunks: {tags: [soy], aliases: [soy chunks, soya chunks, soy nuggets, nutrela, soy granules, soya granules, soybean, soybeans, soya bean, whole soya dal, soy flour, edamame, tempeh]}
+
+# ---------------- Eggs ----------------
+egg: {tags: [egg], aliases: [egg, eggs, whole egg, whole eggs, egg yolk, egg yolks, egg white, egg whites, boiled egg, anda, mutta, अंडे, अंडा]}
+egg_replacer: {aliases: [egg replacer, flaxmeal egg replacer, flax egg]}
+
+# ---------------- Meat, poultry, seafood ----------------
+chicken: {tags: [meat, poultry], aliases: [chicken, chicken breast, chicken breasts, boneless chicken, chicken thigh, chicken thighs, chicken legs, chicken drumstick, chicken drumsticks, chicken wings, chicken mince, chicken keema, chicken sausage, chicken tikka, hariyali chicken tikka, murgh, kozhi]}
+chicken_stock: {tags: [meat, poultry], may: [allium], aliases: [chicken stock, chicken broth, chicken cube]}
+mutton: {tags: [meat], aliases: [mutton, lamb, goat meat, mutton keema, mutton kheema, keema, mutton legs, lamb ribs, gosht, mince meat, minced meat, meat]}
+pork: {tags: [meat], aliases: [pork, bacon, bacon strips, ham, sausage, sausages, salami, pepperoni, prosciutto]}
+beef: {tags: [meat], aliases: [beef, steak]}
+fish: {tags: [fish], aliases: [fish, fish fillet, fish fillets, basa, basa fish, rohu, rohu fish, pomfret, pomfret fish, seer fish, surmai, king fish, mackerel, bangda, sardine, sardines, sardine fish, hilsa, ilish, hilsa fish, bhetki, bhetki fish, salmon, salmon fillet, tuna, canned tuna, shark fish, maach, aar maach, meen, anchovies, dried fish]}
+shellfish: {tags: [shellfish], aliases: [prawn, prawns, shrimp, shrimps, dried shrimps, crab, crabs, lobster, oyster, oysters, clams, clam, mussels, squid, calamari, jhinga, chingri, era, kolambi]}
+
+# ---------------- Grains, flours, breads ----------------
+rice: {aliases: [rice, basmati rice, cooked rice, steamed rice, idli rice, dosa rice, brown rice, red rice, red matta rice, black rice, jasmine rice, thai jasmine rice, arborio rice, sona masoori, ponni rice, govind bhog rice, gobindobhog, seeraga samba rice, jeeraga samba rice, broken rice, broken raw rice, raw rice, boiled rice, wild rice, leftover rice, chawal, अन्नम, चावल, long grain rice, long grain, congee]}
+rice_flour: {aliases: [rice flour, rice rava, idiyappam flour, chawal ka atta]}
+poha: {aliases: [poha, flattened rice, beaten rice, aval, avalakki, red poha, flattened red rice, nylon sabakki]}
+puffed_rice: {aliases: [puffed rice, murmura, kurmura, mandakki, pori, bhel]}
+batter: {aliases: [idli dosa batter, dosa batter, idli batter, idli, dosa, ada, medu vada, vada, uttapam]}
+wheat_flour: {tags: [gluten], aliases: [whole wheat flour, wheat flour, atta, chapati flour, gehun ka atta, multigrain flour, multigrain atta, wheat bran, wheat germ, wheat berries, whole wheat, wheat grass powder, wheat flakes, hulled wheat, wheat grass]}
+maida: {tags: [gluten], aliases: [maida, all purpose flour, plain flour, refined flour, vivatta maida, bread flour, cake flour, self raising flour, pastry flour]}
+semolina: {tags: [gluten], aliases: [semolina, sooji, suji, rava, rawa, bombay rava, chiroti rava, upma rava, सूजी]}
+broken_wheat: {tags: [gluten], aliases: [broken wheat, dalia, daliya, godumai rava, cracked wheat, bulgur, bulgur wheat, couscous, lapsi]}
+barley: {tags: [gluten], aliases: [barley, barley flour, jau, pearl barley, malt]}
+rye: {tags: [gluten], aliases: [rye flour, rye bread], note: "A bare 'rye' in translated Indian recipes is usually rai (mustard seeds)"}
+oats: {may: [gluten], aliases: [oats, instant oats, rolled oats, oatmeal, oats flour, oat flour, oat bran, quick oats, steel cut oats, muesli, granola]}
+millet: {aliases: [millet, millets, ragi, ragi flour, finger millet, nachni, nagli, sprouted ragi, bajra, bajra flour, pearl millet, jowar, jowar flour, sorghum, foxtail millet, barnyard millet, samvat, kodo millet, little millet, kutki, proso millet, mixed millets, ragi seeds, jowar seeds]}
+pseudo_grain: {aliases: [quinoa, quinoa flour, buckwheat, buckwheat flour, kuttu, kuttu ka atta, amaranth, amaranth seeds, amaranth flour, rajgira, rajgira flour, sabudana, sago, tapioca pearls, tapioca flour, arrowroot, arrowroot flour, singhara atta, water chestnut flour, quinoa]}
+corn_flour: {aliases: [corn flour, cornflour, corn starch, cornstarch, corn meal, cornmeal, makki ka atta, yellow corn meal flour, polenta, maize flour]}
+besan: {aliases: [besan, gram flour, chickpea flour, kadalai maavu, roasted gram flour, sattu, sattu ka atta, besan flour, बेसन]}
+urad_flour: {aliases: [urad dal flour, urad flour]}
+bread: {tags: [gluten], may: [dairy, egg, soy], aliases: [ham burger buns, ham burger bun, hamburger buns, hamburger bun, hamburger buns, bread, white bread, brown bread, whole wheat bread, whole wheat brown bread, multigrain bread, sandwich bread, bread slices, bread crumbs, breadcrumbs, whole wheat bread crumbs, panko, croutons, fried bread cubes, pav, pav buns, burger buns, burger bun, buns, bun, hot dog bread, hot dog buns, baguette, french bread, french loaf, crusty bread, crusty bread log, ciabatta, ciabatta bread, panini bread, bagel, submarine bread, subway bread, pita, pita bread, mini pita breads, whole wheat pita bread, focaccia, kulcha, naan, pizza base]}
+roti: {tags: [gluten], aliases: [roti, chapati, chapatti, phulka, leftover roti, paratha, tawa paratha, whole wheat tawa paratha, khakra, khakhra, homemade whole wheat khakras, poori, puri, pani puris, papdi, papdi puris, bhatura]}
+tortilla: {tags: [gluten], aliases: [tortilla, tortillas, whole wheat flour tortilla, wraps, soft taco shells]}
+corn_tortilla: {aliases: [corn tortilla, corn flour tortilla, hard taco shells, taco shells, nachos, tortilla chips]}
+pasta: {tags: [gluten], may: [egg], aliases: [pasta, spaghetti, spaghetti pasta, penne, penne pasta, penne rigate, fusilli, macaroni, macaroni pasta, farfalle, conchiglie, conchiglie pasta, spirali, spirali pasta, linguine, fettuccine, tagliatelle, lasagna, lasagna sheets, chifferi rigati, orzo, ravioli]}
+noodles: {tags: [gluten], may: [egg], aliases: [noodles, hakka noodles, veg hakka noodles, wheat noodles, udon noodles, ramen, maggi, maggi noodles, instant noodles, chow mein]}
+rice_noodles: {aliases: [rice noodles, rice vermicelli, rice vermicelli noodles, flat rice noodles, glass noodles, rice paper, rice paper rolls]}
+vermicelli: {tags: [gluten], aliases: [vermicelli, semiya, seviyan, sevai, thin semiya, roasted vermicelli, pheni, kataifi, kataifi dough]}
+pastry: {tags: [gluten], may: [dairy, egg], aliases: [puff pastry, puff pastry sheet, phyllo, phyllo sheets, pie crust, all purpose pie crust, spring roll wrappers, samosa patti, wonton wrappers]}
+biscuit: {tags: [gluten], may: [dairy, soy], aliases: [biscuit, biscuits, cookies, marie biscuit, digestive biscuit, multigrain digestive biscuits, multigrain digestive oat biscuits, oreo, oreo biscuits, bourbon biscuits, graham crackers, graham cracker crumbs, crackers, rusk, toast, chocolate wafers, wafers, pretzels]}
+cake: {tags: [gluten], may: [dairy, egg], aliases: [cake, sponge cake, sponge cake slice, chocolate cake, lemon pound cake, pound cake, brownie]}
+cereal: {may: [gluten], aliases: [corn flakes, cornflakes, cereal]}
+
+# ---------------- Pulses ----------------
+dal: {aliases: [dal, daal, dhal, lentils, lentil, mixed lentils, toor dal, arhar dal, split toor dal, tuvar dal, moong dal, yellow moong dal, green moong dal, whole moong, moong, mung, green gram, masoor dal, pink masoor dal, red lentils, chana dal, bengal gram dal, urad dal, white urad dal, black urad dal, whole urad, kali dal, moth dal, matki, moth sprouts, horse gram, horse gram dal, kollu, kulith, mixed sprouts, moong sprouts, green moong sprouts, sprouts, roasted gram dal, pottukadalai, dalia chana, fresh green toor dal, pigeon pea, badi, wadi, vadi, black gram, pigeonpea, pigeon peas, cowpea, cowpea pods, horse, horse powder]}
+chickpeas: {aliases: [chickpeas, chickpea, kabuli chana, white chickpeas, chole, kala chana, brown chickpeas, black chickpeas, hara chana, fresh green chickpeas, green chickpeas, garbanzo, white garbanzo, chana, kabuli chana]}
+kidney_beans: {aliases: [rajma, kidney beans, large kidney beans, kashmiri rajma, red kidney beans, black beans, canned black beans, black eyed beans, lobia, chawli, white beans, white broad beans, refried beans, baked beans, azuki, red black eyed beans, dry beans]}
+papad: {may: [gluten], aliases: [papad, papads, urad dal papad, appalam, poppadom]}
+namkeen: {may: [allium, gluten, peanut], aliases: [sev, boondi, namkeen, bhujia, mixture, chivda, farsan]}
+
+# ---------------- Nuts & seeds ----------------
+almond: {tags: [tree_nut], aliases: [almond, almonds, badam, slivered almonds, almond meal, almond flour, almond powder, badam powder, almond butter, बादाम]}
+cashew: {tags: [tree_nut], aliases: [cashew, cashews, cashew nut, cashew nuts, kaju, whole cashews, cashew paste, काजू, mundiri]}
+walnut: {tags: [tree_nut], aliases: [walnut, walnuts, akhrot]}
+pistachio: {tags: [tree_nut], aliases: [pistachio, pistachios, pista]}
+other_tree_nut: {tags: [tree_nut], aliases: [pecan, pecans, hazelnut, hazelnuts, hazelnut meal, macadamia, pine nuts, pine nut, brazil nut, chironji, charoli, nutella, nutella spread]}
+mixed_nuts: {tags: [tree_nut], may: [peanut], aliases: [mixed nuts, dry fruits, mixed dry fruits, nuts]}
+peanut: {tags: [peanut], aliases: [peanut, peanuts, groundnut, groundnuts, moongphali, mungfali, kadalai, verkadalai, roasted peanuts, raw peanuts, boiled peanuts, groundnut powder, peanut powder, peanut butter]}
+sesame: {tags: [sesame], aliases: [sesame, sesame seeds, til, til seeds, ellu, black sesame seeds, white sesame, sesame powder]}
+seeds: {aliases: [sunflower seeds, pumpkin seeds, melon seeds, magaj, watermelon seeds, chia seeds, sabja, basil seeds, flax seeds, flaxseeds, flax seed powder, flax meal, flaxmeal, alsi, lotus seeds, phool makhana, makhana, fox nuts, char magaz, chaar magaz]}
+coconut_sugar: {aliases: [coconut sugar, palm sugar, palm jaggery, karupatti, nolen gur, date jaggery]}
+edible_gum: {aliases: [gond, goond, edible gum, natural gum]}
+
+# ---------------- Sweeteners ----------------
+sugar: {aliases: [sugar, white sugar, caster sugar, castor sugar, brown sugar, demerara sugar, powdered sugar, icing sugar, confectioners sugar, cane sugar, sugar cubes, decorative sugar, sprinkles, candy sprinkles, tutti frutti, glazed cherries, शक्कर, चीनी, misri, mishri, molasses]}
+jaggery: {aliases: [jaggery, gur, gud, vellam, bella, jaggery powder, गुड़, good, good powder, good powder done]}
+honey: {tags: [honey], aliases: [honey, shahad, madhu]}
+sweetener: {aliases: [stevia, monk fruit, sugar free, artificial sweetener, sucralose]}
+dates: {aliases: [dates, khajur, seedless dates, dry dates, dry dates powder, kharik, kharik pud, chuara]}
+
+# ---------------- Fruits ----------------
+lemon: {aliases: [lemon, lemons, lemon juice, lime, limes, lime juice, nimbu, lemon zest, lemon wedges, lime wedges, lemon rind, निम्बू का रस]}
+fruit: {aliases: [fruit, fruits, fresh fruits, mixed fruits, mixed berries, banana, bananas, ripe banana, ripe bananas, robusta banana, nendra pazham, elaichi banana, apple, apples, green apple, apple puree, mango, mangoes, ripe mango, raw mango, mango pulp, kachi kairi, aam, aamras, aam papad, orange, oranges, orange juice, fresh orange juice, orange zest, orange peel, orange pulp, orange rind, pineapple, pineapple juice, papaya, guava, amrood, pomegranate, pomegranate juice, fresh pomegranate fruit kernels, pomegranate arils, grapes, green grapes, black grapes, red grapes, green seedless grapes, red seedless grapes, strawberry, strawberries, blueberries, blackberries, raspberries, fresh raspberries, dried raspberries, cranberries, cherries, fresh cherries, pitted cherries, canned cherries, kiwi, watermelon, musk melon, honey dew melon, melon, peaches, peach, pears, pear, plums, plum, apricots, apricot, prunes, figs, fresh figs, dried figs, anjeer, chikoo, sapota, custard apple, sitaphal, jamun, black plum, alu bukhara, star fruit, passion fruit, dragon fruit, pitaya, wood apple, bael, amla, gooseberry, nellikai, hog plum, amtekai, bilimbi, bimbla, raisins, kishmish, black raisins, sultanas, currants, mixed fruit, fruit juice, sugarcane juice, mosambi, lychee, grapefruit, falsa, ber, ker, gondhoraj lebu juice, lebu]}
+
+# ---------------- Chocolate / bakery sweets ----------------
+cocoa: {aliases: [cocoa, cocoa powder, cacao]}
+dark_chocolate: {may: [dairy, tree_nut, soy], aliases: [dark chocolate, chocolate, chocolate chips, dark chocolate chips, chocolate bar, chocolate shavings, chocolate ganache, cooking chocolate, compound chocolate, choco chips, chocolate syrup]}
+milk_chocolate: {tags: [dairy, lactose], may: [tree_nut, soy], aliases: [milk chocolate, white chocolate, maltesers, butterscotch, butterscotch chips, caramel, toffee]}
+indian_sweet: {tags: [dairy, lactose], aliases: [rasgulla, gulab jamun, kalakand, rasmalai, peda, barfi, burfi]}
+silver_leaf: {tags: [silver_leaf], aliases: [silver foil, silver leaf, chandi ka vark, varq, edible silver foil, edible silver leaf, silver work, chandi s work, silver balls]}
+
+# ---------------- Beverages / alcohol ----------------
+alcohol: {tags: [alcohol], aliases: [rum, wine, red wine, white wine, dry white wine, beer, vodka, tequila, triple sec, brandy, whisky, whiskey, sherry, orange liquor, orange liqueur, baileys, baileys irish cream, liqueur, mirin, sake, cooking wine, shaoxing wine, grand marnier, bourbon whiskey, bhang]}
+tea_coffee: {aliases: [tea, tea leaves, tea bags, green tea, black tea, assam tea leaves, oolong tea, matcha, matcha powder, coffee, instant coffee, instant coffee powder, coffee powder, filter coffee powder, coffee decoction, green coffee beans, espresso, espresso powder, arabica]}
+soda: {aliases: [soda, soda water, aerated water, club soda, coca cola, cola, sprite, ginger ale, tonic water, seven up, 7 up, rasna]}
+stock: {may: [allium], aliases: [vegetable stock, veg stock, stock, broth, vegetable broth, stock cube, bouillon]}
+water: {aliases: [water, hot water, warm water, cold water, chilled water, lukewarm water, ice, ice cubes, crushed ice, पानी]}
+
+# ---------------- Misc ----------------
+spirulina: {aliases: [spirulina, moringa powder]}
+non_food: {tags: [non_food], aliases: [coal, charcoal, toothpicks, toothpick, cotton thread, cotton threads, banana leaf, banana leaves, thonnai, dried leaves, skewers, clamps, parchment, foil]}
+prepared_snack: {may: [allium, gluten, dairy], aliases: [samosa, samosas, potato wedges, aloo bhujia mix, chakli, mathri, kachori, ice cream cone, cone]}
+
+# ---------------- Long tail added from coverage audit ----------------
+kimchi: {tags: [allium], may: [fish, shellfish], aliases: [kimchi]}
+momos: {tags: [gluten], may: [allium], aliases: [momos, momo, dumplings, dim sum]}
+crepes: {tags: [gluten, egg, dairy], aliases: [crepes, crepe, pancake, pancakes]}
+gelatin_dessert: {tags: [gelatin], aliases: [jello, jelly mix, jelly crystals]}
+malted_drink: {tags: [dairy, lactose, gluten], aliases: [horlicks, bournvita, boost, malted milk]}
+dairy_sweet: {tags: [dairy, lactose], aliases: [mishti doi, dulce de leche, motichoor ladoo, motichoor ladoos, ladoo, laddu]}
+confectionery: {tags: [dairy, lactose, gluten], may: [tree_nut, peanut, soy], aliases: [kitkat, kitkat bars, choco thins, cheetos, chocolate biscuits]}
+chyawanprash: {tags: [honey, dairy, trace_lactose], aliases: [chyawanprash]}
+soya_chaap: {tags: [soy, gluten], aliases: [soya chaap, soy chaap, soy flakes, soya flakes]}
+dhokla: {aliases: [khaman dhokla, dhokla, khaman, thattai, bhakarwadi, bhakarwdis, rabodi]}
+khichdi: {aliases: [khichdi, pongal]}
+filler: {tags: [non_food], aliases: [as per taste, according to taste, as per use, as per the experiment, as required, to taste, as needed, save, white, mess, spoon, grind, yield, peel, peel and chop, peel and then grind, mash, leaf, tighten it, kilograms, wood, parcel, parcels, botis, round flower, trumpet, masauras, sundkai vathal]}

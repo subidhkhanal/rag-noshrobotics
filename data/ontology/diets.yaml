@@ -1,0 +1,109 @@
+# Diet / allergen rules over ingredient tags.
+#   block - a recipe containing an ingredient with any of these tags is excluded
+#   flag  - shown with a warning (brand-dependent or debated); ranked below clean matches
+# An ingredient's `may` tags that intersect `block` also produce a flag.
+# `unknown_flag: true` flags recipes containing ingredients the ontology could not resolve.
+
+vegetarian:
+  label: Vegetarian
+  description: No meat, poultry, fish, seafood, eggs or gelatin (Indian vegetarian).
+  block: [meat, poultry, fish, shellfish, egg, gelatin]
+  flag: [silver_leaf]
+  unknown_flag: true
+
+eggetarian:
+  label: Eggetarian
+  description: Vegetarian plus eggs.
+  block: [meat, poultry, fish, shellfish, gelatin]
+  unknown_flag: true
+
+vegan:
+  label: Vegan
+  description: No animal products, including dairy, ghee, eggs and honey.
+  block: [meat, poultry, fish, shellfish, egg, gelatin, dairy, honey]
+  flag: [silver_leaf]
+  unknown_flag: true
+
+jain:
+  label: Jain
+  description: Vegetarian with no onion, garlic, root vegetables, mushrooms, honey or alcohol.
+  block: [meat, poultry, fish, shellfish, egg, gelatin, allium, root_veg, fungi, honey, alcohol]
+  flag: [jain_some_avoid, dry_root_spice, fungi_yeast, silver_leaf, blend]
+  unknown_flag: true
+
+sattvic:
+  label: Sattvic
+  description: Vegetarian with no onion, garlic, mushrooms or alcohol.
+  block: [meat, poultry, fish, shellfish, egg, gelatin, allium, fungi, alcohol]
+  flag: [fungi_yeast, blend]
+  unknown_flag: true
+
+no_onion_garlic:
+  label: No onion, no garlic
+  description: No onion, garlic or any allium (shallots, leeks, spring onion, onion/garlic powder).
+  block: [allium]
+  flag: [blend]
+  unknown_flag: true
+
+lactose_free:
+  label: Lactose-free
+  description: No milk, curd, paneer, cream, khoya or soft cheese. Ghee, butter and aged cheese are flagged (trace lactose).
+  block: [lactose]
+  flag: [trace_lactose]
+  unknown_flag: true
+
+dairy_free:
+  label: Dairy-free
+  description: No dairy of any kind, including ghee and butter.
+  block: [dairy]
+  unknown_flag: true
+
+gluten_free:
+  label: Gluten-free
+  description: No wheat, maida, semolina, barley, rye or soy sauce. Hing, oats and blends are flagged (often contaminated or cut with wheat).
+  block: [gluten]
+  unknown_flag: true
+
+nut_free:
+  label: Nut-free
+  description: No tree nuts or peanuts.
+  block: [tree_nut, peanut]
+  unknown_flag: true
+
+tree_nut_free:
+  label: Tree-nut-free
+  description: No almonds, cashews, walnuts, pistachios or other tree nuts.
+  block: [tree_nut]
+  unknown_flag: true
+
+peanut_free:
+  label: Peanut-free
+  description: No peanuts or groundnut oil.
+  block: [peanut]
+  unknown_flag: true
+
+egg_free:
+  label: Egg-free
+  description: No eggs or egg-based products like mayonnaise.
+  block: [egg]
+  unknown_flag: true
+
+soy_free:
+  label: Soy-free
+  block: [soy]
+  unknown_flag: true
+
+sesame_free:
+  label: Sesame-free
+  block: [sesame]
+  unknown_flag: true
+
+shellfish_free:
+  label: Shellfish-free
+  block: [shellfish]
+  unknown_flag: true
+
+fish_free:
+  label: Fish-free
+  block: [fish]
+  unknown_flag: true

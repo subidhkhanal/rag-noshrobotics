@@ -1,0 +1,420 @@
+{
+  "total_recipes": 6109,
+  "labels": {
+    "Vegetarian": {
+      "checked_as": "vegetarian",
+      "labelled": 4190,
+      "violations": 220,
+      "examples": [
+        {
+          "id": 12,
+          "name": "Veg Chili Cheese Burgers",
+          "reasons": [
+            "1 Whole Egg → egg (egg)"
+          ]
+        },
+        {
+          "id": 60,
+          "name": "Pan Fried Rice Balls Filled With Cheese",
+          "reasons": [
+            "3 Whole Eggs - beaten with a fork → egg (egg)"
+          ]
+        },
+        {
+          "id": 74,
+          "name": "Singapore Style Chicken Layered Fried Rice",
+          "reasons": [
+            "300 grams Boneless chicken - cut into 1/2 inch cubed → chicken (meat, poultry)",
+            "250 grams Egg noodles - boiled and tossed in a teaspoon oil → egg (egg)",
+            "1/2 cup Classic Mayonnaise (With Egg) → mayonnaise (egg)"
+          ]
+        },
+        {
+          "id": 95,
+          "name": "Drunken Noodles",
+          "reasons": [
+            "1 tbsp fish sauce → fish sauce (fish)"
+          ]
+        },
+        {
+          "id": 106,
+          "name": "Carrot Corn Mayo Pancake With Sandwich Spread",
+          "reasons": [
+            "5 tablespoons Del Monte Sandwich Spread → mayonnaise (egg)",
+            "3 Whole Eggs → egg (egg)"
+          ]
+        },
+        {
+          "id": 140,
+          "name": "Mexican Grilled Corn Flavoured With Cheesy Garlic Mayo",
+          "reasons": [
+            "4 tablespoon Del Monte Cheesy Garlic Mayo → garlic mayo (egg)"
+          ]
+        },
+        {
+          "id": 172,
+          "name": "Eggless Devil's Food Cake",
+          "reasons": [
+            "3 Whole Eggs - or Flaxmeal Egg Replacer → egg (egg)"
+          ]
+        },
+        {
+          "id": 177,
+          "name": "Crispy Chicken Dumplings",
+          "reasons": [
+            "300 grams Boneless chicken → chicken (meat, poultry)",
+            "1 Whole Egg → egg (egg)"
+          ]
+        }
+      ]
+    },
+    "High Protein Vegetarian": {
+      "checked_as": "vegetarian",
+      "labelled": 576,
+      "violations": 15,
+      "examples": [
+        {
+          "id": 604,
+          "name": "Stuffed Omelette With Cheesy Garlic Mushroom & Corn",
+          "reasons": [
+            "1 tablespoon Nutralite Cheesy Garlic Mayo → garlic mayo (egg)",
+            "4 Whole Eggs → egg (egg)"
+          ]
+        },
+        {
+          "id": 605,
+          "name": "Vegetarian Sloppy Joe",
+          "reasons": [
+            "4 tablespoon Del Monte Cheesy Garlic Mayo → garlic mayo (egg)"
+          ]
+        },
+        {
+          "id": 752,
+          "name": "Baked Fish In Coconut Milk",
+          "reasons": [
+            "1 kg Fish fillet - cut into medium → fish (fish)"
+          ]
+        },
+        {
+          "id": 1187,
+          "name": "Paneer Frankie - Delicious Kid Friendly Snack",
+          "reasons": [
+            "4 tablespoons Del Monte Tandoori Mayo → mayonnaise (egg)"
+          ]
+        },
+        {
+          "id": 2100,
+          "name": "Mughlai Fish Curry",
+          "reasons": [
+            "2 Mackerel fish - cut into half and scored → fish (fish)"
+          ]
+        },
+        {
+          "id": 2133,
+          "name": "Recheado Chicken Naan Wraps",
+          "reasons": [
+            "400 grams Chicken breasts - boneless and skinless → chicken (meat, poultry)"
+          ]
+        },
+        {
+          "id": 3543,
+          "name": "High Protein Chickpea Potato Hash Brown",
+          "reasons": [
+            "1 Whole Egg → egg (egg)"
+          ]
+        },
+        {
+          "id": 4195,
+          "name": "High Protein Broccoli & Coriander Loaf",
+          "reasons": [
+            "2 Egg whites → egg (egg)"
+          ]
+        }
+      ]
+    },
+    "Vegan": {
+      "checked_as": "vegan",
+      "labelled": 51,
+      "violations": 13,
+      "examples": [
+        {
+          "id": 1459,
+          "name": "Zucchini Zoodles with mushroom Meatball",
+          "reasons": [
+            "1 teaspoon Honey → honey (honey)"
+          ]
+        },
+        {
+          "id": 1862,
+          "name": "Delhi Style Fruit Chaat -Homemade Kulle Chaat Of North India",
+          "reasons": [
+            "Ghee - for stir frying → ghee (dairy)"
+          ]
+        },
+        {
+          "id": 1898,
+          "name": "Eggless Mango Cake",
+          "reasons": [
+            "2 tablespoons Milk Powder - optional → milk powder (dairy)",
+            "1/4 cup Curd (Dahi / Yogurt) → curd (dairy)"
+          ]
+        },
+        {
+          "id": 1919,
+          "name": "Papaya Basil Smoothie With Chia Seeds",
+          "reasons": [
+            "1-1/2 cup Milk → milk (dairy)",
+            "1 tablespoon Honey - optional → honey (honey)"
+          ]
+        },
+        {
+          "id": 2128,
+          "name": "Fruit Tart - Vegan",
+          "reasons": [
+            "5 tablespoon Coconut Oil - or melted butter → butter (dairy)",
+            "1/3 cup Maple syrup - or honey → honey (honey)",
+            "1/2 cup Almond Milk (Badam Milk) - or milk → milk (dairy)"
+          ]
+        },
+        {
+          "id": 3461,
+          "name": "Chocolate Coconut Pistachio Bites (Paleo & Vegan)",
+          "reasons": [
+            "1/3 cup Maple syrup - or Honey → honey (honey)"
+          ]
+        },
+        {
+          "id": 3634,
+          "name": "Dairy Free Balsamic Strawberry Ice-cream",
+          "reasons": [
+            "1/2+1/2 cup Maple syrup - (honey can also be used if not vegan) → honey (honey)"
+          ]
+        },
+        {
+          "id": 5148,
+          "name": "Paneer Carrot Stuffed Paratha",
+          "reasons": [
+            "1 cup Paneer (Homemade Cottage Cheese) → paneer (dairy)",
+            "Ghee - or oil for cooking → ghee (dairy)"
+          ]
+        }
+      ]
+    },
+    "No Onion No Garlic (Sattvic)": {
+      "checked_as": "sattvic",
+      "labelled": 62,
+      "violations": 5,
+      "examples": [
+        {
+          "id": 2944,
+          "name": "Roasted Mushroom",
+          "reasons": [
+            "400 grams Button mushrooms - cut into quarters → mushroom (fungi)"
+          ]
+        },
+        {
+          "id": 3927,
+          "name": "Tuna Roasted Mushroom Sandwich with Tartare Dip Mayo",
+          "reasons": [
+            "125 grams Canned tuna - drained → fish (fish)",
+            "100 grams Button mushrooms - sliced → mushroom (fungi)",
+            "2 tablespoons Onions - chopped → onion (allium)"
+          ]
+        },
+        {
+          "id": 3928,
+          "name": "Dark Chocolate Cherry Cake",
+          "reasons": [
+            "2 Whole Eggs → egg (egg)"
+          ]
+        },
+        {
+          "id": 5490,
+          "name": "Green Beans And Scrambled Egg",
+          "reasons": [
+            "3 Whole Eggs → egg (egg)"
+          ]
+        },
+        {
+          "id": 8164,
+          "name": "Honey Glazed Corn Fritters",
+          "reasons": [
+            "Spring Onion (Bulb & Greens) - as required → spring onion (allium)"
+          ]
+        }
+      ]
+    },
+    "Gluten Free": {
+      "checked_as": "gluten_free",
+      "labelled": 45,
+      "violations": 3,
+      "examples": [
+        {
+          "id": 618,
+          "name": "Mexican Taco With Spicy Tofu Crumble",
+          "reasons": [
+            "4 Soft Taco Shells - or hard taco shells → tortilla (gluten)"
+          ]
+        },
+        {
+          "id": 8226,
+          "name": "Pearl Barley Vegetable Soup",
+          "reasons": [
+            "1/2 cup Barley (seeds) - soaked for 5 to 6 hours → barley (gluten)"
+          ]
+        },
+        {
+          "id": 9306,
+          "name": "Buckwheat Crepe with Fruit Compote",
+          "reasons": [
+            "1/2 cup Whole Wheat Flour → wheat flour (gluten)"
+          ]
+        }
+      ]
+    },
+    "Eggetarian": {
+      "checked_as": "eggetarian",
+      "labelled": 316,
+      "violations": 7,
+      "examples": [
+        {
+          "id": 2295,
+          "name": "Chinese Egg Drop Soup (With Vegetarian Option)",
+          "reasons": [
+            "4 cups Chicken stock - or 4 cups water → chicken stock (meat, poultry)"
+          ]
+        },
+        {
+          "id": 2514,
+          "name": "Chicken And Egg Soup",
+          "reasons": [
+            "1 Chicken breasts - cut juliennes → chicken (meat, poultry)",
+            "1 1/2 cup Chicken stock → chicken stock (meat, poultry)"
+          ]
+        },
+        {
+          "id": 2716,
+          "name": "Chinese Style Sweet And Spicy Broccoli Stir Fry With Sausage",
+          "reasons": [
+            "4 Chicken sausage → chicken (meat, poultry)"
+          ]
+        },
+        {
+          "id": 2779,
+          "name": "Sambal Telor with Nasi Uduk (Indonesian Style Eggs Cooked in Sambal and Lemongrass Coconut Rice)",
+          "reasons": [
+            "2 teaspoons Fish sauce - optional → fish sauce (fish)"
+          ]
+        },
+        {
+          "id": 5977,
+          "name": "Shrimp Deviled Eggs",
+          "reasons": [
+            "10 Shrimps - peeled and deveined → shellfish (shellfish)"
+          ]
+        },
+        {
+          "id": 8256,
+          "name": "Jello Poke Cake",
+          "reasons": [
+            "1 Jelly Mix - any flavour will do → gelatin dessert (gelatin)"
+          ]
+        },
+        {
+          "id": 10516,
+          "name": "Nargisi Kofta Curry - Spicy Scotched Egg Curry",
+          "reasons": [
+            "500 grams Mutton - keema → mutton (meat)"
+          ]
+        }
+      ]
+    }
+  },
+  "verdict_counts": {
+    "vegetarian": {
+      "pass": 4543,
+      "block": 1145,
+      "flag": 421
+    },
+    "eggetarian": {
+      "pass": 5426,
+      "block": 642,
+      "flag": 41
+    },
+    "vegan": {
+      "pass": 2311,
+      "block": 3641,
+      "flag": 157
+    },
+    "jain": {
+      "block": 4407,
+      "flag": 285,
+      "pass": 1417
+    },
+    "sattvic": {
+      "block": 3543,
+      "flag": 339,
+      "pass": 2227
+    },
+    "no_onion_garlic": {
+      "block": 3164,
+      "flag": 242,
+      "pass": 2703
+    },
+    "lactose_free": {
+      "pass": 3073,
+      "flag": 897,
+      "block": 2139
+    },
+    "dairy_free": {
+      "pass": 2918,
+      "block": 3046,
+      "flag": 145
+    },
+    "gluten_free": {
+      "pass": 2897,
+      "flag": 1316,
+      "block": 1896
+    },
+    "nut_free": {
+      "pass": 4789,
+      "block": 1166,
+      "flag": 154
+    },
+    "tree_nut_free": {
+      "pass": 5122,
+      "block": 871,
+      "flag": 116
+    },
+    "peanut_free": {
+      "pass": 5622,
+      "block": 337,
+      "flag": 150
+    },
+    "egg_free": {
+      "pass": 5077,
+      "flag": 431,
+      "block": 601
+    },
+    "soy_free": {
+      "pass": 5267,
+      "flag": 499,
+      "block": 343
+    },
+    "sesame_free": {
+      "pass": 5619,
+      "block": 474,
+      "flag": 16
+    },
+    "shellfish_free": {
+      "pass": 5976,
+      "flag": 51,
+      "block": 82
+    },
+    "fish_free": {
+      "pass": 5949,
+      "flag": 49,
+      "block": 111
+    }
+  }
+}
