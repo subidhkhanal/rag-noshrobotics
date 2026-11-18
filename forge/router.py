@@ -15,7 +15,8 @@ from collections import OrderedDict
 from . import guard, llm_parser
 
 MODEL = os.getenv("CLAUDE_ROUTER_MODEL", "claude-haiku-5-5")
-INTENTS = ["search", "followup", "help", "about", "greeting", "thanks", "bye", "reset", "off_topic"]
+INTENTS = ["search", "followup", "dish_question", "recall", "help", "about", "greeting", "thanks", "bye", "reset",
+           "off_topic"]
 SCHEMA = {
     "type": "object",
     "properties": {
@@ -32,6 +33,9 @@ Choose the intent:
   (including "something else", "more", "spicier", "vegan version").
 - followup: asks about one of the dishes currently on screen (how to make it, its ingredients, steps, more details).
   Set card to the dish's number from the list (1 = first). "it"/"that one"/"this" with no other hint = 1.
+- dish_question: asks whether a dish on screen has some property (healthy? spicy? Jain? contains garlic? how long?
+  how many does it serve?). Set card like followup. Not a request for new dishes.
+- recall: asks what was suggested or shown earlier in this chat ("what was the last recipe?").
 - help: asks what the assistant can do or how to use it.
 - about: asks who or what the assistant is, or who made it.
 - greeting, thanks, bye: social messages.
@@ -95,9 +99,11 @@ def validate(data: dict, n_cards: int) -> dict | None:
     card = card - 1 if isinstance(card, int) and not isinstance(card, bool) and 1 <= card <= n_cards else None
     want = data.get("want") if data.get("want") in ("steps", "ingredients", "both") else "both"
     intent = data["intent"]
-    if intent == "followup" and card is None:
-        # Nothing on screen to follow up on -> treat as a request; otherwise "it" means the top card.
-        intent, card = ("followup", 0) if n_cards else ("search", None)
-    if intent != "followup":
+    if not n_cards and intent in ("followup", "dish_question"):
+        intent = "search"  # nothing on screen to ask about: treat it as a request
+    elif intent == "followup" and card is None:
+        card = 0  # "it" with no other hint means the top card
+    # dish_question may keep card=None: the chat then uses the dish in focus.
+    if intent not in ("followup", "dish_question"):
         card = None
     return {"intent": intent, "card": card, "want": want}

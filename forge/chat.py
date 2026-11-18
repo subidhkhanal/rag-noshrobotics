@@ -10,7 +10,7 @@ from functools import cached_property
 
 import httpx
 
-from . import llm_parser, router
+from . import dish_qa, llm_parser, router
 from .adapt import adapt
 from .plan import make_plan
 from .ontology import tokenize
@@ -61,6 +61,7 @@ class Session:
     shown: list[int] = field(default_factory=list)
     last_top: int | None = None
     last_ids: list[int] = field(default_factory=list)  # the cards of the latest reply, in order ("the first one")
+    focus: int | None = None  # the dish last asked about ("is it spicy?" after "how to make the second one")
 
     def to_dict(self) -> dict:
         st = self.state
@@ -69,7 +70,7 @@ class Session:
             "pantry_mode": st.pantry_mode, "max_time": st.max_time, "course": st.course, "cuisine": st.cuisine,
             "attributes": sorted(st.attributes), "servings": st.servings, "prefer_non_veg": st.prefer_non_veg,
             "text": st.text, "shown": self.shown[-MAX_SHOWN:], "last_top": self.last_top,
-            "last_ids": self.last_ids[:LAST_IDS],
+            "last_ids": self.last_ids[:LAST_IDS], "focus": self.focus,
         }
 
 
@@ -106,8 +107,9 @@ def session_from(engine: Engine, data: dict | None) -> Session:
     last_ids = data.get("last_ids")
     last_ids = ([x for x in last_ids if isinstance(x, int) and x in engine.by_id][:LAST_IDS]
                 if isinstance(last_ids, list) else [])
+    focus = data.get("focus")
     return Session(state=st, shown=shown, last_top=last if isinstance(last, int) and last in engine.by_id else None,
-                   last_ids=last_ids)
+                   last_ids=last_ids, focus=focus if isinstance(focus, int) and focus in engine.by_id else None)
 
 
 def merge(prev: Constraints, new: Constraints, message: str, onto=None) -> Constraints:
@@ -177,6 +179,11 @@ class Assistant:
         kind = small_talk_kind(message)
         if kind:
             return self._small_talk_reply(s, kind)
+        if dish_qa.RECALL.search(message):
+            return self._recall_reply(s)
+        asked = self._dish_question(s, message)
+        if asked is not None:
+            return asked
         target = self._referenced_recipe(s, message)
         if target is not None:
             return self._detail_reply(s, target, message)
@@ -256,8 +263,8 @@ class Assistant:
                 bare = not re.sub(r"\b(the|please|pls|plz|ok|okay|so|and)\b|[?.!,]", " ", text.replace(m.group(0), " ")).strip()
                 if (ask or bare) and -len(s.last_ids) <= idx < len(s.last_ids):
                     return s.last_ids[idx]
-            elif m.group(3) and ask:  # "that one" / "this recipe" / "it": the top card
-                return s.last_ids[0]
+            elif m.group(3) and ask:  # "that one" / "this recipe" / "it": the dish in focus, else the top card
+                return s.focus if s.focus in s.shown or s.focus in s.last_ids else s.last_ids[0]
         if ASK_BY_NAME.search(text):
             # By name: most of the message's distinctive words appear in one shown recipe's name.
             words = {w for w in tokenize(text) if len(w) > 3} - COMMON_WORDS - {"make", "cook", "recipe", "need",
@@ -283,6 +290,11 @@ class Assistant:
             return None
         if r["intent"] == "followup":
             return self._detail_reply(s, s.last_ids[r["card"]], message, want=r["want"])
+        if r["intent"] == "recall":
+            return self._recall_reply(s)
+        if r["intent"] == "dish_question" and s.last_ids:
+            rid = s.last_ids[r["card"]] if r["card"] is not None else (s.focus or s.last_ids[0])
+            return self._dish_question(s, message, rid=rid) or self._detail_reply(s, rid, message, want="both")
         if r["intent"] in ("help", "about", "greeting", "thanks", "bye"):
             return self._small_talk_reply(s, r["intent"])
         if r["intent"] == "reset":
@@ -291,11 +303,74 @@ class Assistant:
             return self._small_talk_reply(s, "unclear")
         return "search"  # a food request the rules didn't recognise ("street food"): search with its words
 
+    def _dish_question(self, s: Session, message: str, rid: int | None = None) -> dict | None:
+        """"Is it healthy?", "does the second one have garlic?", "kya ye jain hai?": answer about that dish only."""
+        if not (s.last_ids or s.focus):
+            return None
+        if rid is None and not dish_qa.is_dish_question(message):
+            return None
+        onto, eng = self.engine.onto, self.engine
+        q = parse(onto, message)
+        if rid is None:
+            m = REFERENCE.search(message.lower())
+            word = (m.group(1) or m.group(2) or "").lower() if m else ""
+            if dish_qa.ALL_SHOWN.search(message) and s.last_ids:
+                targets = list(s.last_ids)
+            elif word in _ORDINALS and -len(s.last_ids) <= _ORDINALS[word] < len(s.last_ids):
+                targets = [s.last_ids[_ORDINALS[word]]]
+            else:
+                targets = [s.focus if s.focus is not None else s.last_ids[0]]
+        else:
+            targets = [rid]
+        lines = {t: dish_qa.answer(eng, eng.by_id[t], q, message) for t in targets}
+        if not any(lines.values()):
+            return None  # not a question about properties we can answer: let the normal flow handle it
+        if len(targets) == 1:
+            t = targets[0]
+            r = eng.recipes[eng.by_id[t]]
+            reply = f"{r['name']}: " + " ".join(lines[t])
+            s.focus = t
+        else:
+            reply = "\n".join(f"{eng.recipes[eng.by_id[t]]['name']}: {' '.join(lines[t])}" for t in targets)
+        results = []
+        for t in targets:
+            i = eng.by_id[t]
+            res = eng._explain(i, 0.0, eng.is_flagged(i, s.state), s.state)
+            results.append(card(res))
+        return {"mode": "detail", "state": s.to_dict(), "reply": reply, "results": results[:1] if len(targets) == 1 else [],
+                "detail": {"ingredients": [], "steps": [], "url": ""}, "closest": None, "blocked_examples": [],
+                "constraints": chips(onto, s.state), "trace": {}}
+
+    def _recall_reply(self, s: Session) -> dict:
+        """What this chat has shown so far: the latest suggestions as cards, plus earlier dishes by name."""
+        onto, eng = self.engine.onto, self.engine
+        if not (s.last_ids or s.shown):
+            return {**self._small_talk_reply(s, "unclear"),
+                    "reply": "I haven't suggested any recipes in this chat yet. Tell me what you'd like to cook."}
+        name = lambda rid: eng.recipes[eng.by_id[rid]]["name"]  # noqa: E731
+        latest = s.last_ids or s.shown[-5:]
+        earlier = [x for x in dict.fromkeys(reversed(s.shown)) if x not in latest][:8]
+        what = describe(onto, s.state) if (s.state.diets or s.state.exclude or s.state.course or s.state.text) else ""
+        reply = (f"My latest suggestions{f' ({what})' if what.strip() else ''} were: "
+                 + "; ".join(name(x) for x in latest) + ".")
+        if s.focus is not None and s.focus in eng.by_id:
+            reply += f" The last one we looked at closely was {name(s.focus)}."
+        if earlier:
+            reply += " Earlier in this chat: " + "; ".join(name(x) for x in earlier) + "."
+        reply += " Ask about any of them, e.g. “how to make the first one”."
+        cards = []
+        for t in latest:
+            i = eng.by_id[t]
+            cards.append(card(eng._explain(i, 0.0, eng.is_flagged(i, s.state), s.state)))
+        return {"mode": "search", "state": s.to_dict(), "reply": reply, "results": cards, "closest": None,
+                "blocked_examples": [], "constraints": chips(onto, s.state), "trace": {}}
+
     def _detail_reply(self, s: Session, rid: int, message: str, want: str | None = None) -> dict:
         """Ingredients and/or steps of a dish already shown, straight from the recipe record (no generation)."""
         onto, eng = self.engine.onto, self.engine
         i = eng.by_id[rid]
         r, st = eng.recipes[i], s.state
+        s.focus = rid
         if want:
             want_ing, want_steps = want in ("ingredients", "both"), want in ("steps", "both")
         else:
