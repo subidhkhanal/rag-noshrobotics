@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from . import llm_parser
 from .adapt import adapt
 from .chat import Assistant, chips, session_from
 from .search import DATA, Engine
@@ -59,7 +60,8 @@ class StateIn(BaseModel):
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "recipes": len(engine.recipes), "profile": engine.profile, "dense": engine.emb is not None}
+    return {"ok": True, "recipes": len(engine.recipes), "profile": engine.profile, "dense": engine.emb is not None,
+            "claude_parser": llm_parser.enabled()}
 
 
 @app.post("/api/chat")
