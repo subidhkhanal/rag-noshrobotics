@@ -18,6 +18,7 @@
         <h1>RecipeForge</h1>
         <p>Every dietary claim checked against the real ingredient list — not the recipe name.</p>
       </div>
+      <button id="chats-btn" class="chats-btn" aria-haspopup="dialog">Chats</button>
     </div>
     <nav class="tabs" role="tablist">
       <button role="tab" data-tab="chat" class="active">Assistant</button>
@@ -50,7 +51,7 @@
           <input id="input" autocomplete="off" maxlength="500" placeholder="e.g. vegan high protein lunch, no peanuts">
           <button type="submit" aria-label="Send">Send</button>
         </form>
-        <div class="footrow"><button id="reset" class="link">Start over</button><span id="history-note" class="sub"></span></div>
+        <div class="footrow"><button id="reset" class="link">New chat</button><span id="history-note" class="sub"></span></div>
       </div>
     </section>
 
@@ -80,6 +81,16 @@
       <p class="lede">Verified by an independent regex checker over the whole corpus: zero recipes that pass no-onion-garlic, Jain or vegan mention a forbidden ingredient.</p>
     </section>
   </main>
+
+  <dialog id="chats-dialog" aria-label="Saved chats">
+    <div class="dlg">
+      <button class="close" aria-label="Close">×</button>
+      <h3>Your chats</h3>
+      <p class="sub">Saved on this device only. A new chat remembers the diets and allergies from your latest chat — remove any with ×.</p>
+      <button id="new-chat" class="primary">+ New chat</button>
+      <ul id="chats-list" class="chats-list"></ul>
+    </div>
+  </dialog>
 
   <dialog id="recipe-dialog">
     <div class="dlg">

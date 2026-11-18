@@ -67,6 +67,13 @@ def chat(body: ChatIn):
     return assistant.chat(body.state, body.message, body.history)
 
 
+@app.post("/api/constraints")
+def constraints(body: StateIn):
+    """Validate a client-held state (e.g. a saved chat or remembered diets) and return its chips."""
+    s = session_from(engine, body.state)
+    return {"state": s.to_dict(), "constraints": chips(engine.onto, s.state)}
+
+
 @app.post("/api/constraints/remove")
 def remove(body: RemoveIn):
     s = assistant.remove_constraint(body.state, body.kind, body.value)

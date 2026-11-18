@@ -14,7 +14,9 @@ DIET_PATTERNS: list[tuple[str, str]] = [
     ("no_onion_garlic",
      r"(no|without|zero|free of|minus|skip)\s+(onions?|pyaa?z|kanda)\s*(,|and|or|&|n|aur|\+)?\s*(no\s+|without\s+)?(garlic|lahsun|lehsun|lasun)"
      r"|(no|without)\s+(garlic|lahsun|lehsun)\s*(,|and|or|&|aur)?\s*(no\s+|without\s+)?(onions?|pyaa?z)"
-     r"|onion[- ]?(and[- ]|&[- ]?)?garlic[- ]free|bina\s+(pyaa?z|kanda)\s*(aur\s+)?(lahsun|lehsun)?|(pyaa?z|kanda)\s+(lahsun|lehsun)\s+(nahi|nahin|ke bina)"),
+     r"|onion[- ]?(and[- ]|&[- ]?)?garlic[- ]free|bina\s+(pyaa?z|kanda)\s*(aur\s+)?(lahsun|lehsun)?|(pyaa?z|kanda)\s+(aur\s+)?(lahsun|lehsun)\s+(nahi|nahin|ke bina|bina)"
+     r"|(lahsun|lehsun)\s+(aur\s+)?(pyaa?z|kanda)\s+(nahi|nahin|ke bina|bina)"
+     r"|hold the (onions?|garlic) and (garlic|onions?)"),
     ("jain", r"\bjain\b"),
     ("sattvic", r"\bsatt?vic\b|\bsatvik\b|\bvrat\b|\bfasting\b|\bnavratri\b|\bupvas\b"),
     ("vegan", r"\bvegan\b|plant[- ]based"),
@@ -37,11 +39,13 @@ DIET_PATTERNS: list[tuple[str, str]] = [
 NON_VEG = re.compile(r"\bnon[- ]?veg(etarian)?\b|\bchicken\b|\bmutton\b|\bfish\b|\bprawns?\b|\bmeat\b(?! masala)", re.I)
 
 EXCLUDE_RE = re.compile(
-    r"\b(?:no|without|not|skip|avoid|except|minus|hate|dislike|don'?t (?:like|want|eat)|allergic to|bina|zero)\s+"
+    r"\b(?:no|without|not|skip|avoid|except|minus|hate|dislike|don'?t (?:like|want|eat|add)|allergic to|bina|zero|"
+    r"hold(?: the)?|can'?t (?:eat|have|stand|do)|cannot (?:eat|have)|nothing with|keep|leave out|leave|minus the)\s+"
     r"((?:[a-zऀ-ॿ]+(?:\s*(?:,|and|or|&|aur|nor)\s*|\s+)?){1,4})",
     re.I,
 )
-HINDI_EXCLUDE_RE = re.compile(r"\b([a-zऀ-ॿ]+)\s+(?:nahi|nahin|mat|na)\b", re.I)
+HINDI_EXCLUDE_RE = re.compile(
+    r"\b((?:[a-zऀ-ॿ]+\s+(?:aur\s+|or\s+)?){0,2}[a-zऀ-ॿ]+)\s+(?:ke\s+)?(?:nahi|nahin|mat|na|bina|out)\b", re.I)
 INCLUDE_RE = re.compile(
     r"\b(?:i have|i've got|i got|have got|got some|with|using|use up|made with|containing|includes?|from)\s+"
     r"((?:[a-zऀ-ॿ]+(?:\s*(?:,|and|&|aur|plus)\s*|\s+)?){1,8})",
@@ -49,6 +53,8 @@ INCLUDE_RE = re.compile(
 )
 PANTRY_RE = re.compile(r"\b(i have|i've got|i got|have got|in my (fridge|pantry|kitchen)|leftover|use up)\b", re.I)
 STOP_AT = re.compile(r"\b(under|within|in|for|that|which|but|no|without|less|max|quick|and make|recipe|recipes|dish|dishes|something|please)\b.*$", re.I)
+# Exclusion lists may repeat the negation ("no mushrooms, no paneer"), so don't stop at "no"/"without".
+STOP_AT_EXCL = re.compile(r"\b(under|within|in|for|that|which|but|less|max|quick|and make|recipe|recipes|dish|dishes|something|please)\b.*$", re.I)
 
 TIME_RES = [
     (re.compile(r"(?:under|within|less than|in|max(?:imum)?|below|up ?to|upto|<|no more than|not more than|only)\s*(\d{1,3})\s*(?:min|mins|minutes|minute)\b", re.I), "min"),
@@ -56,6 +62,8 @@ TIME_RES = [
     (re.compile(r"(?:under|within|in|less than)\s*half an hour", re.I), "half"),
     (re.compile(r"(?:under|within|in|less than)\s*(?:an|one|1)\s*(?:hour|hr)\b", re.I), "hour"),
     (re.compile(r"(?:under|within|in|less than)\s*(\d)\s*(?:hours|hrs|hour|hr)\b", re.I), "hours"),
+    (re.compile(r"\bready in\s*(\d{1,3})\b", re.I), "min"),
+    (re.compile(r"\b(\d{1,3})\s*(?:min|mins|minutes)\b", re.I), "min"),
 ]
 COURSE_RES = {
     "breakfast": r"\b(breakfast|nashta|nasta|tiffin|morning meal|brunch)\b",
@@ -181,6 +189,23 @@ def _ingredients_in(onto: Ontology, phrase: str) -> list[str]:
     return ids
 
 
+_LIST_GLUE = {"and", "or", "aur", "nor", "the", "any", "please", "either", "no", "not", "without", "also"}
+
+
+def _list_only(onto: Ontology, phrase: str) -> str:
+    """Keep comma-continued items only while they are pure ingredient lists ("tomatoes, capsicum"),
+    so "no mushrooms, paneer dinner" stops before "paneer dinner"."""
+    head, *rest = phrase.split(",")
+    kept = [head]
+    for seg in rest:
+        words = [w for w in re.findall(r"[a-zऀ-ॿ]+", seg) if w not in _LIST_GLUE]
+        covered = {t for m in onto.match(seg) for t in m.alias.split()}
+        if not words or any(w not in covered and w.rstrip("s") not in covered for w in words):
+            break
+        kept.append(seg)
+    return ",".join(kept)
+
+
 def parse(onto: Ontology, message: str) -> Constraints:
     low = " " + message.strip().lower().replace("’", "'") + " "
     low = re.sub(r"n't\b", " not", low)
@@ -202,11 +227,11 @@ def parse(onto: Ontology, message: str) -> Constraints:
         c.prefer_non_veg = bool(re.search(r"\bnon[- ]?veg", low))
 
     for m in EXCLUDE_RE.finditer(low):
-        phrase = STOP_AT.sub("", m.group(1))
+        phrase = _list_only(onto, STOP_AT_EXCL.sub("", m.group(1)))
         ids = _ingredients_in(onto, phrase)
         if ids:
             c.exclude.update(ids)
-            consumed.append(m.group(0))
+            consumed.append(m.group(0)[: m.start(1) - m.start(0)] + phrase)
     for m in HINDI_EXCLUDE_RE.finditer(low):
         ids = _ingredients_in(onto, m.group(1))
         if ids:

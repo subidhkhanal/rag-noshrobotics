@@ -65,3 +65,20 @@ def test_new_topic_replaces_soft_but_keeps_diet():
     assert not is_refinement(msg, new)
     st = merge(st, new, msg)
     assert st.diets == {"jain"} and st.course == "dinner" and st.include == ["paneer"]
+
+
+@pytest.mark.parametrize("msg,diets,exclude,include", [
+    ("hold the onions please, and make it vegan", {"vegan"}, {"onion"}, []),
+    ("lahsun pyaz ke bina kuch banao", {"no_onion_garlic"}, set(), []),
+    ("I can't eat mushrooms, paneer dinner", set(), {"mushroom"}, ["paneer"]),
+    ("strictly vegetarian, no mushrooms, no paneer", {"vegetarian"}, {"mushroom", "paneer"}, []),
+    ("no tomatoes, capsicum or onions please", set(), {"tomato", "capsicum", "onion"}, []),
+])
+def test_refusals_never_become_wanted_ingredients(msg, diets, exclude, include):
+    c = parse(onto, msg)
+    assert c.diets == diets and c.exclude == exclude and c.include == include
+
+
+def test_bare_time_limits():
+    assert parse(onto, "ready in 25").max_time == 25
+    assert parse(onto, "15 minutes mexican fried rice").max_time == 15

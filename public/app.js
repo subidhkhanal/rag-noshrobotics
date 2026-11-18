@@ -1,6 +1,50 @@
 const API = (window.API_BASE || "").replace(/\/$/, "");
 let state = null;
 
+// ---------- saved chats (this device only) ----------
+const CKEY = "recipeforge.chats.v1";
+const MAX_CHATS = 20;
+const MAX_TURNS = 40;
+let chatId = null;
+let carried = [];  // chips remembered from an earlier chat: [{kind, value}]
+
+function loadChats() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CKEY) || "[]");
+    return Array.isArray(c) ? c : [];
+  } catch { return []; }
+}
+function saveChats(chats) {
+  let list = chats.sort((a, b) => b.updated - a.updated).slice(0, MAX_CHATS);
+  while (list.length) {
+    try { localStorage.setItem(CKEY, JSON.stringify(list)); return; } catch { list = list.slice(0, -1); }
+  }
+  try { localStorage.removeItem(CKEY); } catch { /* storage unavailable */ }
+}
+function newId() {
+  return (crypto.randomUUID && crypto.randomUUID()) || Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+function updateChat(mutate) {
+  const chats = loadChats();
+  let c = chats.find((x) => x.id === chatId);
+  if (!c) {
+    c = { id: chatId, title: "New chat", created: Date.now(), turns: [], state: null, chips: [], carried };
+    chats.push(c);
+  }
+  mutate(c);
+  c.updated = Date.now();
+  c.turns = c.turns.slice(-MAX_TURNS);
+  saveChats(chats);
+}
+function relTime(ms) {
+  const m = Math.round((Date.now() - ms) / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m} min ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h} h ago`;
+  return `${Math.round(h / 24)} d ago`;
+}
+
 // ---------- cooking history (this device only) ----------
 const HKEY = "recipeforge.history.v1";
 function loadHistory() {
@@ -130,8 +174,9 @@ function addBot(data) {
 }
 
 function renderChips(chips) {
+  const isCarried = (c) => carried.some((x) => x.kind === c.kind && x.value === c.value);
   $("#chips").innerHTML = chips
-    .map((c) => `<span class="chip ${c.hard ? "hard" : ""}">${c.hard ? "🔒 " : ""}${esc(c.label)}<button aria-label="Remove ${esc(c.label)}" data-kind="${esc(c.kind)}" data-value="${esc(c.value)}">×</button></span>`)
+    .map((c) => `<span class="chip ${c.hard ? "hard" : ""}" ${isCarried(c) ? 'title="Remembered from an earlier chat on this device"' : ""}>${c.hard ? "🔒 " : ""}${esc(c.label)}${isCarried(c) ? ' <small class="remembered">remembered</small>' : ""}<button aria-label="Remove ${esc(c.label)}" data-kind="${esc(c.kind)}" data-value="${esc(c.value)}">×</button></span>`)
     .join("");
 }
 
@@ -150,6 +195,13 @@ async function send(text) {
     typing.remove();
     addBot(data);
     renderChips(data.constraints);
+    updateChat((c) => {
+      if (!c.turns.length) c.title = text.slice(0, 60);
+      c.turns.push({ role: "user", text }, { role: "bot", data });
+      c.state = data.state;
+      c.chips = data.constraints;
+      c.carried = carried;
+    });
   } catch (e) {
     typing.textContent = `Something went wrong (${e.message}). Please try again.`;
   }
@@ -171,14 +223,78 @@ $("#chips").addEventListener("click", async (e) => {
   if (!b || !state) return;
   const data = await api("/api/constraints/remove", { state, kind: b.dataset.kind, value: b.dataset.value });
   state = data.state;
+  carried = carried.filter((x) => !(x.kind === b.dataset.kind && x.value === b.dataset.value));
   renderChips(data.constraints);
+  if (loadChats().some((c) => c.id === chatId)) {
+    updateChat((c) => { c.state = state; c.chips = data.constraints; c.carried = carried; });
+  }
 });
-function resetChat() {
-  state = null;
+
+function clearMessages() {
   messages.querySelectorAll(".msg:not(.intro)").forEach((m) => m.remove());
-  renderChips([]);
 }
-$("#reset").addEventListener("click", resetChat);
+
+// Start a new chat. Diets and allergy exclusions from the most recent chat carry over (remove with ×).
+async function newChat({ carry = true } = {}) {
+  chatId = newId();
+  state = null;
+  carried = [];
+  clearMessages();
+  renderChips([]);
+  const last = loadChats()[0];
+  const seed = carry && last?.state ? { diets: last.state.diets || [], exclude: last.state.exclude || [] } : null;
+  if (seed && (seed.diets.length || seed.exclude.length)) {
+    try {
+      const data = await api("/api/constraints", { state: seed });
+      state = data.state;
+      carried = data.constraints.map((c) => ({ kind: c.kind, value: c.value }));
+      renderChips(data.constraints);
+    } catch { /* start clean if the server can't validate it */ }
+  }
+}
+
+function openChat(id) {
+  const c = loadChats().find((x) => x.id === id);
+  if (!c) return newChat();
+  chatId = c.id;
+  state = c.state;
+  carried = c.carried || [];
+  clearMessages();
+  for (const t of c.turns) {
+    if (t.role === "user") addUser(t.text);
+    else addBot(t.data);
+  }
+  renderChips(c.chips || []);
+  showTab("chat");
+  messages.lastElementChild?.scrollIntoView({ block: "end" });
+}
+
+function resetChat() { return newChat({ carry: false }); }
+$("#reset").addEventListener("click", () => newChat());
+
+// ---------- chat list ----------
+const chatsDialog = $("#chats-dialog");
+function renderChatList() {
+  const chats = loadChats();
+  $("#chats-list").innerHTML = chats.length
+    ? chats.map((c) => `<li class="${c.id === chatId ? "current" : ""}">
+        <button class="open" data-open="${esc(c.id)}"><b>${esc(c.title)}</b><span class="sub">${esc(relTime(c.updated))} · ${Math.ceil(c.turns.length / 2)} message${c.turns.length > 2 ? "s" : ""}${(c.chips || []).filter((x) => x.hard).length ? ` · ${esc(c.chips.filter((x) => x.hard).map((x) => x.label).join(", "))}` : ""}</span></button>
+        <button class="del" data-del="${esc(c.id)}" aria-label="Delete chat">×</button></li>`).join("")
+    : `<li class="sub">No saved chats yet.</li>`;
+}
+$("#chats-btn").addEventListener("click", () => { renderChatList(); chatsDialog.showModal(); });
+chatsDialog.addEventListener("click", (e) => {
+  if (e.target === chatsDialog || e.target.closest(".close")) return chatsDialog.close();
+  if (e.target.closest("#new-chat")) { chatsDialog.close(); showTab("chat"); return newChat(); }
+  const open = e.target.closest("[data-open]");
+  if (open) { chatsDialog.close(); return openChat(open.dataset.open); }
+  const del = e.target.closest("[data-del]");
+  if (del) {
+    saveChats(loadChats().filter((c) => c.id !== del.dataset.del));
+    if (del.dataset.del === chatId) newChat({ carry: false });
+    renderChatList();
+  }
+});
 messages.addEventListener("click", (e) => {
   const b = e.target.closest("button[data-act]");
   if (!b) return;
@@ -239,7 +355,7 @@ $("#stress-list").innerHTML = STRESS.map((s, i) => `
 $("#stress-list").addEventListener("click", async (e) => {
   const b = e.target.closest("[data-stress]");
   if (!b) return;
-  resetChat();
+  await resetChat();
   showTab("chat");
   for (const q of STRESS[+b.dataset.stress].qs) await send(q);
 });
@@ -257,4 +373,11 @@ async function loadAudit() {
   $("#audit").innerHTML = `
     <p><b>${total}</b> recipes carry a diet label that their own ingredient list contradicts.</p>
     <div class="audit-wrap"><table class="audit"><thead><tr><th>Source label</th><th>Contradicted</th><th>Examples (ingredient → reason)</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+// ---------- start: reopen the most recent chat on this device, or start a new one ----------
+{
+  const recent = loadChats()[0];
+  if (recent) openChat(recent.id);
+  else newChat();
 }
