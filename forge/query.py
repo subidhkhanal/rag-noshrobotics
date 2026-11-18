@@ -313,6 +313,8 @@ def normalize_message(onto: Ontology, message: str) -> str:
 def parse(onto: Ontology, message: str) -> Constraints:
     message = normalize_message(onto, message)
     low = " " + message.strip().lower().replace("’", "'") + " "
+    low = re.sub(r"\bcan'?t\b", "cannot", low)
+    low = re.sub(r"\bwon'?t\b", "will not", low)
     low = re.sub(r"n't\b", " not", low)
     low = re.sub(r"(\w)'(m|s|re|ve|ll|d)\b", r"\1", low)
     low = HINGLISH_VERB.sub(" ", low)
