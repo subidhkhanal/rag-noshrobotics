@@ -12,7 +12,7 @@ import re
 
 from .ontology import Ontology
 from .parser_schema import ATTRIBUTES, COURSES, DIETS, INTENTS, SYSTEM, normalize
-from .query import ATTRIBUTE_RES, COURSE_RES, CUISINE_GROUPS, Constraints
+from .query import ATTRIBUTE_RES, COURSE_RES, CUISINE_GROUPS, Constraints, canonical_text, remove_spans
 
 TIMEOUT_S = float(os.getenv("CLAUDE_PARSER_TIMEOUT", "6"))
 CUES = re.compile(
@@ -52,13 +52,7 @@ def enabled() -> bool:
 
 def should_call(message: str, understood: list[str] | None = None) -> bool:
     """Call Claude only when a cue word survives after removing what the rules already turned into constraints."""
-    rest = " " + message.lower().replace("’", "'") + " "
-    rest = re.sub(r"\bcan'?t\b", "cannot", rest)
-    rest = re.sub(r"\bwon'?t\b", "will not", rest)
-    rest = re.sub(r"n't\b", " not", rest)
-    for span in sorted(understood or [], key=len, reverse=True):
-        if span.strip():
-            rest = rest.replace(span.strip().lower(), " ")
+    rest = remove_spans(canonical_text(message), understood or [])
     return bool(CUES.search(rest))
 
 

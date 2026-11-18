@@ -207,6 +207,16 @@ def _list_only(onto: Ontology, phrase: str) -> str:
         words = [w for w in re.findall(r"[a-zऀ-ॿ]+", seg) if w not in _LIST_GLUE]
         covered = {t for m in onto.match(seg) for t in m.alias.split()}
         if not words or any(w not in covered and w.rstrip("s") not in covered for w in words):
+            # A repeated negation still refuses its ingredient: "no mushrooms, no paneer dinner" keeps "no paneer".
+            if re.match(r"\s*(?:no|not|without)\b", seg):
+                end = 0
+                for w in re.finditer(r"[a-zऀ-ॿ]+", seg):
+                    t = w.group(0)
+                    if t not in _LIST_GLUE and t not in covered and t.rstrip("s") not in covered:
+                        break
+                    end = w.end()
+                if seg[:end].split()[-1] not in _LIST_GLUE:
+                    kept.append(seg[:end])
             break
         kept.append(seg)
     return ",".join(kept)
@@ -311,14 +321,27 @@ def normalize_message(onto: Ontology, message: str) -> str:
     return re.sub(r"[A-Za-z]+", fix, message)
 
 
-def parse(onto: Ontology, message: str) -> Constraints:
-    message = normalize_message(onto, message)
+def canonical_text(message: str) -> str:
+    """Lowercase, expand contractions and drop Hinglish 'to make' verbs. Shared by the parser and the Claude gate,
+    so the spans the parser reports as understood line up exactly with the gate's text."""
     low = " " + message.strip().lower().replace("’", "'") + " "
     low = re.sub(r"\bcan'?t\b", "cannot", low)
     low = re.sub(r"\bwon'?t\b", "will not", low)
     low = re.sub(r"n't\b", " not", low)
     low = re.sub(r"(\w)'(m|s|re|ve|ll|d)\b", r"\1", low)
-    low = HINGLISH_VERB.sub(" ", low)
+    return HINGLISH_VERB.sub(" ", low)
+
+
+def remove_spans(text: str, spans: list[str]) -> str:
+    """Remove each span as whole words only, so removing 'paneer' can't cut into 'paneertikka'-style words."""
+    for span in sorted({s.strip().lower() for s in spans if s.strip()}, key=len, reverse=True):
+        text = re.sub(rf"(?<![\wऀ-ॿ]){re.escape(span)}(?![\wऀ-ॿ])", " ", text)
+    return text
+
+
+def parse(onto: Ontology, message: str) -> Constraints:
+    message = normalize_message(onto, message)
+    low = canonical_text(message)
     c = Constraints()
     consumed: list[str] = []
 
@@ -356,7 +379,8 @@ def parse(onto: Ontology, message: str) -> Constraints:
             end = whole.find(surfaces[0]) + len(surfaces[0]) if surfaces and surfaces[0] in whole else len(whole)
             consumed.append(whole[:end])
             for extra in surfaces[1:]:
-                hit = re.search(r"(?:\b(?:no|not|without|or|and|nor)\s+)?" + re.escape(extra), whole)
+                # \b keeps "egg" from matching inside "eggplant".
+                hit = re.search(r"(?:\b(?:no|not|without|or|and|nor|aur)\s+)?\b" + re.escape(extra) + r"\b", whole)
                 consumed.append(hit.group(0) if hit else extra)
     for m in HINDI_EXCLUDE_RE.finditer(low):
         ids = _ingredients_in(onto, m.group(1))
@@ -431,8 +455,7 @@ def parse(onto: Ontology, message: str) -> Constraints:
     apply_diet_conflicts(onto, c)
 
     remainder = low
-    for span in sorted(consumed, key=len, reverse=True):
-        remainder = remainder.replace(span.lower(), " ")
+    remainder = remove_spans(remainder, consumed)
     remainder = re.sub(r"\b(no|without|not|avoid|bina|nahi|nahin|mat)\b\s+\w+", " ", remainder)
     remainder = FILLER.sub(" ", remainder)
     remainder = re.sub(r"[^a-z0-9ऀ-ॿ ]+", " ", remainder)

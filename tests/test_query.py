@@ -98,5 +98,29 @@ def test_contraction_refusals(msg, exclude):
 def test_claude_gate_skips_refusals_rules_understood():
     from forge.llm_parser import should_call
     from forge.query import normalize_message
-    for msg in ["my kid can't eat cashews", "I can't stand mushrooms", "hold the onions please", "no onion no garlic"]:
+    for msg in ["my kid can't eat cashews", "I can't stand mushrooms", "hold the onions please", "no onion no garlic",
+                "no mushrooms, no paneer", "without potatoes and without peas"]:
+        assert not should_call(normalize_message(onto, msg), parse(onto, msg).understood), msg
+
+
+def test_repeated_negation_before_dish_word_still_refuses():
+    c = parse(onto, "no mushrooms, no paneer dinner")
+    assert {"mushroom", "paneer"} <= c.exclude and "paneer" not in c.include and c.course == "dinner"
+
+
+def test_later_refusal_does_not_match_inside_earlier_word():
+    c = parse(onto, "no eggplant or egg")
+    assert "egg" in c.exclude and "egg" not in c.text.split()
+
+
+def test_span_removal_is_whole_word_only():
+    from forge.query import remove_spans
+    out = remove_spans(" no paneer and paneertikka masala ", ["no paneer", "masala"])
+    assert "paneertikka" in out and "masala" not in out and "no paneer" not in out
+
+
+def test_gate_and_parser_share_normalisation():
+    from forge.llm_parser import should_call
+    from forge.query import normalize_message
+    for msg in ["I'm allergic to sesame", "I've got no eggs, she's vegan", "kuch spicy banana hai"]:
         assert not should_call(normalize_message(onto, msg), parse(onto, msg).understood), msg
