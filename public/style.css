@@ -458,3 +458,6 @@ body { display: block; height: 100dvh; overflow: hidden; }
 }
 .side-link { text-decoration: none; color: var(--muted); font-size: 13px; margin-top: 6px; }
 .side-link:hover { color: var(--text); }
+.msg.bot.streaming > p::after { content: "▍"; margin-left: 1px; color: var(--accent); animation: caret 1s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .msg.bot.streaming > p::after { animation: none; } }

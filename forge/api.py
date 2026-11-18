@@ -4,13 +4,14 @@ Run locally: uvicorn forge.api:app --port 8000
 """
 from __future__ import annotations
 
+import json
 import os
 import time
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -73,6 +74,19 @@ def health():
 @app.post("/api/chat")
 def chat(body: ChatIn):
     return assistant.chat(body.state, body.message, body.history)
+
+
+@app.post("/api/chat/stream")
+def chat_stream(body: ChatIn):
+    """Server-sent events: status / delta (reply text as it's written) / reset / final (cards and state)."""
+    def events():
+        try:
+            for ev in assistant.chat_stream(body.state, body.message, body.history):
+                yield f"data: {json.dumps(ev, ensure_ascii=False)}\n\n"
+        except Exception:  # noqa: BLE001 - tell the client to retry the plain endpoint
+            yield f"data: {json.dumps({'type': 'error'})}\n\n"
+    return StreamingResponse(events(), media_type="text/event-stream",
+                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @app.post("/api/constraints")

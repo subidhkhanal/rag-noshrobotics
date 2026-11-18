@@ -265,6 +265,60 @@ function renderChips(chips) {
     .join("");
 }
 
+// Streams the assistant's reply: text appears as it's written, a status line shows while tools run, and the
+// final event carries the cards. Resolves with the final payload (same shape as /api/chat).
+async function streamChat(body, typing, slow) {
+  const res = await fetch(API + "/api/chat/stream", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+  });
+  if (!res.ok || !res.body) {
+    const err = new Error(`${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "", live = null, text = "";
+  const statusEl = () => typing.querySelector(".typing-text");
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let cut;
+    while ((cut = buffer.indexOf("\n\n")) >= 0) {
+      const line = buffer.slice(0, cut).trim();
+      buffer = buffer.slice(cut + 2);
+      if (!line.startsWith("data:")) continue;
+      const ev = JSON.parse(line.slice(5));
+      if (ev.type === "final") {
+        live?.remove();
+        return ev.data;
+      }
+      if (ev.type === "error") throw new Error("stream error");
+      if (ev.type === "status") {
+        clearTimeout(slow);
+        if (statusEl()) statusEl().textContent = ev.text.replace(/…$/, "");
+        typing.hidden = false;
+      } else if (ev.type === "reset") {
+        text = "";
+        if (live) live.querySelector("p").textContent = "";
+      } else if (ev.type === "delta") {
+        if (!live) {
+          live = document.createElement("div");
+          live.className = "msg bot streaming";
+          live.innerHTML = "<p></p>";
+          messages.insertBefore(live, typing);
+        }
+        text += ev.text;
+        live.querySelector("p").textContent = text;
+        typing.hidden = true;
+        live.scrollIntoView({ block: "end" });
+      }
+    }
+  }
+  throw new Error("stream ended early");
+}
+
 async function send(text) {
   text = text.trim();
   if (!text || busy) return;
@@ -278,7 +332,14 @@ async function send(text) {
   typing.scrollIntoView({ behavior: "smooth", block: "end" });
   const slow = setTimeout(() => { typing.querySelector(".typing-text").textContent = "Reading your request carefully"; }, 1200);
   try {
-    const data = await api("/api/chat", { message: text, state, history: loadHistory() });
+    const body = { message: text, state, history: loadHistory() };
+    let data;
+    try {
+      data = await streamChat(body, typing, slow);
+    } catch (err) {
+      if (err.status === 429) throw err;
+      data = await api("/api/chat", body);  // streaming unavailable: plain request
+    }
     state = data.state;
     typing.remove();
     addBot(data);

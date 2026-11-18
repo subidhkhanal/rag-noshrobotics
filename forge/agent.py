@@ -51,6 +51,12 @@ TOOLS = [
          "items": {"type": "array", "items": {"type": "string"}},
          "question": {"type": "string", "description": "The question in plain English, e.g. 'does it contain garlic?'"}},
          "required": ["items", "question"]}},
+    {"name": "check_ingredient",
+     "description": "Check one ingredient against the user's locked diets and allergies, and list safe curated "
+                    "substitutes. Use for 'can I use potato?', 'replace X with Y in the dosa', 'is ghee vegan?'. "
+                    "Optionally pass `item` (an on-screen label) to also say whether that dish contains it.",
+     "input_schema": {"type": "object", "properties": {
+         "ingredient": {"type": "string"}, "item": {"type": "string"}}, "required": ["ingredient"]}},
     {"name": "plan_week",
      "description": "Make a multi-day meal plan with a shopping list, e.g. request \"5 jain dinners\".",
      "input_schema": {"type": "object", "properties": {"request": {"type": "string"}}, "required": ["request"]}},
@@ -77,6 +83,9 @@ How to work:
 
 Hard rules (safety):
 - Only name dishes that came from a tool in this conversation or are listed under "On screen". Never invent dishes.
+- Never describe a specific dish's ingredients, steps, timings or quantities unless get_recipe, check_dishes or
+  search_recipes returned them in THIS turn. To talk about a dish's method, call get_recipe first.
+- Never say you showed, opened or changed something unless a tool did it in this turn.
 - Never say a specific dish is Jain/vegan/allergy-safe etc. unless check_dishes or the card checks said so. The
   catalogue has no calorie or nutrition data: never give numbers.
 - Locked restrictions stay on for the whole chat. If the user wants one removed, tell them to tap × on its chip.
@@ -174,11 +183,52 @@ class Agent:
                 return "The catalogue has no data to answer that (no nutrition or calorie data)."
             self._show(turn, out, rank=1)
             return "Facts from the ingredient lists:\n" + out["reply"]
+        if name == "check_ingredient":
+            return self._check_ingredient(s, str(args.get("ingredient", ""))[:80], args.get("item"))
         if name == "recall":
             out = self.a._recall_reply(s)
             self._show(turn, out, rank=2)
             return out["reply"]
         return f"Error: unknown tool {name}."
+
+    def _check_ingredient(self, s, text: str, item=None) -> str:
+        """Ingredient vs the locked restrictions, from the ontology; safe swaps from the curated list."""
+        from .adapt import _blocking_ids, _candidates, load_substitutions
+        onto = self.eng.onto
+        ids = [m.ingredient for m in onto.match(text) if "non_food" not in onto.ingredients[m.ingredient].tags]
+        if not ids:
+            corrected = self.eng.speller.correct_text(text)
+            ids = [m.ingredient for m in onto.match(corrected) if "non_food" not in onto.ingredients[m.ingredient].tags]
+        if not ids:
+            return f"'{text}' isn't in the ingredient database, so it can't be checked."
+        subs = getattr(self, "_subs", None) or load_substitutions()
+        self._subs = subs
+        out = []
+        for iid in ids[:3]:
+            label = onto.label(iid)
+            line = [{"line": label, "name": label, "ids": [iid]}]
+            verdicts = []
+            for d in sorted(s.state.diets):
+                v = onto.diet_verdict(d, line)
+                dl = onto.diets[d]["label"]
+                verdicts.append(f"fits {dl}" if v.status == "pass" else
+                                f"NOT {dl} ({', '.join(sorted(onto.effective_tags(iid) & set(onto.diets[d].get('block', []))))})"
+                                if v.status == "block" else f"check for {dl}: {v.reasons[0] if v.reasons else 'may vary'}")
+            for e in sorted(s.state.exclude):
+                if e in onto.lineage(iid):
+                    verdicts.append(f"excluded (you said no {onto.label(e)})")
+            if not verdicts:
+                verdicts.append("no locked restrictions to check against")
+            safe = [opt for opt in _candidates(onto, iid, subs) if not _blocking_ids(onto, opt["to"], s.state)]
+            swaps = "; ".join(f"{' + '.join(onto.label(x) for x in o['to'])}: {o['how']}" for o in safe[:3])
+            out.append(f"{label}: " + ", ".join(verdicts) + (f". Safe swaps: {swaps}" if swaps else ""))
+            if item is not None:
+                rid = (self._resolve(s, [item]) or [None])[0]
+                if rid is not None:
+                    r = self.eng.recipes[self.eng.by_id[rid]]
+                    has = onto.exclusion_verdict(iid, r["ingredients"]).status == "block"
+                    out.append(f"{r['name']} {'contains' if has else 'does not list'} {label}.")
+        return "\n".join(out)
 
     @staticmethod
     def _show(turn: dict, out: dict, rank: int) -> None:
@@ -209,14 +259,23 @@ class Agent:
 
     # ---------------- the turn ----------------
     def turn(self, state: dict | None, message: str, history: list | None) -> dict:
+        """Non-streaming turn: runs the stream to the end and returns the final payload."""
+        for ev in self.stream_turn(state, message, history):
+            if ev["type"] == "final":
+                return ev["data"]
+        raise AgentError("no final event")
+
+    def stream_turn(self, state: dict | None, message: str, history: list | None):
+        """Yields {"type": "status"|"delta"|"reset"|"final"} events. Text streams as Claude writes it; tools run
+        between model calls; the reply guardrail runs on the finished text (a "reset" event replaces it if a
+        rewrite is needed). Raises on failure so the caller can fall back to the deterministic pipeline."""
         import anthropic
         from .chat import chips, session_from
         s = session_from(self.eng, state)
         onto = self.eng.onto
-        # 0. Restrictions in the user's own words are locked by the rules first (add-only), whatever Claude does.
+        # 0. Restrictions in the user's own words are locked by the rules first (add-only), whatever Claude does,
+        #    but only for requests or statements about the user, not general questions ("why is ginger not jain?").
         said = parse(onto, message)
-        # ...but only when it's a request or about the user ("jain dinner", "I'm vegan", "no onion"), not a general
-        # question ("why is ginger not jain?" must not switch Jain on).
         asks = dish_qa.QUESTION.search(message) and not FIRST_PERSON.search(message)
         if (said.diets or said.exclude) and not asks:
             s.state.diets |= said.diets
@@ -231,29 +290,43 @@ class Agent:
         client = llm_parser._get_client().with_options(timeout=TIMEOUT_S)
         t0 = time.perf_counter()
         stats["agent_turns"] += 1
-        text, retried = "", False
+        parts: list[str] = []  # reply text across model calls (text before a tool call + the final answer)
+        retried = False
         try:
             for _ in range(MAX_STEPS):
                 if not guard.allow_claude():
                     raise AgentError("budget")
-                resp = client.messages.create(
-                    model=MODEL, max_tokens=1500, output_config={"effort": "low"},
-                    system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
-                    tools=TOOLS, messages=msgs)
+                if parts and parts[-1].strip():
+                    parts.append("\n\n")
+                    yield {"type": "delta", "text": "\n\n"}
+                with client.messages.stream(
+                        model=MODEL, max_tokens=1500, output_config={"effort": "low"},
+                        system=[{"type": "text", "text": SYSTEM, "cache_control": {"type": "ephemeral"}}],
+                        tools=TOOLS, messages=msgs) as stream:
+                    for ev in stream:
+                        if ev.type == "content_block_delta" and getattr(ev.delta, "type", "") == "text_delta":
+                            parts.append(ev.delta.text)
+                            yield {"type": "delta", "text": ev.delta.text}
+                    resp = stream.get_final_message()
                 if resp.stop_reason == "tool_use":
                     msgs.append({"role": "assistant", "content": resp.content})
-                    results = [{"type": "tool_result", "tool_use_id": b.id,
-                                "content": self._run_tool(s, b.name, dict(b.input or {}), turn)}
-                               for b in resp.content if b.type == "tool_use"]
+                    results = []
+                    for b in resp.content:
+                        if b.type == "tool_use":
+                            yield {"type": "status", "text": TOOL_STATUS.get(b.name, "Working…")}
+                            results.append({"type": "tool_result", "tool_use_id": b.id,
+                                            "content": self._run_tool(s, b.name, dict(b.input or {}), turn)})
                     msgs.append({"role": "user", "content": results})
                     continue
                 if resp.stop_reason not in ("end_turn", "stop_sequence"):
                     raise AgentError(resp.stop_reason)
-                text = "".join(b.text for b in resp.content if b.type == "text").strip()
+                text = "".join(parts).strip()
                 problem = self._check_reply(text, set(s.last_ids) | shown_before | set(s.shown))
                 if problem and not retried:
                     stats["agent_rejected"] += 1
                     retried = True
+                    parts = []
+                    yield {"type": "reset"}
                     msgs += [{"role": "assistant", "content": resp.content},
                              {"role": "user", "content": f"(App check: {problem}. Rewrite the reply following the rules.)"}]
                     continue
@@ -267,12 +340,17 @@ class Agent:
             raise
         finally:
             stats["agent_ms"] += (time.perf_counter() - t0) * 1000
+        text = "".join(parts).strip()
         if not text:
             raise AgentError("empty reply")
         ui = turn["ui"] or {"mode": "chat", "results": [], "closest": None, "blocked_examples": [], "trace": {}}
-        return {**ui, "reply": text[:1500], "state": s.to_dict(), "constraints": chips(onto, s.state),
-                "suggestions": [], "agent": True}
+        yield {"type": "final", "data": {**ui, "reply": text[:2000], "state": s.to_dict(),
+                                         "constraints": chips(onto, s.state), "suggestions": [], "agent": True}}
 
+
+TOOL_STATUS = {"search_recipes": "Searching recipes…", "get_recipe": "Opening the recipe…",
+               "check_dishes": "Checking the ingredients…", "check_ingredient": "Checking that ingredient…",
+               "plan_week": "Planning your week…", "recall": "Looking back at this chat…"}
 
 ASPECT_WORDS = {
     "healthy": r"health|light|rich|heavy|weight|diet food|calorie|nutrition|oily",

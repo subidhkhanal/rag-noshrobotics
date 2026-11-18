@@ -26,7 +26,8 @@ RECENT_TURNS = 4
 # Signs a message is conversation, not a bare request ("hi! I'm tired after work").
 CHATTY = re.compile(r"\b(hi|hello|hey|tired|bored|stressed|sick|feeling|today was|after work|husband|wife|kids?|"
                     r"family|friends?|guests?|party|why|because|should i|do you|can you|could you|would you|"
-                    r"suggest|recommend|help me|thank|thanks|please)\b|\?", re.I)
+                    r"suggest|recommend|help me|thank|thanks|please|replace|swap|substitut\w*|instead|alternative|"
+                    r"more|else|other|another|change|without it|can i|could i|like|love|hate|prefer)\b|\?", re.I)
 REPLY_MEMORY = 400  # characters of each assistant reply kept for context
 SMALL_TALK_KINDS = {"greeting", "thanks", "ack", "about", "override", "reset", "bye", "help", "unclear"}
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -218,7 +219,7 @@ class Assistant:
         if small_talk_kind(message) or self._needs_understanding(s, message, parsed):
             return False
         structured = bool(parsed.diets or parsed.exclude or parsed.include or parsed.course or parsed.cuisine
-                          or parsed.max_time or parsed.attributes or parsed.servings or parsed.intents)
+                          or parsed.max_time or parsed.attributes or parsed.servings or "plan" in parsed.intents)
         short_dish = len(message.split()) <= 4 and self._food_signal(parsed) == "strong"
         return (structured or short_dish) and not CHATTY.search(message)
 
@@ -248,6 +249,31 @@ class Assistant:
                 out = None
         if out is None:
             out = self._chat(state, message, history)
+        return self._remember(out, message)
+
+    def chat_stream(self, state: dict | None, message: str, history: list | None = None):
+        """Same as chat(), as events: "status"/"delta" while the agent writes, then one "final" with the full
+        payload (cards, state). If the agent fails midway, a "reset" clears the partial text and the
+        deterministic pipeline answers."""
+        out, started = None, False
+        if agent_mod.enabled() and not self._fast_path(state, message):
+            try:
+                for ev in self.agent.stream_turn(state, message, history):
+                    if ev["type"] == "final":
+                        out = ev["data"]
+                        break
+                    started = started or ev["type"] == "delta"
+                    yield ev
+            except Exception:  # noqa: BLE001 - fall back, and clear any partial text
+                out = None
+                if started:
+                    yield {"type": "reset"}
+        if out is None:
+            out = self._chat(state, message, history)
+        yield {"type": "final", "data": self._remember(out, message)}
+
+    @staticmethod
+    def _remember(out: dict, message: str) -> dict:
         # Keep a short transcript in the client-held state, so the next turn is understood in context.
         st = out.get("state") or {}
         recent = [t for t in st.get("recent", []) if isinstance(t, dict)]

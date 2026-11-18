@@ -48,6 +48,27 @@ class FakeClient:
         self.calls.append(kw)
         return self.script.pop(0)
 
+    def stream(self, **kw):
+        """Streaming twin of create(): text blocks arrive as text_delta events, then the final message."""
+        resp = self.create(**kw)
+
+        class Stream:
+            def __enter__(self_inner):
+                return self_inner
+
+            def __exit__(self_inner, *a):
+                return False
+
+            def __iter__(self_inner):
+                for b in resp.content:
+                    if b.type == "text":
+                        yield types.SimpleNamespace(type="content_block_delta",
+                                                    delta=types.SimpleNamespace(type="text_delta", text=b.text))
+
+            def get_final_message(self_inner):
+                return resp
+        return Stream()
+
 
 def text_msg(t):
     return types.SimpleNamespace(stop_reason="end_turn", content=[types.SimpleNamespace(type="text", text=t)])
@@ -64,6 +85,7 @@ def fake(monkeypatch):
         client = FakeClient(script)
         monkeypatch.setattr(agent.llm_parser, "_get_client", lambda: client)
         monkeypatch.setattr(agent.guard, "allow_claude", lambda: True)
+        monkeypatch.setattr(agent, "enabled", lambda: True)
         return client
     return install
 
@@ -101,3 +123,19 @@ def test_invented_dish_is_rewritten_then_falls_back(fake, shown):
     fake([text_msg(f"Try {bogus}!"), text_msg(f"Really, try {bogus}!")])
     with pytest.raises(agent.AgentError):
         assistant.agent.turn(shown, "anything else you'd suggest?", None)
+
+
+def test_stream_emits_status_text_then_final(fake, shown):
+    fake([tool_msg("check_dishes", {"items": ["2"], "question": "is it spicy?"}), text_msg("It's mildly spiced.")])
+    events = list(assistant.chat_stream(shown, "is the second one spicy, like for a kid?"))
+    kinds = [e["type"] for e in events]
+    assert "status" in kinds and "delta" in kinds and kinds[-1] == "final"
+    assert events[-1]["data"]["reply"] == "It's mildly spiced." and events[-1]["data"]["state"]["recent"]
+
+
+def test_stream_falls_back_and_clears_partial_text(fake, shown):
+    bogus = next(n for n in assistant._long_names if "paneer" not in n).title()
+    fake([text_msg(f"Try {bogus}!"), text_msg(f"Really, try {bogus}!")])
+    events = list(assistant.chat_stream(shown, "anything else you'd suggest?"))
+    assert "reset" in [e["type"] for e in events]  # streamed text withdrawn
+    assert events[-1]["type"] == "final" and not events[-1]["data"].get("agent")  # deterministic answer instead

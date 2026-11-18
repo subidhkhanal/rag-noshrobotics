@@ -351,6 +351,9 @@ def canonical_text(message: str) -> str:
     low = re.sub(r"\bcan'?t\b", "cannot", low)
     low = re.sub(r"\bwon'?t\b", "will not", low)
     low = re.sub(r"n't\b", " not", low)
+    # Run-together negations people type: "donot", "dosent", "didnot", "cannot" stays.
+    low = re.sub(r"\b(do|does|did|is|are|was|were|should|would|could)not\b", r"\1 not", low)
+    low = re.sub(r"\b(dosent|doesnt|dosnt)\b", "does not", low)
     low = re.sub(r"(\w)'(m|s|re|ve|ll|d)\b", r"\1", low)
     return HINGLISH_VERB.sub(" ", low)
 
