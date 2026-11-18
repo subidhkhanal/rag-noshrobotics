@@ -345,11 +345,8 @@ class Assistant:
         if "spicy" in st.attributes and anchor is None:
             head += ", leaning spicy"
         if st.diets or st.exclude:
-            removed = sum(out.trace["removed_by_constraint"].values())
-            head += f", each verified ingredient by ingredient. I ruled out {removed:,} of {out.trace['corpus']:,} recipes that broke your constraints"
-            if out.blocked_examples:
-                ex = out.blocked_examples[0]
-                head += f" (for example {ex['name']} — {ex['reason'].split(': ', 1)[-1]})"
+            # The counts and ruled-out examples live in "How I found these"; the reply stays short.
+            head += ", each checked ingredient by ingredient"
         lines.append(head + ".")
         if st.pantry_mode and st.include:
             want = set(st.include)
@@ -399,7 +396,13 @@ _SMALL_TALK = [
     ("bye", r"(bye|goodbye|see you|good\s*night|tata)"),
     ("about", r"(who (made|built|created) (you|this)|who are you|what are you|what is this( app| site)?|"
               r"are you (chatgpt|claude|an ai|a bot))"),
-    ("help", r"(help|what can you do|how (do|does) (you|this|it) work)"),
+    ("help", r"(help|"
+             r"what (else )?(can|do|could|will|should|does) (you|u|it|this( app| site)?|i) (d+o+|offer|help with|ask)"
+             r"( for me)?|"
+             r"how (do|does|can|should) (you|u|this|it|i) (work|help|use (this|it|you))|how to use (this|it|you)|"
+             r"what (are|is) (you|u|this|it) (for|good at|capable of|able to do)|what('s| is) your (job|purpose|use)|"
+             r"(your )?(features|capabilities)|"
+             r"(tum|aap|ap) kya (kar sakte|karte) (ho|hain|hai)|kya kar sakte ho|kya karte ho)"),
 ]
 # Swaps that only change a cooking fat (butter -> oil) aren't worth announcing.
 STYLE_ONLY = {"butter", "ghee"}
@@ -413,7 +416,9 @@ def small_talk_kind(message: str) -> str | None:
         return "override"
     text = re.sub(r"[\s!.?,:)(]+$", "", message.strip().lower())
     for kind, pat in _SMALL_TALK:
-        if re.fullmatch(rf"{pat}(\s*[!.?,]+\s*{pat})*", text) or (kind == "help" and re.search(rf"\b{pat}\b", text)
+        # Inside a longer message a help phrase must end it: "hi, what can you do" is help,
+        # "what do you do with okra" is a food question.
+        if re.fullmatch(rf"{pat}(\s*[!.?,]+\s*{pat})*", text) or (kind == "help" and re.search(rf"\b{pat}$", text)
                                                                      and len(text.split()) <= 6):
             return kind
     return None
