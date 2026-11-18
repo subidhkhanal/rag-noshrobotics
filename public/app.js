@@ -219,7 +219,7 @@ function planHtml(data) {
 function addBot(data) {
   const el = document.createElement("div");
   el.className = "msg bot";
-  let html = `<p>${esc(data.reply)}</p>`;
+  let html = `<div class="reply">${md(data.reply)}</div>`;
   if (data.suggestions?.length) html += `<div class="suggest">${data.suggestions.map((s) => `<button>${esc(s)}</button>`).join("")}</div>`;
   if (data.mode === "plan" && data.results.length) html += planHtml(data);
   else if (data.results.length) html += `<div class="cards">${data.results.map(cardHtml).join("")}</div>`;
@@ -253,9 +253,52 @@ function addBot(data) {
     html += `<details class="trace"><summary>How I found these</summary><ol class="trace-steps">${steps.map((s) => `<li>${s}</li>`).join("")}</ol>${ruled}
       <details class="raw"><summary>Raw details</summary><pre>${esc(JSON.stringify({ parsed: data.parsed, trace: t }, null, 2))}</pre></details></details>`;
   }
+  const next = followUps(data);
+  if (next.length && !data.suggestions?.length) {
+    html += `<div class="followups">${next.map((s) => `<button>${esc(s)}</button>`).join("")}</div>`;
+  }
   el.innerHTML = html;
+  messages.querySelectorAll(".followups").forEach((f) => f.remove());  // only the latest reply offers them
   messages.appendChild(el);
   updateEmpty();
+}
+
+// Suggested next questions, ChatGPT-style, based on what's on screen.
+function followUps(data) {
+  const n = data.results?.length || 0;
+  if (data.mode === "plan" && n) return ["Explain Monday's dish", "Which day is quickest?", "Swap Friday's dish"];
+  if (data.mode === "detail" && n === 1) return ["Is it spicy?", "What can I substitute?", "Show me other options"];
+  if (data.mode === "search" && n > 1) return ["How do I make the first one?", "Which of these is quickest?", "Something lighter"];
+  return [];
+}
+
+// Minimal, safe Markdown for assistant replies: text is escaped first, then **bold**, *italic*, `code`,
+// bullet and numbered lists, and paragraphs are rebuilt.
+function md(text) {
+  const inline = (s) => esc(s)
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|[\s(])\*(?!\s)(.+?)\*(?=[\s).,!?:;]|$)/g, "$1<em>$2</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>");
+  const out = [];
+  let list = null;
+  const close = () => { if (list) { out.push(`</${list}>`); list = null; } };
+  for (const raw of String(text || "").split("\n")) {
+    const line = raw.trimEnd();
+    const ul = line.match(/^\s*[-*•]\s+(.*)$/);
+    const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
+    if (ul || ol) {
+      const kind = ul ? "ul" : "ol";
+      if (list !== kind) { close(); out.push(`<${kind}>`); list = kind; }
+      out.push(`<li>${inline((ul || ol)[1])}</li>`);
+    } else if (!line.trim()) {
+      close();
+    } else {
+      close();
+      out.push(`<p>${inline(line)}</p>`);
+    }
+  }
+  close();
+  return out.join("");
 }
 
 function renderChips(chips) {
@@ -278,8 +321,28 @@ async function streamChat(body, typing, slow) {
   }
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = "", live = null, text = "";
   const statusEl = () => typing.querySelector(".typing-text");
+  // Smooth reveal: network chunks arrive in bursts, so text goes into a buffer and is revealed at a steady
+  // pace that speeds up when there's a backlog (it never falls more than ~1/3 s behind).
+  let buffer = "", live = null, target = "", shown = 0, raf = 0;
+  const nearBottom = () => messages.scrollHeight - messages.scrollTop - messages.clientHeight < 140;
+  const paint = () => {
+    raf = 0;
+    if (!live) return;
+    const backlog = target.length - shown;
+    if (backlog > 0) {
+      const follow = nearBottom();
+      shown += Math.max(1, Math.ceil(backlog / 20));
+      live.querySelector(".reply").innerHTML = md(target.slice(0, shown));
+      if (follow) messages.scrollTop = messages.scrollHeight;
+    }
+    if (shown < target.length) raf = requestAnimationFrame(paint);
+  };
+  const drained = () => new Promise((done) => {
+    const started = performance.now();
+    const check = () => (shown >= target.length || performance.now() - started > 1500 ? done() : setTimeout(check, 30));
+    check();
+  });
   for (;;) {
     const { value, done } = await reader.read();
     if (done) break;
@@ -291,6 +354,8 @@ async function streamChat(body, typing, slow) {
       if (!line.startsWith("data:")) continue;
       const ev = JSON.parse(line.slice(5));
       if (ev.type === "final") {
+        await drained();
+        cancelAnimationFrame(raf);
         live?.remove();
         return ev.data;
       }
@@ -300,19 +365,19 @@ async function streamChat(body, typing, slow) {
         if (statusEl()) statusEl().textContent = ev.text.replace(/…$/, "");
         typing.hidden = false;
       } else if (ev.type === "reset") {
-        text = "";
-        if (live) live.querySelector("p").textContent = "";
+        target = "";
+        shown = 0;
+        if (live) live.querySelector(".reply").innerHTML = "";
       } else if (ev.type === "delta") {
         if (!live) {
           live = document.createElement("div");
           live.className = "msg bot streaming";
-          live.innerHTML = "<p></p>";
+          live.innerHTML = '<div class="reply"></div>';
           messages.insertBefore(live, typing);
         }
-        text += ev.text;
-        live.querySelector("p").textContent = text;
+        target += ev.text;
         typing.hidden = true;
-        live.scrollIntoView({ block: "end" });
+        if (!raf) raf = requestAnimationFrame(paint);
       }
     }
   }
@@ -398,7 +463,7 @@ messages.addEventListener("click", (e) => {
   }
   const starter = e.target.closest(".starters button[data-q]");
   if (starter) return send(starter.dataset.q);
-  const s = e.target.closest(".suggest button");
+  const s = e.target.closest(".suggest button, .followups button");
   if (s) send(s.textContent);
 });
 $("#chips").addEventListener("click", async (e) => {

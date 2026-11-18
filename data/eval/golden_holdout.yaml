@@ -1,0 +1,63 @@
+# Held-out English descriptions (written before the synonym expansion was built, worded differently from
+# golden.yaml) to check that retrieval changes generalise instead of fitting the main set. Same format.
+- id: h_puri
+  name: "\\bpuris?\\b|poori|bhatura"
+  en: balloon-like fried wheat bread for breakfast
+- id: h_paratha
+  name: "paratha|parantha|thepla|roti|kulcha"
+  en: layered griddle bread stuffed with vegetables
+- id: h_pakora
+  name: "pakora|pakoda|bhaji|bajji|bonda|fritter"
+  en: battered vegetable fritters for a rainy day
+- id: h_kofta
+  name: "kofta|kofte"
+  en: fried vegetable balls in a rich gravy
+- id: h_kheer
+  name: "kheer|payasam|phirni|payesh"
+  en: sweet milk and rice pudding with cardamom
+- id: h_dosa
+  name: "dosa|cheela|chilla|uttapam|adai"
+  en: thin savoury crepe made from fermented batter
+- id: h_cheela
+  name: "cheela|chilla|chila|pudla|pancake|uttapam"
+  en: savoury lentil pancake
+- id: h_vada
+  name: "vada|wada|vadai"
+  en: deep fried lentil doughnut
+- id: h_upma
+  name: "upma|uppittu|kichadi|pongal"
+  en: savoury semolina porridge with vegetables
+- id: h_dal
+  name: "\\bdal\\b|daal|dhal|sambar|lentil"
+  en: everyday yellow lentil stew
+- id: h_idli
+  name: "idli"
+  en: soft steamed rice and lentil cakes
+- id: h_dhokla
+  name: "dhokla|khaman|handvo"
+  en: spongy steamed savoury cake made with gram flour
+- id: h_lassi
+  name: "lassi|chaas|buttermilk|majjige|mor"
+  en: chilled churned yogurt drink
+- id: h_shrikhand
+  name: "shrikh?and|srikhand"
+  en: thick sweetened hung curd dessert
+- id: h_poha
+  name: "poha|aval|avalakki|chivda"
+  en: beaten rice breakfast with peanuts
+- id: h_pulao
+  name: "pulao|pulav|pilaf|biryani"
+  en: fragrant spiced rice with peas
+- id: h_paneer
+  name: "paneer"
+  ings: [paneer]
+  en: cottage cheese cubes in tomato gravy
+- id: h_chole
+  name: "chole|chana|chickpea"
+  en: spicy chickpea curry from punjab
+- id: h_ladoo
+  name: "ladoo|laddu|laddoo"
+  en: round sweet balls made of gram flour and ghee
+- id: h_momo
+  name: "momo|dumpling|modak|kozhukattai"
+  en: steamed stuffed dumplings

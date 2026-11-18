@@ -58,3 +58,16 @@ def test_golden_set_relevance_rules_are_satisfiable():
     e = Engine(use_dense=False)
     for item in load_golden():
         assert n_relevant(e, item) > 0, item["id"]
+
+
+@pytest.mark.parametrize("query,word", [
+    ("balloon-like fried wheat bread for breakfast", "puri"),
+    ("thin savoury crepe made from fermented batter", "dosa"),
+    ("fried vegetable balls in a rich gravy", "kofta"),
+    ("beaten rice breakfast with peanuts", "poha"),
+])
+def test_english_descriptions_find_the_dish(query, word):
+    from forge.search import Engine
+    e = Engine()
+    names = [r.recipe["name"].lower() for r in e.search(parse(e.onto, query), k=5).results]
+    assert any(word in n or (word == "puri" and "poori" in n) for n in names), names

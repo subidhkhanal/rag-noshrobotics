@@ -26,6 +26,35 @@ from .translit import Speller
 
 KEEP_WORDS = COMMON_WORDS | HINGLISH_WORDS
 
+# Domain thesaurus: general English food descriptions -> Indian dish names that fit them. Query expansion only
+# (adds search words); it never filters, and diet checks are unaffected.
+DISH_SYNONYMS = [(re.compile(rx, re.I), names) for rx, names in [
+    (r"\bflat ?breads?\b|\bgriddle bread", "roti chapati paratha phulka thepla bhakri"),
+    (r"\b(puff(ed|y)?|balloon\w*)\b.*\bbread|\bfried (wheat )?bread", "puri poori bhatura"),
+    (r"\bstuffed (flat)?bread", "paratha kulcha"),
+    (r"\bfritters?\b|\bbatter(ed)? (fried )?(veg|vegetable|onion)", "pakora pakoda bhaji bajji bonda"),
+    (r"\bdumplings?\b|\b(veg|vegetable|paneer) balls?\b", "kofta momo modak kozhukattai"),
+    (r"\b(rice|milk) pudding\b|\bpudding\b", "kheer payasam phirni"),
+    (r"\bcrepes?\b|\bfermented batter\b", "dosa"),
+    (r"\b(savou?ry|lentil|gram flour|besan) pancakes?\b|\bpancakes?\b", "cheela chilla uttapam"),
+    (r"\bdoughnuts?\b|\bdonuts?\b", "vada"),
+    (r"\bsemolina\b", "upma rava sooji"),
+    (r"\bporridge\b", "upma pongal daliya khichdi"),
+    (r"\blentil (stew|soup|curry)\b|\blentils?\b", "dal"),
+    (r"\b(steamed )?rice (and lentil )?cakes?\b", "idli"),
+    (r"\bsteamed (savou?ry )?(gram flour )?cake\b|\bspongy\b.*\bcake", "dhokla khaman"),
+    (r"\byog(h)?urt drink\b|\bchurned\b|\bbuttermilk\b", "lassi chaas"),
+    (r"\b(strained|hung) (yog(h)?urt|curd)\b", "shrikhand"),
+    (r"\b(flattened|beaten) rice\b", "poha"),
+    (r"\bspiced rice\b|\bfragrant rice\b|\bpilaf\b", "pulao biryani"),
+    (r"\bcottage cheese\b", "paneer"),
+    (r"\bchickpeas?\b", "chole chana"),
+    (r"\bkidney beans?\b", "rajma"),
+    (r"\bsweet balls?\b|\bround sweets?\b", "ladoo laddu"),
+    (r"\b(fried|crispy) (savou?ry )?pastr(y|ies)\b", "samosa kachori"),
+    (r"\b(tamarind|pepper) soup\b", "rasam"),
+]]
+
 DATA = Path(__file__).resolve().parent.parent / "data" / "processed"
 M2V_DIR = Path(__file__).resolve().parent.parent / "data" / "models" / "potion-base-8M"
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
@@ -320,6 +349,10 @@ class Engine:
         if parts[0]:
             # Spelling variants the corpus never uses ("biriyani", "sambhar", "chatni") -> the corpus spelling.
             parts[0] = " ".join(w if w in KEEP_WORDS else self.speller.correct(w) for w in parts[0].split())
+            # English descriptions -> the Indian dish names they describe ("puffed fried bread" -> puri).
+            extra = [names for rx, names in DISH_SYNONYMS if rx.search(parts[0])]
+            if extra:
+                parts.append(" ".join(dict.fromkeys(" ".join(extra).split())))
         if not any(p.strip() for p in parts):
             # Course is a filter, not a search word ("dinner" would match "Dinner Rolls").
             parts += [self.onto.diets[d]["label"] for d in sorted(c.diets)] + [
