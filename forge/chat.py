@@ -10,7 +10,7 @@ from functools import cached_property
 
 import httpx
 
-from . import commander, dish_qa, llm_parser
+from . import agent as agent_mod, commander, dish_qa, llm_parser
 from .adapt import adapt
 from .plan import make_plan
 from .ontology import tokenize
@@ -23,6 +23,11 @@ from .translit import COMMON
 MAX_SHOWN = 60
 LAST_IDS = 14  # a weekly plan shows up to 14 cards
 RECENT_TURNS = 4
+# Signs a message is conversation, not a bare request ("hi! I'm tired after work").
+CHATTY = re.compile(r"\b(hi|hello|hey|tired|bored|stressed|sick|feeling|today was|after work|husband|wife|kids?|"
+                    r"family|friends?|guests?|party|why|because|should i|do you|can you|could you|would you|"
+                    r"suggest|recommend|help me|thank|thanks|please)\b|\?", re.I)
+REPLY_MEMORY = 400  # characters of each assistant reply kept for context
 SMALL_TALK_KINDS = {"greeting", "thanks", "ack", "about", "override", "reset", "bye", "help", "unclear"}
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 CARD_LABELS = set(DAYS) | {str(i) for i in range(1, LAST_IDS + 1)}
@@ -95,7 +100,7 @@ class Session:
         return [str(i + 1) for i in range(len(self.last_ids))]
 
     def remember(self, message: str, reply: str) -> None:
-        self.recent = (self.recent + [{"u": message[:200], "b": reply[:160]}])[-RECENT_TURNS:]
+        self.recent = (self.recent + [{"u": message[:200], "b": reply[:REPLY_MEMORY]}])[-RECENT_TURNS:]
 
     def to_dict(self) -> dict:
         st = self.state
@@ -146,7 +151,7 @@ def session_from(engine: Engine, data: dict | None) -> Session:
     labels = data.get("last_labels")
     labels = [x for x in labels if isinstance(x, str) and x in CARD_LABELS][:LAST_IDS] if isinstance(labels, list) else []
     recent = data.get("recent")
-    recent = [{"u": str(t.get("u", ""))[:200], "b": str(t.get("b", ""))[:160]}
+    recent = [{"u": str(t.get("u", ""))[:200], "b": str(t.get("b", ""))[:REPLY_MEMORY]}
               for t in recent if isinstance(t, dict)][-RECENT_TURNS:] if isinstance(recent, list) else []
     return Session(state=st, shown=shown, last_top=last if isinstance(last, int) and last in engine.by_id else None,
                    last_ids=last_ids, focus=focus if isinstance(focus, int) and focus in engine.by_id else None,
@@ -196,6 +201,26 @@ def _merge(prev: Constraints, new: Constraints, message: str) -> Constraints:
 class Assistant:
     def __init__(self, engine: Engine):
         self.engine = engine
+        self.agent = agent_mod.Agent(self)
+
+    @cached_property
+    def _long_names(self) -> list[str]:
+        """Distinctive catalogue dish names, for checking that a written reply only names dishes it was given."""
+        return [n for n in {r["name"].lower() for r in self.engine.recipes} if len(n) >= 14 and len(n.split()) >= 3]
+
+    def _fast_path(self, state: dict | None, message: str) -> bool:
+        """Obvious standalone requests ("jain dinner") and exact card references ("explain monday") are answered
+        instantly by the deterministic pipeline; everything conversational goes to the agent."""
+        s = session_from(self.engine, state)
+        if not dish_qa.is_dish_question(message) and self._explicit_card(s, message) is not None:
+            return True
+        parsed = parse(self.engine.onto, message)
+        if small_talk_kind(message) or self._needs_understanding(s, message, parsed):
+            return False
+        structured = bool(parsed.diets or parsed.exclude or parsed.include or parsed.course or parsed.cuisine
+                          or parsed.max_time or parsed.attributes or parsed.servings or parsed.intents)
+        short_dish = len(message.split()) <= 4 and self._food_signal(parsed) == "strong"
+        return (structured or short_dish) and not CHATTY.search(message)
 
     def remove_constraint(self, state: dict | None, kind: str, value: str) -> Session:
         s = session_from(self.engine, state)
@@ -215,20 +240,32 @@ class Assistant:
         return s
 
     def chat(self, state: dict | None, message: str, history: list | None = None) -> dict:
-        out = self._chat(state, message, history)
+        out = None
+        if agent_mod.enabled() and not self._fast_path(state, message):
+            try:
+                out = self.agent.turn(state, message, history)
+            except Exception:  # noqa: BLE001 - any agent failure falls back to the deterministic pipeline
+                out = None
+        if out is None:
+            out = self._chat(state, message, history)
         # Keep a short transcript in the client-held state, so the next turn is understood in context.
         st = out.get("state") or {}
         recent = [t for t in st.get("recent", []) if isinstance(t, dict)]
-        out["state"] = {**st, "recent": (recent + [{"u": message[:200], "b": out.get("reply", "")[:160]}])[-RECENT_TURNS:]}
+        out["state"] = {**st, "recent": (recent + [{"u": message[:200], "b": out.get("reply", "")[:REPLY_MEMORY]}])[-RECENT_TURNS:]}
         return out
 
-    def _chat(self, state: dict | None, message: str, history: list | None = None) -> dict:
+    def _chat(self, state: dict | None, message: str, history: list | None = None, understand: bool = True,
+              allow_reset: bool = True) -> dict:
+        """The task pipeline. `understand=False` skips the command step (used by the agent's tools, which are already
+        inside a Claude turn); `allow_reset=False` means a request can never clear the locked restrictions."""
         s = session_from(self.engine, state)
         onto = self.engine.onto
         kind = small_talk_kind(message)
         if kind:
             return self._small_talk_reply(s, kind)
         parsed = parse(onto, message)
+        if not allow_reset:
+            parsed.intents.discard("reset")
         if "reset" in parsed.intents and not self._has_food_content(parsed, ignore_intents=True):
             return self._small_talk_reply(Session(), "reset")
 
@@ -241,7 +278,7 @@ class Assistant:
             if certain is not None and self._referenced_recipe(s, message) == certain:
                 return self._detail_reply(s, certain, message)
         cmd = None
-        if commander.enabled() and self._needs_understanding(s, message, parsed):
+        if understand and commander.enabled() and self._needs_understanding(s, message, parsed):
             cmd = self._command(s, message)
         router_says_food = False
         if cmd is not None:
@@ -262,7 +299,8 @@ class Assistant:
             if target is not None:
                 return self._detail_reply(s, target, message)
         profile = build_profile(self.engine, history)
-        used_llm = llm_parser.enabled() and llm_parser.should_call(normalize_message(onto, message), parsed.understood)
+        used_llm = understand and llm_parser.enabled() and llm_parser.should_call(normalize_message(onto, message),
+                                                                                    parsed.understood)
         if used_llm:
             parsed = llm_parser.combine(onto, parsed, llm_parser.llm_parse(message))
         if not self._has_food_content(parsed) and not (router_says_food and parsed.text.strip()):

@@ -128,3 +128,29 @@
     - {say: "which one is quickest", tag: multi, expect: {mode: detail, item: all}}
     - {say: "what did you suggest before this", tag: recall, expect: {mode: search, recall: true}}
     - {say: "hmm, not these, show me others", tag: new_request, expect: {mode: search}}
+
+# General conversation: the reply must be a real answer, not a canned line ("not_canned"). `mode` lists what's
+# acceptable when more than one kind of answer is reasonable.
+- setup: []
+  turns:
+    - {say: "hi! I'm tired after work", tag: general, expect: {mode: [chat, search], not_canned: true}}
+    - {say: "why is ginger not allowed in jain food?", tag: general, expect: {mode: chat, not_canned: true, no_new_locks: true}}
+    - {say: "what is sattvic food?", tag: general, expect: {mode: chat, not_canned: true, no_new_locks: true}}
+    - {say: "is ghee vegan?", tag: general, expect: {mode: chat, not_canned: true, no_new_locks: true}}
+    - {say: "how do I store leftover dal?", tag: general, expect: {mode: chat, not_canned: true}}
+    - {say: "how do I make my rotis softer?", tag: general, expect: {mode: [chat, search], not_canned: true}}
+    - {say: "I'm diabetic, what should I avoid?", tag: general, expect: {mode: [chat, search], not_canned: true}}
+    - {say: "my husband eats chicken but I'm vegetarian, what works for both?", tag: general, expect: {mode: search, not_canned: true}}
+    - {say: "what can I make for a kids' birthday party?", tag: general, expect: {mode: search, not_canned: true}}
+    - {say: "aaj kuch accha sa banana hai, kya suggest karoge?", tag: general, expect: {mode: [search, chat], not_canned: true}}
+    - {say: "tell me a joke", tag: general, expect: {mode: chat, not_canned: true}}
+    - {say: "what's the difference between dal and lentils?", tag: general, expect: {mode: chat, not_canned: true}}
+
+- setup: ["paneer dinner"]
+  turns:
+    - {say: "can I swap paneer for tofu in the second one?", tag: general, expect: {mode: [chat, detail], not_canned: true}}
+    - {say: "what side dish goes well with the first one?", tag: general, expect: {mode: [chat, search, detail], not_canned: true}}
+    - {say: "these all look heavy, I want something lighter", tag: general, expect: {mode: search, not_canned: true}}
+    - {say: "my mom can't eat spicy food, which of these is ok for her?", tag: general, expect: {mode: detail, item: all, not_canned: true}}
+    - {say: "can I make the third one ahead of time?", tag: general, expect: {mode: [chat, detail], not_canned: true}}
+    - {say: "thanks, this was really helpful!", tag: general, expect: {mode: chat, not_canned: true}}

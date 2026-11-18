@@ -19,15 +19,25 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 
+CANNED = ("couldn't find a food request", "Here are 5 recipe picks.", "I'm a recipe assistant, so",
+          "Got it. What would you like next")
+
+
 def judge(expect: dict, out: dict, screen: dict[str, int], names: dict[int, str]) -> str | None:
     """None if the reply meets the expectation, else a short reason."""
     mode = out.get("mode")
     results = out.get("results") or []
-    if mode != expect["mode"]:
-        return f"mode {mode} != {expect['mode']}"
-    if expect.get("recall") and "latest suggestions" not in out.get("reply", ""):
-        return "not a recall answer"
-    if mode == "detail":
+    modes = expect["mode"] if isinstance(expect["mode"], list) else [expect["mode"]]
+    if mode not in modes:
+        return f"mode {mode} not in {modes}"
+    reply = out.get("reply", "")
+    if expect.get("not_canned") and (len(reply) < 40 or any(c in reply for c in CANNED)):
+        return f"canned reply: {reply[:70]!r}"
+    if expect.get("no_new_locks") and (out.get("state") or {}).get("diets"):
+        return f"a question locked a diet: {out['state']['diets']}"
+    if expect.get("recall") and set(r["id"] for r in results) != set(screen.values()):
+        return "not a recall answer (the earlier cards weren't shown)"
+    if mode == "detail" and expect["mode"] == "detail" or mode == "detail" and "item" in expect:
         item = expect.get("item")
         if item == "all":
             if len(results) > 1 or (results and len(screen) > 1):

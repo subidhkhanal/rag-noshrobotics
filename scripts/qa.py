@@ -101,7 +101,9 @@ EVERYDAY = [
     [("pakode banane hain", "search", False)], [("चाट", "search", False)],
 ]
 
-GARBLE = re.compile(r"\b(\w+) \1\b|recipe recipe|  |\bNone\b|\bnull\b|\{|\}|\[\]|nan\b", re.I)
+GARBLE = re.compile(r"\b(\w+) \1\b|recipe recipe|  |\bnull\b|\{|\}|\[\]|nan\b", re.I)
+# A raw Python None leaking into text; case-sensitive so the English word "none" is fine.
+RAW_NONE = re.compile(r"\bNone\b(?! of)")
 
 
 def call_local(assistant):
@@ -136,6 +138,8 @@ def check(engine, message, out, state_diets, state_exclude, include):
         issues.append("empty reply")
     if GARBLE.search(reply):
         issues.append(f"garbled reply: {GARBLE.search(reply).group(0)!r}")
+    if RAW_NONE.search(reply):
+        issues.append("garbled reply: raw None")
     diets, exclude = set(state_diets), set(state_exclude)
     for card in out.get("results", []) + ([out["closest"]] if out.get("closest") else []):
         if engine is None:
@@ -189,7 +193,7 @@ def main():
                 continue
             st = out.get("state") or {}
             issues = check(engine, msg, out, st.get("diets", []), st.get("exclude", []), st.get("include", []))
-            if ms > 4000:
+            if ms > 8000:  # conversational turns call Claude (Sonnet + tools): ~3-6 s
                 issues.append(f"slow: {ms:.0f} ms")
             n_issues += bool(issues)
             rows.append({"conv": conv[0], "msg": msg[:80], "ms": round(ms), "mode": out.get("mode"),

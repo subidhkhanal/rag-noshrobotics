@@ -196,7 +196,9 @@ class Ontology:
                 if excluded in self.lineage(iid) or self.effective_tags(iid) & class_tags:
                     blocks.append(f"{item['line']} → {self.label(excluded)}")
                 elif self.effective_may(iid) & risky_tags:
-                    flags.append(f"{item['line']} may contain {self.label(excluded)}")
+                    # Name the actual risk ("may contain dairy"), not the excluded item ("may contain paneer").
+                    risk = ", ".join(sorted(self.effective_may(iid) & risky_tags)).replace("_", " ")
+                    flags.append(f"{item['line']} may contain {risk}")
         if blocks:
             return Verdict("block", blocks)
         if flags:

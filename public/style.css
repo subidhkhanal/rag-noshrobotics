@@ -456,3 +456,5 @@ body { display: block; height: 100dvh; overflow: hidden; }
   .cmp-summary .tile b { font-size: 22px; }
   .cmp-head { flex-direction: column; gap: 10px; }
 }
+.side-link { text-decoration: none; color: var(--muted); font-size: 13px; margin-top: 6px; }
+.side-link:hover { color: var(--text); }

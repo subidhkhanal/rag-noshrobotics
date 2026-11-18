@@ -241,7 +241,7 @@ function addBot(data) {
     const removedTotal = Object.values(t.removed_by_constraint || {}).reduce((a, b) => a + b, 0);
     const removedBy = Object.entries(t.removed_by_constraint || {}).map(([k, v]) => `${n(v)} for ${k}`).join(", ");
     const steps = [
-      `<b>Understood</b> ${esc(understood)}${t.claude_parser ? " <span class=\"sub\">(Claude helped read this one)</span>" : ""}`,
+      `<b>Understood</b> ${esc(understood)}${t.claude_parser ? " <span class=\"sub\">(an AI model helped read this one)</span>" : ""}`,
       `<b>Checked</b> ${n(t.corpus)} recipes, ingredient by ingredient${removedTotal
         ? ` — ruled out ${n(removedTotal)}${Object.keys(t.removed_by_constraint).length > 1 ? ` (${esc(removedBy)})` : ` for ${esc(Object.keys(t.removed_by_constraint)[0])}`}`
         : ""}`,
