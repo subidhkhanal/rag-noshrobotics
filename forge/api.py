@@ -1,4 +1,7 @@
-"""HTTP API + static web app.  Run: uvicorn forge.api:app --port 8000"""
+"""HTTP API + static web app. Stateless: the client sends conversation state with each request.
+
+Run locally: uvicorn forge.api:app --port 8000
+"""
 from __future__ import annotations
 
 import json
@@ -10,15 +13,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from .chat import Assistant, chips
+from .adapt import adapt
+from .chat import Assistant, chips, session_from
 from .search import DATA, Engine
 
 ROOT = Path(__file__).resolve().parent.parent
 engine = Engine()
+engine.embed_query("warm up")
 assistant = Assistant(engine)
 AUDIT = json.loads((DATA / "audit.json").read_text(encoding="utf-8"))
 
-app = FastAPI(title="RecipeForge", version="0.3.0")
+app = FastAPI(title="RecipeForge", version="0.4.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",")],
@@ -29,46 +34,49 @@ app.add_middleware(
 
 class ChatIn(BaseModel):
     message: str = Field(min_length=1, max_length=500)
-    session_id: str | None = Field(default=None, max_length=64)
+    state: dict | None = None
 
 
 class RemoveIn(BaseModel):
-    session_id: str = Field(max_length=64)
+    state: dict | None = None
     kind: str = Field(max_length=20)
     value: str = Field(default="", max_length=60)
 
 
+class StateIn(BaseModel):
+    state: dict | None = None
+
+
 @app.get("/api/health")
 def health():
-    return {"ok": True, "recipes": len(engine.recipes), "dense": engine.emb is not None}
+    return {"ok": True, "recipes": len(engine.recipes), "profile": engine.profile, "dense": engine.emb is not None}
 
 
 @app.post("/api/chat")
 def chat(body: ChatIn):
-    return assistant.chat(body.session_id, body.message)
+    return assistant.chat(body.state, body.message)
 
 
 @app.post("/api/constraints/remove")
 def remove(body: RemoveIn):
-    s = assistant.remove_constraint(body.session_id, body.kind, body.value)
-    return {"session_id": s.id, "constraints": chips(engine.onto, s.state)}
+    s = assistant.remove_constraint(body.state, body.kind, body.value)
+    return {"state": s.to_dict(), "constraints": chips(engine.onto, s.state)}
 
 
-@app.get("/api/recipe/{rid}")
-def recipe(rid: int, session_id: str | None = None):
+@app.post("/api/recipe/{rid}")
+def recipe(rid: int, body: StateIn):
     if rid not in engine.by_id:
         raise HTTPException(404, "recipe not found")
-    i = engine.by_id[rid]
-    r = engine.recipes[i]
+    r = engine.recipes[engine.by_id[rid]]
     onto = engine.onto
-    st = assistant.sessions[session_id].state if session_id in assistant.sessions else None
-    block_tags = {t for d in (st.diets if st else []) for t in onto.diets[d].get("block", [])}
+    st = session_from(engine, body.state).state
+    block_tags = {t for d in st.diets for t in onto.diets[d].get("block", [])}
     lines = []
     for it in r["ingredients"]:
         status, note = "ok", ""
         for iid in it["ids"]:
             tags, may = onto.effective_tags(iid), onto.effective_may(iid)
-            if tags & block_tags or (st and any(e in onto.lineage(iid) for e in st.exclude)):
+            if tags & block_tags or any(e in onto.lineage(iid) for e in st.exclude):
                 status, note = "block", ", ".join(sorted(tags & block_tags)) or "excluded"
             elif status != "block" and may & block_tags:
                 status, note = "flag", "may contain " + ", ".join(sorted(may & block_tags))
@@ -80,8 +88,17 @@ def recipe(rid: int, session_id: str | None = None):
         "total_min": r["total_min"], "prep_min": r["prep_min"], "cook_min": r["cook_min"],
         "servings": r["servings"], "url": r["url"], "source_diet_label": r["source_diet_label"],
         "ingredients": lines, "instructions": r["instructions"],
+        "method_only": [onto.label(x) for x in r.get("method_only", [])],
         "verdicts": {d: {"label": onto.diets[d]["label"], **v} for d, v in r["verdicts"].items()},
     }
+
+
+@app.post("/api/adapt/{rid}")
+def adapt_recipe(rid: int, body: StateIn):
+    if rid not in engine.by_id:
+        raise HTTPException(404, "recipe not found")
+    st = session_from(engine, body.state).state
+    return adapt(engine.onto, engine.recipes[engine.by_id[rid]], st).to_dict(engine.onto)
 
 
 @app.get("/api/audit")
@@ -89,6 +106,6 @@ def audit():
     return AUDIT
 
 
-web = ROOT / "web"
+web = ROOT / "public"
 if web.exists():
     app.mount("/", StaticFiles(directory=web, html=True), name="web")

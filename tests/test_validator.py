@@ -106,3 +106,18 @@ def test_no_passing_recipe_mentions_forbidden_ingredient(diet):
             if pattern.search(text):
                 violations.append((rec["name"], it["line"]))
     assert violations == [], f"{len(violations)} leaks, e.g. {violations[:10]}"
+
+
+def test_method_cross_check_catches_unlisted_garlic():
+    from forge.build_corpus import method_only_ingredients
+    ings = parse_ingredients(onto, "200 grams Pasta - farfalle, 5 cloves Cloves (Laung) - minced")
+    steps = "Cook the pasta. Heat olive oil in a wide pan, add the minced garlic and saute."
+    assert method_only_ingredients(onto, "Farfalle Garlic-And-Oil", steps, ings) == ["garlic"]
+
+
+def test_method_cross_check_ignores_serving_suggestions_and_negations():
+    from forge.build_corpus import method_only_ingredients
+    ings = parse_ingredients(onto, "1 cup Toor Dal")
+    steps = ("To begin making the Dal Recipe in no onion no garlic style, boil the dal. "
+             "Serve with egg mayo sandwich recipe and onion raita.")
+    assert method_only_ingredients(onto, "Dal", steps, ings) == []

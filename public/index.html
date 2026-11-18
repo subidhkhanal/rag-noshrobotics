@@ -68,10 +68,11 @@
       <h2>How it works</h2>
       <ol class="pipeline">
         <li><b>Parse</b> the message into hard constraints (diet, allergy, "no X", time) and soft preferences (ingredients, course, cuisine, spicy…). English, Hinglish and Devanagari ingredient names are understood.</li>
-        <li><b>Normalise ingredients.</b> Every line in every recipe is mapped to one of 248 canonical ingredients via 2,200+ English, Hinglish and Devanagari aliases (99.98% line coverage). Compound items are expanded: <i>ginger garlic paste → ginger + garlic</i>. Brand-dependent items carry "may contain" risks: <i>ketchup, Maggi tastemaker, compounded hing</i>.</li>
+        <li><b>Normalise ingredients.</b> Every line in every recipe is mapped to one of 249 canonical ingredients via 2,200+ English, Hinglish and Devanagari aliases (99.98% line coverage). Compound items are expanded: <i>ginger garlic paste → ginger + garlic</i>. Brand-dependent items carry "may contain" risks: <i>ketchup, Maggi tastemaker, compounded hing</i>. The cooking steps are cross-checked too: if the method uses garlic, onion, egg or meat that the ingredient list omits, the recipe is flagged.</li>
         <li><b>Hard-filter in code</b> before any ranking. Diet rules (Jain, sattvic, no-onion-garlic, vegan, lactose-free, gluten-free, nut/egg/soy/sesame/shellfish-free) are evaluated against those ingredients. The language model never decides compliance.</li>
-        <li><b>Retrieve</b> over the survivors with BM25 + dense embeddings (bge-small), fused with reciprocal rank fusion. Negations are removed from the search text, because embeddings can't express "no garlic".</li>
-        <li><b>Rerank</b> with a cross-encoder, adjust for your preferences, penalise brand-dependent risks, and apply MMR so you get five different dishes instead of five dals.</li>
+        <li><b>Retrieve</b> over the survivors with BM25 + dense static embeddings (Model2Vec), fused with reciprocal rank fusion. Negations are removed from the search text, because embeddings can't express "no garlic".</li>
+        <li><b>Rank</b> by your preferences (ingredients on hand, dish-name match, spicy, creamy, light…), penalise brand-dependent risks, and apply MMR so you get five different dishes instead of five dals. About 20 ms per query.</li>
+        <li><b>Adapt near-misses.</b> A recipe ruled out for your diet is offered with validated swaps (ginger → sonth for Jain, paneer → tofu for vegan), and the adapted recipe is re-checked against every constraint.</li>
         <li><b>Explain.</b> Each card lists the checks it passed; you can open any recipe to see the verdict for every ingredient line. When nothing fits, it says so and never relaxes a dietary rule to fill the gap.</li>
       </ol>
       <p class="lede">Verified by an independent regex checker over the whole corpus: zero recipes that pass no-onion-garlic, Jain or vegan mention a forbidden ingredient.</p>

@@ -55,31 +55,39 @@ SAFE = re.compile(
     r"onion (nigella )?seeds|nigella|kalonji|coconut (milk|cream|yogurt|curd)|almond milk|badam milk|soy milk|oat milk|"
     r"peanut butter|cocoa butter|almond butter|eggless|eggplant|egg replacer|butter ?scotch|dry ginger|ginger powder|sonth|"
     r"saunth|cream of tartar|ginger ale|honey ?dew|eggless mayo\w*|veg mayo\w*|(rice|corn|millet|ragi|jowar|bajra) ?(flour|noodles|rava)|"
-    r"rice rava|idli rava|buckwheat|coconut cream|ham ?burger|gluten free|vegan (butter|cheese|mayo)",
+    r"rice rava|idli rava|buckwheat|(kuttu|singharw*|singhade|rajgira|makki|sattu) ka atta|coconut cream|ham ?burger|gluten free|vegan (butter|cheese|mayo)",
     re.I,
 )
 EXCLUDE_WORDS = {"mushroom": r"mushrooms?", "coconut": r"coconut", "potato": r"potato(es)?|aloo", "cheese": r"(?<!cottage )cheese",
                  "onion": r"onions?", "garlic": r"garlic"}
 
 
-def violations(engine, c, rec) -> list[str]:
-    bad = []
+REF_EMB = np.load(ROOT / "data" / "processed" / "embeddings_m2v.npy")  # one fixed space for diversity
+
+
+def violations(engine, c, rec) -> tuple[list[str], list[str]]:
+    """(silent violations, disclosed risks). A checker hit is silent only if the system called that diet a clean pass."""
+    silent, disclosed = [], []
     lines = [SAFE.sub(" ", it["line"]) for it in rec["ingredients"]]
     for d in c.diets:
         pat = INDEPENDENT.get(d)
         if pat:
-            bad += [f"{d}: {l}" for l in lines if re.search(pat, l, re.I)]
+            hits = [f"{d}: {l}" for l in lines if re.search(pat, l, re.I)]
+            (silent if rec["verdicts"][d]["status"] == "pass" else disclosed).extend(hits)
     for e in c.exclude:
         pat = EXCLUDE_WORDS.get(e)
         if pat:
-            bad += [f"no {e}: {l}" for l in lines if re.search(rf"\b({pat})\b", l, re.I)]
+            hits = [f"no {e}: {l}" for l in lines if re.search(rf"\b({pat})\b", l, re.I)]
+            status = engine.exclusion_status(e)[engine.by_id[rec["id"]]].status
+            (silent if status == "pass" else disclosed).extend(hits)
     if c.max_time and not (0 < rec["total_min"] <= c.max_time):
-        bad.append(f"time {rec['total_min']} > {c.max_time}")
-    return bad
+        silent.append(f"time {rec['total_min']} > {c.max_time}")
+    return silent, disclosed
 
 
 def run(engine: Engine, name: str):
     total, viol, flagged, cover, course_ok, cuisine_ok, sims, lat, empty = 0, [], 0, [], [], [], [], [], 0
+    disclosed = 0
     for q in QUERIES:
         c = parse(engine.onto, q)
         t = time.perf_counter()
@@ -92,9 +100,10 @@ def run(engine: Engine, name: str):
             rec, i = r.recipe, engine.by_id[r.recipe["id"]]
             idxs.append(i)
             total += 1
-            v = violations(engine, c, rec)
+            v, warned = violations(engine, c, rec)
             if v:
                 viol.append((q, rec["name"], v[0]))
+            disclosed += bool(warned)
             flagged += r.flagged
             if c.include:
                 cover.append(len(set(c.include) & engine.lineages[i]) / len(c.include))
@@ -102,12 +111,12 @@ def run(engine: Engine, name: str):
                 course_ok.append(c.course in rec["course_tags"])
             if c.cuisine:
                 cuisine_ok.append(engine._cuisine_ok(i, c.cuisine))
-        if engine.emb is not None and len(idxs) > 1:
-            m = engine.emb[idxs] @ engine.emb[idxs].T
+        if len(idxs) > 1:
+            m = REF_EMB[idxs] @ REF_EMB[idxs].T
             sims.append(float((m.sum() - np.trace(m)) / (len(idxs) * (len(idxs) - 1))))
     avg = lambda xs: statistics.mean(xs) if xs else float("nan")
     return {
-        "config": name, "queries": len(QUERIES), "results": total, "violations": len(viol),
+        "config": name, "queries": len(QUERIES), "results": total, "violations": len(viol), "disclosed": disclosed,
         "violation_examples": viol[:5], "flagged": flagged, "empty": empty,
         "include_coverage": avg(cover), "course_match": avg(course_ok), "cuisine_match": avg(cuisine_ok),
         "intra_list_similarity": avg(sims), "p50_ms": 1000 * statistics.median(lat), "p95_ms": 1000 * sorted(lat)[int(0.95 * len(lat)) - 1],
@@ -118,26 +127,42 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "reports" / "evaluation.md"))
     args = ap.parse_args()
-    dense = Engine(use_dense=True, use_rerank=True)
-    configs = [("BM25 only", False, False), ("BM25 + dense (RRF)", True, False), ("BM25 + dense + cross-encoder", True, True)]
+    t = time.perf_counter()
+    fast = Engine(profile="fast")
+    fast.embed_query("warm up")
+    cold_fast = time.perf_counter() - t
     rows = []
-    for name, use_dense, use_rerank in configs:
-        dense.use_rerank = use_rerank
-        emb = dense.emb
-        if not use_dense:
-            dense.emb = None
-        rows.append(run(dense, name))
-        dense.emb = emb
+    emb = fast.emb
+    fast.emb = None
+    rows.append(run(fast, "BM25 only"))
+    fast.emb = emb
+    rows.append(run(fast, "Fast: BM25 + Model2Vec (deployed)"))
+    rows[-1]["cold_s"] = cold_fast
+    try:
+        t = time.perf_counter()
+        full = Engine(profile="full")
+        full.embed_query("warm up")
+        list(full.reranker.rerank("warm up", ["a", "b"]))
+        cold_full = time.perf_counter() - t
+        full.use_rerank = False
+        rows.append(run(full, "Full: BM25 + bge-small"))
+        full.use_rerank = True
+        rows.append(run(full, "Full: BM25 + bge-small + cross-encoder"))
+        rows[-1]["cold_s"] = cold_full
+    except ImportError:
+        pass
     md = ["# RecipeForge evaluation", "",
           f"{len(QUERIES)} constrained queries, top-5 results each. Compliance is checked by an independent regex "
-          "checker over raw ingredient lines (not the ontology). Relevance proxies: share of requested ingredients "
+          "checker over raw ingredient lines (not the ontology). A checker hit is a *silent violation* only if the "
+          "system called the recipe a clean pass; hits on results the system flagged ⚠ were disclosed to the user. Relevance proxies: share of requested ingredients "
           "present, course/cuisine match rate. Lower intra-list similarity = more varied results.", "",
-          "| Config | Results | Violations | Flagged ⚠ | Empty | Ingredient coverage | Course match | Cuisine match | Intra-list sim | p50 ms | p95 ms |",
-          "|---|---|---|---|---|---|---|---|---|---|---|"]
+          "| Config | Results | Silent violations | Checker hits that were flagged ⚠ | Flagged ⚠ | Empty | Ingredient coverage | Course match | Cuisine match | Intra-list sim | p50 ms | p95 ms | Cold start s |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rows:
-        md.append(f"| {r['config']} | {r['results']} | **{r['violations']}** | {r['flagged']} | {r['empty']} | "
+        cold = f"{r['cold_s']:.1f}" if "cold_s" in r else ""
+        md.append(f"| {r['config']} | {r['results']} | **{r['violations']}** | {r['disclosed']} | {r['flagged']} | {r['empty']} | "
                   f"{r['include_coverage']:.2f} | {r['course_match']:.2f} | {r['cuisine_match']:.2f} | "
-                  f"{r['intra_list_similarity']:.3f} | {r['p50_ms']:.0f} | {r['p95_ms']:.0f} |")
+                  f"{r['intra_list_similarity']:.3f} | {r['p50_ms']:.0f} | {r['p95_ms']:.0f} | {cold} |")
     for r in rows:
         if r["violation_examples"]:
             md += ["", f"Violations in {r['config']}:"] + [f"- `{q}` → {n}: {v}" for q, n, v in r["violation_examples"]]

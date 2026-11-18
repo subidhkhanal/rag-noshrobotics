@@ -51,6 +51,39 @@ def clean_name(s: str) -> str:
     return s
 
 
+METHOD_NOISE = re.compile(r"\b(no|without|skip|optional(ly)?|instead of|or|eggless|like)\s+\w+", re.I)
+# Only high-signal ingredients that are commonly left off ingredient lists; generic words ("meat shredder",
+# "sausage-shaped dough") made broader checks too noisy.
+METHOD_IDS = {"onion", "shallot", "spring_onion", "leek", "garlic", "ginger_garlic_paste", "egg", "chicken", "fish",
+              "shellfish", "mushroom"}
+SERVING = re.compile(r"\b(serve|served|serving|along with|pair|accompani|goes well|tastes great|enjoy)\w*\b", re.I)
+OTHER_RECIPE = re.compile(r"(\b[\w&'-]+\s+){1,8}recipes?\b", re.I)
+DISH_IDS = {"crepes", "momos", "prepared_snack", "indian_sweet", "confectionery", "dairy_sweet", "khichdi", "dhokla",
+            "batter", "cake", "biscuit", "roti", "bread"}
+
+
+def method_only_ingredients(onto, name: str, instructions: str, ings: list[dict]) -> list[str]:
+    """Diet-relevant ingredients the cooking steps use that the ingredient list omits (source data errors)."""
+    steps = [s for s in re.split(r"(?<=[.!?।])\s*", instructions)
+             if not SERVING.search(s) and not re.search(r"परोस|के साथ", s)]
+    text = " ".join(steps)
+    text = OTHER_RECIPE.sub(" ", text)
+    text = re.sub(re.escape(re.sub(r"\s*\(.*", "", name)), " ", text, flags=re.I)
+    text = METHOD_NOISE.sub(" ", text)
+    listed = set().union(*[onto.lineage(i) for it in ings for i in it["ids"]]) if ings else set()
+    out = []
+    for m in onto.match(text):
+        iid = m.ingredient
+        if iid in listed or iid in out or iid not in METHOD_IDS:
+            continue
+        if iid == "egg" and re.search(r"eggless|egg[- ]free|vegan", name, re.I):
+            continue
+        if any(iid in onto.lineage(x) or x in onto.lineage(iid) for x in listed):
+            continue
+        out.append(iid)
+    return out
+
+
 def build(csv_path: str) -> None:
     onto = load()
     df = pd.read_csv(csv_path)
@@ -63,10 +96,21 @@ def build(csv_path: str) -> None:
             continue
         seen.add(key)
         ings = parse_ingredients(onto, r.TranslatedIngredients)
+        instructions = clean_text(r.TranslatedInstructions)
+        hidden = method_only_ingredients(onto, name, instructions, ings)
         verdicts = {}
         for diet in onto.diets:
             v = onto.diet_verdict(diet, ings)
-            verdicts[diet] = {"status": v.status, "reasons": v.reasons[:6]}
+            reasons = list(v.reasons)
+            status = v.status
+            block = set(onto.diets[diet].get("block", []))
+            for iid in hidden:
+                hit = onto.effective_tags(iid) & block
+                if hit and status != "block":
+                    status = "flag"
+                    reasons.insert(0, f"method mentions {onto.label(iid)} ({', '.join(sorted(hit))}), "
+                                      f"but the ingredient list doesn't")
+            verdicts[diet] = {"status": status, "reasons": reasons[:6]}
         ids = sorted({i for it in ings for i in it["ids"]})
         recipes.append(
             {
@@ -84,7 +128,8 @@ def build(csv_path: str) -> None:
                 "ingredients": ings,
                 "ingredient_ids": ids,
                 "verdicts": verdicts,
-                "instructions": clean_text(r.TranslatedInstructions)[:1500],
+                "instructions": instructions[:1500],
+                "method_only": hidden,
                 "is_component": bool(COMPONENT.search(name)),
             }
         )

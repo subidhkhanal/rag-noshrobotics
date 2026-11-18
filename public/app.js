@@ -1,5 +1,5 @@
 const API = (window.API_BASE || "").replace(/\/$/, "");
-let sessionId = null;
+let state = null;
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -35,6 +35,17 @@ function checkBadge(c) {
   return `<span class="check ${esc(c.status)}" title="${esc(c.detail)}">${icon} ${esc(c.label)}</span>`;
 }
 
+function swapList(swaps) {
+  return swaps.map((s) => `<li><b>${esc(s.replace)} → ${esc(s.with.join(" + "))}</b>: ${esc(s.how)}</li>`).join("");
+}
+
+function adaptHtml(a) {
+  if (!a || !a.adaptable || !a.swaps.length) return "";
+  const main = a.main_swapped.length ? ` <i>(changes a named ingredient: ${esc(a.main_swapped.join(", "))})</i>` : "";
+  return `<details class="adapt"><summary>✓ Can be adapted with ${a.swaps.length} swap${a.swaps.length > 1 ? "s" : ""}${main}</summary>
+    <ul>${swapList(a.swaps)}${swapList(a.safer)}</ul><div class="sub">The adapted recipe was re-checked against every active constraint.</div></details>`;
+}
+
 function cardHtml(r) {
   const flagNotes = r.checks.filter((c) => c.status === "flag").map((c) => `${esc(c.label)}: ${esc(c.detail)}`);
   return `
@@ -44,6 +55,7 @@ function cardHtml(r) {
       ${r.checks.length ? `<div class="checks">${r.checks.map(checkBadge).join("")}</div>` : ""}
       ${r.why.length ? `<ul class="why">${r.why.map((w) => `<li>${esc(w)}</li>`).join("")}</ul>` : ""}
       ${flagNotes.length ? `<div class="flagnote">${flagNotes.join("<br>")}</div>` : ""}
+      ${r.safer?.length ? `<details class="adapt"><summary>Safer swap</summary><ul>${swapList(r.safer)}</ul></details>` : ""}
       <div class="actions">
         <button class="link" data-recipe="${esc(r.id)}">Ingredient check</button>
         ${r.url ? `<a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">Full recipe ↗</a>` : ""}
@@ -59,7 +71,7 @@ function addBot(data) {
   if (data.closest) html += `<div class="cards">${cardHtml(data.closest)}</div>`;
   if (data.blocked_examples.length) {
     html += `<div class="ruled"><b>Ruled out — these matched your words but not your constraints:</b><ul>${data.blocked_examples
-      .map((b) => `<li><button class="link" data-recipe="${esc(b.id)}">${esc(b.name)}</button> — ${esc(b.reason)}</li>`)
+      .map((b) => `<li><button class="link" data-recipe="${esc(b.id)}">${esc(b.name)}</button> — ${esc(b.reason)}${adaptHtml(b.adaptation)}</li>`)
       .join("")}</ul></div>`;
   }
   const t = data.trace;
@@ -91,8 +103,8 @@ async function send(text) {
   messages.appendChild(typing);
   typing.scrollIntoView({ behavior: "smooth", block: "end" });
   try {
-    const data = await api("/api/chat", { message: text, session_id: sessionId });
-    sessionId = data.session_id;
+    const data = await api("/api/chat", { message: text, state });
+    state = data.state;
     typing.remove();
     addBot(data);
     renderChips(data.constraints);
@@ -114,12 +126,13 @@ messages.addEventListener("click", (e) => {
 });
 $("#chips").addEventListener("click", async (e) => {
   const b = e.target.closest("button[data-kind]");
-  if (!b || !sessionId) return;
-  const data = await api("/api/constraints/remove", { session_id: sessionId, kind: b.dataset.kind, value: b.dataset.value });
+  if (!b || !state) return;
+  const data = await api("/api/constraints/remove", { state, kind: b.dataset.kind, value: b.dataset.value });
+  state = data.state;
   renderChips(data.constraints);
 });
 function resetChat() {
-  sessionId = null;
+  state = null;
   messages.querySelectorAll(".msg:not(.intro)").forEach((m) => m.remove());
   renderChips([]);
 }
@@ -130,7 +143,7 @@ const dialog = $("#recipe-dialog");
 document.addEventListener("click", async (e) => {
   const b = e.target.closest("[data-recipe]");
   if (!b) return;
-  const r = await api(`/api/recipe/${encodeURIComponent(b.dataset.recipe)}${sessionId ? `?session_id=${encodeURIComponent(sessionId)}` : ""}`);
+  const r = await api(`/api/recipe/${encodeURIComponent(b.dataset.recipe)}`, { state });
   const verdicts = Object.values(r.verdicts)
     .map((v) => checkBadge({ status: v.status, label: v.label, detail: v.reasons.join("; ") || "pass" }))
     .join("");
@@ -140,6 +153,7 @@ document.addEventListener("click", async (e) => {
     <ul class="ing">${r.ingredients
       .map((i) => `<li class="${esc(i.status)}"><span>${esc(i.line)}</span><span class="m">${esc(i.matched.join(", ") || "—")}${i.note ? ` · ${esc(i.note)}` : ""}</span></li>`)
       .join("")}</ul>
+    ${r.method_only.length ? `<p class="flagnote">⚠ The cooking steps mention ${esc(r.method_only.join(", "))}, which the ingredient list doesn't include — a source-data error, so it's treated as a risk.</p>` : ""}
     <p class="sub">Highlighted lines break a constraint from the current conversation. Verdict for every supported diet:</p>
     <div class="verdicts">${verdicts}</div>
     ${r.url ? `<p><a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">Original recipe ↗</a></p>` : ""}`;

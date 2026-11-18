@@ -1,0 +1,12 @@
+.venv
+.models
+data/raw
+data/processed/embeddings_bge.npy
+research_notes
+reports
+scripts
+tests
+Dockerfile
+.dockerignore
+requirements-full.txt
+data/processed/recipes.jsonl

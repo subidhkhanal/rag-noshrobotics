@@ -1,0 +1,172 @@
+# Curated substitutions used to adapt a recipe to a diet or exclusion.
+# Each source ingredient lists candidate swaps in preference order. A candidate is only used if the
+# adapted recipe re-validates cleanly against every active constraint.
+#   to   - ontology ingredient ids that replace the source (several = combined swap)
+#   how  - cooking guidance shown to the user
+# Swaps follow common Indian home-cooking practice (e.g. Jain / no-onion-garlic kitchens).
+
+onion:
+  - {to: [cabbage], how: "Use finely chopped cabbage, sautéed until soft, for the body and sweetness onion gives."}
+  - {to: [tomato], how: "Use an extra tomato, cooked down well, for body."}
+shallot:
+  - {to: [cabbage], how: "Use finely chopped cabbage in place of the small onions."}
+spring_onion:
+  - {to: [coriander_leaves], how: "Garnish with coriander leaves instead of spring onion greens."}
+leek:
+  - {to: [cabbage], how: "Use thinly sliced cabbage instead of leek."}
+onion_powder:
+  - {to: [asafoetida], how: "Use a pinch of hing instead of onion powder."}
+garlic:
+  - {to: [asafoetida], how: "Add a pinch of hing to the hot oil for the savoury depth garlic gives."}
+garlic_powder:
+  - {to: [asafoetida], how: "Use a pinch of hing instead of garlic powder."}
+ginger:
+  - {to: [dry_ginger], how: "Use 1/2 tsp dry ginger powder (sonth) per inch of fresh ginger."}
+  - {to: [green_chilli], how: "Skip the ginger and add a little extra green chilli for warmth."}
+ginger_garlic_paste:
+  - {to: [asafoetida, dry_ginger], how: "Use a pinch of hing plus 1/2 tsp dry ginger powder per tablespoon of paste."}
+  - {to: [asafoetida, green_chilli], how: "Use a pinch of hing and an extra green chilli per tablespoon of paste."}
+potato:
+  - {to: [raw_banana], how: "Use raw banana (kacha kela), peeled and cubed; it holds its shape like potato."}
+  - {to: [pumpkin], how: "Use cubed pumpkin; reduce cooking time slightly."}
+sweet_potato:
+  - {to: [pumpkin], how: "Use cubed red pumpkin."}
+carrot:
+  - {to: [pumpkin], how: "Use red pumpkin for the same colour and sweetness."}
+  - {to: [capsicum], how: "Use red bell pepper for colour and crunch."}
+radish:
+  - {to: [cucumber], how: "Use cucumber for crunch."}
+beetroot:
+  - {to: [pumpkin], how: "Use red pumpkin."}
+yam:
+  - {to: [raw_banana], how: "Use raw banana."}
+colocasia_root:
+  - {to: [raw_banana], how: "Use raw banana."}
+mushroom:
+  - {to: [paneer], how: "Use cubed paneer."}
+  - {to: [capsicum], how: "Use capsicum strips."}
+mixed_vegetables:
+  - {to: [peas, beans, capsicum, cauliflower], how: "Use peas, beans, capsicum and cauliflower (no root vegetables)."}
+spice_blend:
+  - {to: [garam_masala, amchur], how: "Use garam masala with a pinch of amchur instead of the packaged blend."}
+maggi_masala:
+  - {to: [garam_masala, amchur, turmeric_powder], how: "Season with garam masala, amchur and a pinch of turmeric instead of the tastemaker."}
+ketchup:
+  - {to: [tomato, sugar], how: "Use tomato puree with a pinch of sugar instead of ketchup."}
+chilli_sauce:
+  - {to: [red_chilli, vinegar], how: "Use red chilli paste with a dash of vinegar."}
+pasta_sauce:
+  - {to: [tomato, herbs], how: "Use tomato puree cooked with dried herbs."}
+stock:
+  - {to: [water], how: "Use water with a little extra salt and spice."}
+chicken_stock:
+  - {to: [water], how: "Use water with a little extra salt and spice."}
+chutney_green:
+  - {to: [coriander_leaves, mint, green_chilli, lemon], how: "Grind coriander, mint, green chilli and lemon (no garlic)."}
+curry_paste:
+  - {to: [red_chilli, lemon, coconut_milk], how: "Make a quick paste of red chilli and lemon, finished with coconut milk."}
+
+ghee:
+  - {to: [oil], how: "Use a neutral oil, or coconut oil for South Indian dishes."}
+butter:
+  - {to: [oil], how: "Use oil; for richness finish with a spoon of cashew or coconut cream."}
+milk:
+  - {to: [coconut_milk], how: "Use coconut milk (or almond / oat milk for sweets)."}
+  - {to: [almond_milk], how: "Use unsweetened almond milk."}
+  - {to: [soy_milk], how: "Use unsweetened soy milk."}
+curd:
+  - {to: [coconut_milk, lemon], how: "Use coconut yogurt, or coconut milk with a squeeze of lemon."}
+buttermilk:
+  - {to: [coconut_milk, lemon, water], how: "Thin coconut milk with water and a squeeze of lemon."}
+cream:
+  - {to: [cashew], how: "Blend soaked cashews into a smooth paste."}
+  - {to: [coconut_milk], how: "Use thick coconut milk."}
+paneer:
+  - {to: [tofu], how: "Use firm tofu, pressed and cubed."}
+  - {to: [soy_chunks], how: "Use soaked soya chunks."}
+cheese:
+  - {to: [cashew], how: "Use a cashew-and-nutritional-yeast sauce, or omit."}
+khoya:
+  - {to: [cashew], how: "Use cashew paste reduced with a little sugar."}
+condensed_milk:
+  - {to: [coconut_milk, sugar], how: "Simmer coconut milk with sugar until thick."}
+honey:
+  - {to: [jaggery], how: "Use jaggery syrup."}
+  - {to: [sugar], how: "Use sugar syrup."}
+egg:
+  - {to: [egg_replacer], how: "Use 1 tbsp flaxseed meal + 3 tbsp water per egg (for baking and binding)."}
+  - {to: [paneer], how: "For scrambles, crumble paneer instead of egg."}
+  - {to: [besan], how: "For omelettes, use a besan (gram flour) batter."}
+mayonnaise:
+  - {to: [eggless_mayonnaise], how: "Use eggless mayonnaise."}
+  - {to: [curd], how: "Use thick hung curd seasoned with salt and pepper."}
+chicken:
+  - {to: [paneer], how: "Use paneer; add it at the end so it stays soft."}
+  - {to: [soy_chunks], how: "Use soaked soya chunks."}
+  - {to: [tofu], how: "Use firm tofu."}
+mutton:
+  - {to: [jackfruit], how: "Use raw jackfruit, pressure-cooked first."}
+  - {to: [soy_chunks], how: "Use soya chunks."}
+fish:
+  - {to: [raw_banana], how: "Use raw banana slices, shallow-fried."}
+  - {to: [paneer], how: "Use paneer slices."}
+shellfish:
+  - {to: [paneer], how: "Use paneer cubes."}
+  - {to: [mushroom], how: "Use mushrooms."}
+fish_sauce:
+  - {to: [soy_sauce], how: "Use soy sauce."}
+  - {to: [salt, lemon], how: "Use salt with a squeeze of lemon."}
+worcestershire:
+  - {to: [vinegar, tamarind], how: "Use a splash of vinegar with a little tamarind."}
+gelatin:
+  - {to: [leavening], how: "Use agar agar (china grass): about 1 tsp per tbsp of gelatin."}
+
+maida:
+  - {to: [rice_flour], how: "Use rice flour (texture will be crisper)."}
+  - {to: [millet], how: "Use jowar or ragi flour."}
+wheat_flour:
+  - {to: [millet], how: "Use jowar, bajra or ragi flour."}
+  - {to: [besan], how: "Use besan."}
+semolina:
+  - {to: [millet], how: "Use millet rava."}
+  - {to: [rice_flour], how: "Use rice rava."}
+broken_wheat:
+  - {to: [millet], how: "Use foxtail or little millet."}
+pasta:
+  - {to: [rice_noodles], how: "Use rice noodles."}
+noodles:
+  - {to: [rice_noodles], how: "Use rice noodles."}
+bread:
+  - {to: [batter], how: "Serve with dosa or uttapam instead of bread."}
+soy_sauce:
+  - {to: [salt, vinegar], how: "Use salt with a little vinegar (or certified gluten-free tamari)."}
+asafoetida:
+  - {to: [cumin], how: "Use extra cumin, or certified gluten-free hing."}
+
+cashew:
+  - {to: [seeds], how: "Use melon or sunflower seeds, soaked and ground."}
+  - {to: [coconut], how: "Use fresh coconut paste."}
+almond:
+  - {to: [seeds], how: "Use pumpkin or sunflower seeds."}
+walnut:
+  - {to: [seeds], how: "Use pumpkin seeds."}
+pistachio:
+  - {to: [seeds], how: "Use pumpkin seeds for colour."}
+mixed_nuts:
+  - {to: [seeds], how: "Use mixed seeds."}
+peanut:
+  - {to: [dal], how: "Use roasted chana dal (pottukadalai)."}
+  - {to: [seeds], how: "Use sunflower seeds."}
+peanut_oil:
+  - {to: [oil], how: "Use sunflower or rice bran oil."}
+sesame:
+  - {to: [seeds], how: "Use sunflower seeds."}
+sesame_oil:
+  - {to: [oil], how: "Use a neutral oil."}
+tofu:
+  - {to: [paneer], how: "Use paneer."}
+soy_chunks:
+  - {to: [paneer], how: "Use paneer."}
+  - {to: [chickpeas], how: "Use boiled chickpeas."}
+alcohol:
+  - {to: [vinegar, water], how: "Use stock or water with a splash of vinegar."}

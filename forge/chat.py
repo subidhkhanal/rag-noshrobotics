@@ -3,24 +3,65 @@ from __future__ import annotations
 
 import os
 import re
-import uuid
 from dataclasses import dataclass, field
 
 import httpx
 
-from .query import Constraints, is_refinement, parse
+from .adapt import adapt
+from .query import ATTRIBUTE_RES, COURSE_RES, CUISINE_GROUPS, Constraints, is_refinement, parse
 from .search import Engine, Result, SearchOutput
 
-MAX_SESSIONS = 500
+MAX_SHOWN = 60
 
 
 @dataclass
 class Session:
-    id: str
+    """Conversation state. The server is stateless: the client sends this back with every request."""
     state: Constraints = field(default_factory=Constraints)
     shown: list[int] = field(default_factory=list)
     last_top: int | None = None
-    turns: int = 0
+
+    def to_dict(self) -> dict:
+        st = self.state
+        return {
+            "diets": sorted(st.diets), "exclude": sorted(st.exclude), "include": list(st.include),
+            "pantry_mode": st.pantry_mode, "max_time": st.max_time, "course": st.course, "cuisine": st.cuisine,
+            "attributes": sorted(st.attributes), "servings": st.servings, "prefer_non_veg": st.prefer_non_veg,
+            "text": st.text, "shown": self.shown[-MAX_SHOWN:], "last_top": self.last_top,
+        }
+
+
+def session_from(engine: Engine, data: dict | None) -> Session:
+    """Rebuild a session from client-supplied state, keeping only values the server recognises."""
+    if not isinstance(data, dict):
+        return Session()
+    onto = engine.onto
+
+    def ids(key, allowed):
+        v = data.get(key)
+        return [x for x in v if isinstance(x, str) and x in allowed] if isinstance(v, list) else []
+
+    def bounded_int(key, lo, hi):
+        v = data.get(key)
+        return v if isinstance(v, int) and not isinstance(v, bool) and lo <= v <= hi else None
+
+    st = Constraints(
+        diets=set(ids("diets", onto.diets)),
+        exclude=set(ids("exclude", onto.ingredients)),
+        include=list(dict.fromkeys(ids("include", onto.ingredients)))[:10],
+        pantry_mode=data.get("pantry_mode") is True,
+        max_time=bounded_int("max_time", 1, 600),
+        course=data.get("course") if data.get("course") in COURSE_RES else None,
+        cuisine=data.get("cuisine") if data.get("cuisine") in CUISINE_GROUPS else None,
+        attributes=set(ids("attributes", ATTRIBUTE_RES)),
+        servings=bounded_int("servings", 1, 100),
+        prefer_non_veg=data.get("prefer_non_veg") is True,
+        text=re.sub(r"[^a-z0-9ऀ-ॿ ]", " ", str(data.get("text", ""))[:300].lower()).strip(),
+    )
+    shown = data.get("shown")
+    shown = [x for x in shown if isinstance(x, int) and x in engine.by_id][-MAX_SHOWN:] if isinstance(shown, list) else []
+    last = data.get("last_top")
+    return Session(state=st, shown=shown, last_top=last if isinstance(last, int) and last in engine.by_id else None)
 
 
 def merge(prev: Constraints, new: Constraints, message: str) -> Constraints:
@@ -55,19 +96,9 @@ def merge(prev: Constraints, new: Constraints, message: str) -> Constraints:
 class Assistant:
     def __init__(self, engine: Engine):
         self.engine = engine
-        self.sessions: dict[str, Session] = {}
 
-    def session(self, sid: str | None) -> Session:
-        if sid and sid in self.sessions:
-            return self.sessions[sid]
-        if len(self.sessions) >= MAX_SESSIONS:
-            self.sessions.pop(next(iter(self.sessions)))
-        s = Session(id=uuid.uuid4().hex)
-        self.sessions[s.id] = s
-        return s
-
-    def remove_constraint(self, sid: str, kind: str, value: str) -> Session:
-        s = self.session(sid)
+    def remove_constraint(self, state: dict | None, kind: str, value: str) -> Session:
+        s = session_from(self.engine, state)
         st = s.state
         if kind == "diet":
             st.diets.discard(value)
@@ -83,13 +114,12 @@ class Assistant:
             st.text = ""
         return s
 
-    def chat(self, sid: str | None, message: str) -> dict:
-        s = self.session(sid)
+    def chat(self, state: dict | None, message: str) -> dict:
+        s = session_from(self.engine, state)
         onto = self.engine.onto
         parsed = parse(onto, message)
         s.state = merge(s.state, parsed, message)
         st = s.state
-        s.turns += 1
 
         exclude_ids: set[int] = set()
         if st.intents & {"more", "different"}:
@@ -102,12 +132,21 @@ class Assistant:
         if out.results:
             s.shown += [r.recipe["id"] for r in out.results]
             s.last_top = out.results[0].recipe["id"]
+        for b in out.blocked_examples:
+            b["adaptation"] = adapt(onto, self.engine.recipes[self.engine.by_id[b["id"]]], st).to_dict(onto)
+        cards = []
+        for r in out.results:
+            cd = card(r)
+            if r.flagged:
+                cd["safer"] = adapt(onto, r.recipe, st).to_dict(onto)["safer"]
+            cards.append(cd)
         reply = self.compose(st, parsed, out, anchor)
         reply = self.polish(reply, out) or reply
+        s.shown = s.shown[-MAX_SHOWN:]
         return {
-            "session_id": s.id,
+            "state": s.to_dict(),
             "reply": reply,
-            "results": [card(r) for r in out.results],
+            "results": cards,
             "closest": card(out.closest) if out.closest else None,
             "blocked_examples": out.blocked_examples,
             "constraints": chips(onto, st),
@@ -137,6 +176,9 @@ class Assistant:
             else:
                 lines.append(f"I couldn't find anything that meets {what}. I won't relax a dietary or allergy rule "
                              f"to fill the gap — try removing a preference like cuisine or time instead.")
+            fix = next((b for b in out.blocked_examples if b.get("adaptation", {}).get("adaptable")), None)
+            if fix:
+                lines.append(f"{fix['name']} can be adapted with {len(fix['adaptation']['swaps'])} swap(s) — see below.")
             return " ".join(lines)
         n = len(out.results)
         head = f"Here {'are' if n > 1 else 'is'} {n} {describe(onto, st)} pick{'s' if n > 1 else ''}"

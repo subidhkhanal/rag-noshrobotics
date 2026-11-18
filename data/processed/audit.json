@@ -332,34 +332,34 @@
   },
   "verdict_counts": {
     "vegetarian": {
-      "pass": 4543,
+      "pass": 4526,
       "block": 1145,
-      "flag": 421
+      "flag": 438
     },
     "eggetarian": {
-      "pass": 5426,
+      "pass": 5421,
       "block": 642,
-      "flag": 41
+      "flag": 46
     },
     "vegan": {
-      "pass": 2311,
+      "pass": 2305,
       "block": 3641,
-      "flag": 157
+      "flag": 163
     },
     "jain": {
       "block": 4407,
-      "flag": 285,
-      "pass": 1417
+      "flag": 296,
+      "pass": 1406
     },
     "sattvic": {
       "block": 3543,
-      "flag": 339,
-      "pass": 2227
+      "flag": 352,
+      "pass": 2214
     },
     "no_onion_garlic": {
       "block": 3164,
-      "flag": 242,
-      "pass": 2703
+      "flag": 259,
+      "pass": 2686
     },
     "lactose_free": {
       "pass": 3073,
@@ -392,8 +392,8 @@
       "flag": 150
     },
     "egg_free": {
-      "pass": 5077,
-      "flag": 431,
+      "pass": 5063,
+      "flag": 445,
       "block": 601
     },
     "soy_free": {
@@ -407,8 +407,8 @@
       "flag": 16
     },
     "shellfish_free": {
-      "pass": 5976,
-      "flag": 51,
+      "pass": 5975,
+      "flag": 52,
       "block": 82
     },
     "fish_free": {

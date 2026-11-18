@@ -6,8 +6,11 @@ feature-based adjustments -> MMR diversity -> top k with per-result evidence.
 """
 from __future__ import annotations
 
+import gc
 import json
 import math
+import os
+import pickle
 import re
 from collections import Counter
 from dataclasses import dataclass, field
@@ -16,10 +19,11 @@ from pathlib import Path
 
 import numpy as np
 
-from .ontology import Ontology, load
+from .ontology import Ontology, load, tokenize
 from .query import CUISINE_GROUPS, Constraints
 
 DATA = Path(__file__).resolve().parent.parent / "data" / "processed"
+M2V_DIR = Path(__file__).resolve().parent.parent / "data" / "models" / "potion-base-8M"
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
 RERANK_MODEL = "Xenova/ms-marco-MiniLM-L-6-v2"
 TOKEN = re.compile(r"[a-z0-9]+")
@@ -62,26 +66,37 @@ def _norm(v: np.ndarray) -> np.ndarray:
 
 
 class BM25:
-    def __init__(self, docs: list[list[str]], k1: float = 1.4, b: float = 0.75):
-        self.k1, self.b = k1, b
-        self.tf = [Counter(d) for d in docs]
-        self.len = np.array([len(d) for d in docs], dtype=float)
-        self.avg = float(self.len.mean())
-        df = Counter(t for d in docs for t in set(d))
+    """Okapi BM25 with precomputed per-term postings, so scoring is a few numpy adds."""
+
+    def __init__(self, postings: dict[str, tuple[np.ndarray, np.ndarray]], n_docs: int):
+        self.postings, self.n = postings, n_docs
+
+    @classmethod
+    def build(cls, docs: list[list[str]], k1: float = 1.4, b: float = 0.75) -> "BM25":
+        lens = np.array([len(d) for d in docs], dtype=np.float32)
+        avg = float(lens.mean())
         n = len(docs)
-        self.idf = {t: math.log(1 + (n - f + 0.5) / (f + 0.5)) for t, f in df.items()}
+        cols: dict[str, tuple[list[int], list[float]]] = {}
+        for i, d in enumerate(docs):
+            for t, f in Counter(d).items():
+                ids, tfs = cols.setdefault(t, ([], []))
+                ids.append(i)
+                tfs.append(f)
+        postings = {}
+        for t, (ids, tfs) in cols.items():
+            idf = math.log(1 + (n - len(ids) + 0.5) / (len(ids) + 0.5))
+            ids_a, f = np.array(ids, dtype=np.int32), np.array(tfs, dtype=np.float32)
+            w = idf * f * (k1 + 1) / (f + k1 * (1 - b + b * lens[ids_a] / avg))
+            postings[t] = (ids_a, w.astype(np.float32))
+        return cls(postings, n)
 
     def scores(self, query: list[str], idx: np.ndarray) -> np.ndarray:
-        out = np.zeros(len(idx))
+        full = np.zeros(self.n, dtype=np.float32)
         for t in set(query):
-            idf = self.idf.get(t)
-            if idf is None:
-                continue
-            for j, i in enumerate(idx):
-                f = self.tf[i].get(t)
-                if f:
-                    out[j] += idf * f * (self.k1 + 1) / (f + self.k1 * (1 - self.b + self.b * self.len[i] / self.avg))
-        return out
+            if t in self.postings:
+                ids, w = self.postings[t]
+                full[ids] += w
+        return full[idx]
 
 
 def doc_text(r: dict) -> str:
@@ -89,34 +104,76 @@ def doc_text(r: dict) -> str:
     return f"{r['name']}. {r['cuisine']} {r['course']}. Ingredients: {names}. {r['instructions'][:300]}"
 
 
+class StaticEmbedder:
+    """Model2Vec static embeddings: token-vector mean + L2 norm. Pure numpy, ~80 ms load, <1 ms per query."""
+
+    def __init__(self, model_dir: Path = M2V_DIR):
+        from safetensors.numpy import load_file
+        from tokenizers import Tokenizer
+
+        self.vectors = load_file(str(model_dir / "model.safetensors"))["embeddings"]
+        self.tokenizer = Tokenizer.from_file(str(model_dir / "tokenizer.json"))
+
+    def encode(self, texts: list[str]) -> np.ndarray:
+        out = np.zeros((len(texts), self.vectors.shape[1]), dtype=np.float32)
+        for i, enc in enumerate(self.tokenizer.encode_batch(texts, add_special_tokens=False)):
+            if enc.ids:
+                v = self.vectors[enc.ids[:512]].mean(axis=0)
+                out[i] = v / (np.linalg.norm(v) or 1.0)
+        return out
+
+
 class Engine:
-    def __init__(self, data_dir: Path = DATA, use_dense: bool = True, use_rerank: bool = True):
+    """profile "fast": BM25 + Model2Vec, no reranker (serverless-friendly).
+    profile "full": BM25 + bge-small + cross-encoder rerank (needs fastembed/onnxruntime)."""
+
+    def __init__(self, data_dir: Path = DATA, profile: str | None = None, use_dense: bool = True,
+                 use_rerank: bool | None = None):
+        self.profile = profile or os.getenv("FORGE_PROFILE", "fast")
         self.onto: Ontology = load()
-        self.recipes: list[dict] = [json.loads(l) for l in (data_dir / "recipes.jsonl").read_text(encoding="utf-8").splitlines()]
+        idx_path = data_dir / "index.pkl"
+        src = data_dir / "recipes.jsonl"
+        index = None
+        if idx_path.exists():
+            gc.disable()
+            try:
+                # Our own build artifact (python -m forge.search index), never user input.
+                index = pickle.loads(idx_path.read_bytes())
+            finally:
+                gc.enable()
+            if src.exists() and index.get("source_lines") != count_lines(src):
+                index = None
+        if index is None:
+            index = build_index(self.onto, data_dir)
+        self.recipes: list[dict] = index["recipes"]
+        self.bm25 = BM25(index["postings"], len(self.recipes))
+        self.lineages = index["lineages"]
+        self.tags = index["tags"]
+        self.name_tokens = index["name_tokens"]
+        self.name_ids = index["name_ids"]
         self.by_id = {r["id"]: i for i, r in enumerate(self.recipes)}
-        self.lineages = [
-            frozenset().union(*[self.onto.lineage(i) for i in r["ingredient_ids"]]) if r["ingredient_ids"] else frozenset()
-            for r in self.recipes
-        ]
-        self.tags = [
-            frozenset().union(*[self.onto.effective_tags(i) for i in r["ingredient_ids"]]) if r["ingredient_ids"] else frozenset()
-            for r in self.recipes
-        ]
-        self.bm25 = BM25([TOKEN.findall((r["name"] + " ") * 3 + doc_text(r).lower()) for r in self.recipes])
-        try:
-            import fastembed  # noqa: F401
-            have_models = True
-        except ImportError:
-            have_models = False
-        self.use_dense, self.use_rerank = use_dense and have_models, use_rerank and have_models
-        emb_path = data_dir / "embeddings.npy"
-        self.emb = np.load(emb_path) if self.use_dense and emb_path.exists() else None
+        if self.profile == "full":
+            try:
+                import fastembed  # noqa: F401
+            except ImportError:
+                self.profile = "fast"
+        self.use_dense = use_dense
+        self.use_rerank = (self.profile == "full") if use_rerank is None else (use_rerank and self.profile == "full")
+        emb_path = data_dir / ("embeddings_bge.npy" if self.profile == "full" else "embeddings_m2v.npy")
+        self.emb = np.load(emb_path) if use_dense and emb_path.exists() else None
         self._exclusion_cache: dict[str, list] = {}
 
     @cached_property
     def embedder(self):
-        from fastembed import TextEmbedding
-        return TextEmbedding(EMBED_MODEL)
+        if self.profile == "full":
+            from fastembed import TextEmbedding
+            return TextEmbedding(EMBED_MODEL)
+        return StaticEmbedder()
+
+    def embed_query(self, text: str) -> np.ndarray:
+        if self.profile == "full":
+            return np.array(next(iter(self.embedder.query_embed(text))), dtype=np.float32)
+        return self.embedder.encode([text])[0]
 
     @cached_property
     def reranker(self):
@@ -238,7 +295,7 @@ class Engine:
         trace["query_text"] = qtext
         qvec = None
         if self.emb is not None:
-            qvec = np.array(next(iter(self.embedder.query_embed(qtext))), dtype=np.float32)
+            qvec = self.embed_query(qtext)
 
         blocked_examples = self._blocked_examples(qtext, qvec, blocked_reason, c)
 
@@ -257,7 +314,7 @@ class Engine:
 
     def _rank(self, c, cand, qtext, qvec, anchor_id, k, trace) -> list[Result]:
         idx = np.array(cand)
-        qtok = TOKEN.findall(qtext.lower())
+        qtok = tokenize(qtext)
         lex = self.bm25.scores(qtok, idx)
         ranks = {}
         lex_order = idx[np.argsort(-lex)]
@@ -285,11 +342,16 @@ class Engine:
 
         scored = []
         include = set(c.include)
+        content = {t for t in tokenize(c.text) if len(t) > 2}
         for j, i in enumerate(pool):
             feats = self.features(i)
             s = float(rel[j])
             cover = len(include & self.lineages[i]) / len(include) if include else 0.0
             s += (0.9 if c.pantry_mode else 0.5) * cover
+            if content:
+                s += 0.5 * len(content & self.name_tokens[i]) / len(content)
+            if include:
+                s += 0.4 * len(include & self.name_ids[i]) / len(include)
             for a in c.attributes:
                 s += 0.3 * feats.get(a, 0.0)
             if c.prefer_non_veg and self.tags[i] & MEAT_TAGS:
@@ -387,7 +449,7 @@ class Engine:
         idx = np.array([i for i, why in blocked_reason.items() if not why.startswith("under ")])
         if len(idx) == 0:
             return []
-        lex = self.bm25.scores(TOKEN.findall(qtext.lower()), idx)
+        lex = self.bm25.scores(tokenize(qtext), idx)
         score = _norm(lex)
         if qvec is not None:
             score = score + _norm(self.emb[idx] @ qvec)
@@ -395,15 +457,47 @@ class Engine:
         return [{"id": self.recipes[i]["id"], "name": self.recipes[i]["name"], "reason": blocked_reason[i]} for i in top]
 
 
-def build_embeddings(data_dir: Path = DATA) -> None:
-    from fastembed import TextEmbedding
+def count_lines(path: Path) -> int:
+    """Line-ending-agnostic freshness signature (git may convert LF/CRLF between platforms)."""
+    return path.read_bytes().count(b"\n")
 
+
+def build_index(onto: Ontology, data_dir: Path = DATA, write: bool = False) -> dict:
     recipes = [json.loads(l) for l in (data_dir / "recipes.jsonl").read_text(encoding="utf-8").splitlines()]
-    model = TextEmbedding(EMBED_MODEL)
-    vecs = np.array(list(model.embed([doc_text(r) for r in recipes], batch_size=64)), dtype=np.float32)
-    np.save(data_dir / "embeddings.npy", vecs)
-    print("embeddings", vecs.shape)
+    union = lambda sets: frozenset().union(*sets) if sets else frozenset()
+    index = {
+        "source_lines": count_lines(data_dir / "recipes.jsonl"),
+        "recipes": recipes,
+        "postings": BM25.build([tokenize((r["name"] + " ") * 3 + doc_text(r)) for r in recipes]).postings,
+        "lineages": [union([onto.lineage(i) for i in r["ingredient_ids"]]) for r in recipes],
+        "tags": [union([onto.effective_tags(i) for i in r["ingredient_ids"]]) for r in recipes],
+        "name_tokens": [frozenset(tokenize(r["name"])) for r in recipes],
+        "name_ids": [frozenset(m.ingredient for m in onto.match(r["name"])) for r in recipes],
+    }
+    if write:
+        (data_dir / "index.pkl").write_bytes(pickle.dumps(index, protocol=5))
+        print("index.pkl", len(recipes), "recipes")
+    return index
+
+
+def build_embeddings(profile: str, data_dir: Path = DATA) -> None:
+    recipes = [json.loads(l) for l in (data_dir / "recipes.jsonl").read_text(encoding="utf-8").splitlines()]
+    docs = [doc_text(r) for r in recipes]
+    if profile == "full":
+        from fastembed import TextEmbedding
+        vecs = np.array(list(TextEmbedding(EMBED_MODEL).embed(docs, batch_size=64)), dtype=np.float32)
+        out = data_dir / "embeddings_bge.npy"
+    else:
+        vecs = StaticEmbedder().encode(docs)
+        out = data_dir / "embeddings_m2v.npy"
+    np.save(out, vecs)
+    print(out.name, vecs.shape)
 
 
 if __name__ == "__main__":
-    build_embeddings()
+    import sys
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "fast"
+    if cmd == "index":
+        build_index(load(), write=True)
+    else:
+        build_embeddings(cmd)
