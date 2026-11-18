@@ -9,7 +9,9 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections import OrderedDict
 
+from . import guard
 from .ontology import Ontology
 from .parser_schema import ATTRIBUTES, COURSES, DIETS, INTENTS, SYSTEM, normalize
 from .query import ATTRIBUTE_RES, COURSE_RES, CUISINE_GROUPS, Constraints, canonical_text, remove_spans
@@ -64,12 +66,34 @@ def _get_client():
     return _client
 
 
+_CACHE: OrderedDict[str, dict | None] = OrderedDict()
+_CACHE_SIZE = 2000
+
+
 def llm_parse(message: str) -> dict | None:
+    """Claude's reading of the message, or None (rules alone) on error, timeout or spent budget.
+    Exact-text cache only: similar-looking messages ("with onion" / "without onion") never share an answer."""
+    key = " ".join(message.lower().split())
+    if key in _CACHE:
+        _CACHE.move_to_end(key)
+        guard.stats["claude_cache_hits"] += 1
+        return _CACHE[key]
+    if not guard.allow_claude():
+        return None
+    result = _call_claude(message)
+    if result is not None:  # don't cache a timeout or outage as "nothing to add"
+        _CACHE[key] = result
+        if len(_CACHE) > _CACHE_SIZE:
+            _CACHE.popitem(last=False)
+    return result
+
+
+def _call_claude(message: str) -> dict | None:
     import anthropic
     try:
         response = _get_client().messages.create(
             model=os.getenv("CLAUDE_PARSER_MODEL", "claude-opus-5-5"),
-            max_tokens=2048,
+            max_tokens=1024,
             system=SYSTEM,
             output_config={"effort": "low", "format": {"type": "json_schema", "schema": SCHEMA}},
             messages=[{"role": "user", "content": message}],

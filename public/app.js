@@ -78,7 +78,11 @@ async function api(path, body) {
   const res = await fetch(API + path, body
     ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
     : undefined);
-  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  if (!res.ok) {
+    const err = new Error(`${res.status} ${res.statusText}`);
+    err.status = res.status;
+    throw err;
+  }
   return res.json();
 }
 
@@ -223,7 +227,9 @@ async function send(text) {
       c.carried = carried;
     });
   } catch (e) {
-    typing.textContent = "Couldn't reach the server — please check your connection and try again.";
+    typing.textContent = e.status === 429
+      ? "You're sending messages very quickly — please wait a minute and try again."
+      : "Couldn't reach the server — please check your connection and try again.";
   } finally {
     clearTimeout(slow);
     busy = false;

@@ -11,10 +11,11 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import llm_parser
+from . import guard, llm_parser
 from .adapt import adapt
 from .chat import Assistant, chips, session_from
 from .search import DATA, Engine
@@ -38,6 +39,11 @@ app.add_middleware(
 @app.middleware("http")
 async def server_timing(request, call_next):
     t = time.perf_counter()
+    ip = guard.ip_from(request.headers, request.client.host if request.client else "local")
+    if request.url.path.startswith("/api/") and request.url.path != "/api/health" and not guard.allow_request(ip):
+        return JSONResponse({"detail": "Too many requests. Please wait a minute."}, status_code=429,
+                            headers={"Retry-After": "60"})
+    guard.client_ip.set(ip)
     response = await call_next(request)
     response.headers["Server-Timing"] = f"app;dur={1000 * (time.perf_counter() - t):.1f}"
     return response
@@ -62,7 +68,7 @@ class StateIn(BaseModel):
 @app.get("/api/health")
 def health():
     return {"ok": True, "recipes": len(engine.recipes), "profile": engine.profile, "dense": engine.emb is not None,
-            "claude_parser": llm_parser.enabled()}
+            "claude_parser": llm_parser.enabled(), "guard": guard.stats}
 
 
 @app.post("/api/chat")
