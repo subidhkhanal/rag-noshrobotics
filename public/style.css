@@ -185,7 +185,7 @@ table.audit ul { margin: 0; padding-left: 16px; color: var(--muted); font-size: 
   left: 50%; bottom: 2px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--border);
   border-bottom: 0;
 }
-.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; max-width: 760px; }
+.facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; max-width: 760px; }
 .facts div { background: var(--surface-2); border-radius: 12px; padding: 12px 14px; display: grid; gap: 2px; }
 .facts b { font-size: 20px; font-family: Fraunces, Georgia, serif; }
 .facts span { color: var(--muted); font-size: 13px; }
