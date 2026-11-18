@@ -101,7 +101,7 @@ asafoetida: {may: [gluten], aliases: [asafoetida, hing, heeng, perungayam, inguv
 garam_masala: {aliases: [garam masala, garam masala powder, गरम मसाला]}
 cardamom: {aliases: [cardamom, elaichi, green cardamom, cardamom powder, elakkai, black cardamom, badi elaichi, brown cardamom, इलाइची]}
 cinnamon: {aliases: [cinnamon, cinnamon stick, dalchini, dal chini, cinnamon powder, pattai, दालचीनी]}
-cloves: {aliases: [cloves, clove, laung, lavang, krambu, clove powder, लॉन्ग, लौंग, long, bud long, laung buds]}
+cloves: {aliases: [cloves, clove, laung, lavang, krambu, clove powder, लॉन्ग, लौंग, bud long, laung buds]}
 fennel: {aliases: [fennel, fennel seeds, saunf, sombu, fennel powder, saunf powder, सौंफ]}
 fenugreek_seed: {aliases: [fenugreek seeds, methi seeds, methi dana, vendayam, methi powder, fenugreek powder, split methi seeds, methi kuria, yellow fenugreek seeds, fenugreek]}
 ajwain: {aliases: [ajwain, carom seeds, omam, ova, ajwain seeds]}
@@ -257,7 +257,7 @@ edible_gum: {aliases: [gond, goond, edible gum, natural gum]}
 
 # ---------------- Sweeteners ----------------
 sugar: {aliases: [sugar, white sugar, caster sugar, castor sugar, brown sugar, demerara sugar, powdered sugar, icing sugar, confectioners sugar, cane sugar, sugar cubes, decorative sugar, sprinkles, candy sprinkles, tutti frutti, glazed cherries, शक्कर, चीनी, misri, mishri, molasses]}
-jaggery: {aliases: [jaggery, gur, gud, vellam, bella, jaggery powder, गुड़, good, good powder, good powder done]}
+jaggery: {aliases: [jaggery, gur, gud, vellam, bella, jaggery powder, गुड़, good powder]}
 honey: {tags: [honey], aliases: [honey, shahad, madhu]}
 sweetener: {aliases: [stevia, monk fruit, sugar free, artificial sweetener, sucralose]}
 dates: {aliases: [dates, khajur, seedless dates, dry dates, dry dates powder, kharik, kharik pud, chuara]}
