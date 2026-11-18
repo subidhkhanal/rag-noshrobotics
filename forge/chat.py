@@ -3,11 +3,14 @@ from __future__ import annotations
 
 import os
 import re
-from dataclasses import dataclass, field
+import time
+from dataclasses import dataclass, field, replace
 
 import httpx
 
 from .adapt import adapt
+from .plan import make_plan
+from .profile import build_profile
 from .query import ATTRIBUTE_RES, COURSE_RES, CUISINE_GROUPS, Constraints, is_refinement, parse
 from .search import Engine, Result, SearchOutput
 
@@ -74,7 +77,8 @@ def merge(prev: Constraints, new: Constraints, message: str) -> Constraints:
         intents=new.intents,
         servings=new.servings or prev.servings,
     )
-    if is_refinement(message, new):
+    # "different from what I usually make" is about the user's habits, not the last results: start soft prefs fresh.
+    if is_refinement(message, new) and "usual" not in new.intents:
         merged.include = prev.include + [i for i in new.include if i not in prev.include]
         merged.pantry_mode = prev.pantry_mode or new.pantry_mode
         merged.max_time = new.max_time or prev.max_time
@@ -114,12 +118,18 @@ class Assistant:
             st.text = ""
         return s
 
-    def chat(self, state: dict | None, message: str) -> dict:
+    def chat(self, state: dict | None, message: str, history: list | None = None) -> dict:
         s = session_from(self.engine, state)
         onto = self.engine.onto
+        profile = build_profile(self.engine, history)
         parsed = parse(onto, message)
         s.state = merge(s.state, parsed, message)
         st = s.state
+
+        if "history" in parsed.intents:
+            return self._history_reply(s, parsed, profile)
+        if "plan" in parsed.intents:
+            return self._plan_reply(s, parsed, profile)
 
         exclude_ids: set[int] = set()
         if st.intents & {"more", "different"}:
@@ -128,7 +138,7 @@ class Assistant:
         if anchor is not None:
             exclude_ids.add(anchor)
 
-        out = self.engine.search(st, k=5, exclude_ids=exclude_ids, anchor_id=anchor)
+        out = self.engine.search(st, k=5, exclude_ids=exclude_ids, anchor_id=anchor, profile=profile)
         if out.results:
             s.shown += [r.recipe["id"] for r in out.results]
             s.last_top = out.results[0].recipe["id"]
@@ -141,9 +151,14 @@ class Assistant:
                 cd["safer"] = adapt(onto, r.recipe, st).to_dict(onto)["safer"]
             cards.append(cd)
         reply = self.compose(st, parsed, out, anchor)
+        if st.intents & {"different", "usual"}:
+            reply = (f"Based on your history ({profile.summary(onto)}), here's something different. " if not profile.empty
+                     else "I don't have your cooking history yet — tap “Cooked it” on dishes you make and I'll learn "
+                          "what you usually cook. For now, here's a varied selection. ") + reply
         reply = self.polish(reply, out) or reply
         s.shown = s.shown[-MAX_SHOWN:]
         return {
+            "mode": "search",
             "state": s.to_dict(),
             "reply": reply,
             "results": cards,
@@ -153,6 +168,53 @@ class Assistant:
             "parsed": parsed.to_dict(),
             "trace": out.trace | {"relaxed": out.relaxed},
         }
+
+    def _base_response(self, s: Session, parsed: Constraints, reply: str, results: list[dict], **extra) -> dict:
+        return {"state": s.to_dict(), "reply": reply, "results": results, "closest": None, "blocked_examples": [],
+                "constraints": chips(self.engine.onto, s.state), "parsed": parsed.to_dict(), "trace": {}, **extra}
+
+    def _history_reply(self, s: Session, parsed: Constraints, profile) -> dict:
+        onto, eng = self.engine.onto, self.engine
+        cooked = [e for e in reversed(profile.events) if e.action == "cooked"]
+        recent = [e for e in cooked if e.id in profile.recent_ids]
+        if not cooked:
+            reply = ("I don't have any cooking history for you yet. Tap “Cooked it” on a recipe card after you make it, "
+                     "and I'll remember it here — on this device only.")
+            return self._base_response(s, parsed, reply, [], mode="history")
+        shown = recent or cooked
+        seen, cards = set(), []
+        for e in shown:
+            if e.id in seen:
+                continue
+            seen.add(e.id)
+            r = eng.recipes[eng.by_id[e.id]]
+            cards.append({**card_from_recipe(r), "why": [f"cooked {_ago(e.t)}"]})
+        when = "in the last 7 days" if recent else "so far (nothing in the last 7 days)"
+        reply = f"You've cooked {len(seen)} dish{'es' if len(seen) != 1 else ''} {when}. Overall: {profile.summary(onto)}."
+        return self._base_response(s, parsed, reply, cards[:10], mode="history")
+
+    def _plan_reply(self, s: Session, parsed: Constraints, profile) -> dict:
+        onto, st = self.engine.onto, s.state
+        days = parsed.days or 7
+        plan = make_plan(self.engine, st, profile, days)
+        what = describe(onto, replace(st, course=None))
+        course = st.course or "dinner"
+        if not plan.days:
+            reply = f"I couldn't build a {course} plan for {what} — nothing in the catalogue meets every constraint."
+            return self._base_response(s, parsed, reply, [], mode="plan")
+        cards = [{**card(d.result), "day": d.day, "base": onto.label(d.base) if d.base in onto.ingredients else d.base}
+                 for d in plan.days]
+        s.shown += [d.result.recipe["id"] for d in plan.days]
+        reply = (f"Here's a {len(plan.days)}-day {what if what != 'recipe' else ''} {course} plan. Every dish is verified "
+                 f"against your constraints, no main ingredient repeats on consecutive days, cuisines rotate, and at most "
+                 f"two rich dishes. The catalogue has no calorie data, so balance here means variety rather than "
+                 f"nutrient targets.").replace("  ", " ")
+        if plan.shortfall:
+            reply += f" I could only fill {len(plan.days)} of {days} days without repeating myself under these constraints."
+        if profile is not None and not profile.empty:
+            reply += " Dishes you cooked this week were skipped and the plan leans toward what you've liked."
+        return self._base_response(s, parsed, reply, cards, mode="plan",
+                                   shopping={"items": plan.shopping, "staples": plan.staples})
 
     # ---------- grounded, template-based reply ----------
     def compose(self, st: Constraints, parsed: Constraints, out: SearchOutput, anchor: int | None) -> str:
@@ -260,13 +322,21 @@ def chips(onto, st: Constraints) -> list[dict]:
     return out
 
 
-def card(r: Result | None) -> dict | None:
-    if r is None:
-        return None
-    rec = r.recipe
+def card_from_recipe(rec: dict) -> dict:
     return {
         "id": rec["id"], "name": rec["name"], "cuisine": rec["cuisine"], "course": rec["course"],
         "total_min": rec["total_min"], "servings": rec["servings"], "url": rec["url"],
         "ingredients": [i["name"] for i in rec["ingredients"]][:14],
-        "checks": r.checks, "why": r.why, "flagged": r.flagged, "score": r.score,
+        "checks": [], "why": [], "flagged": False, "score": 0,
     }
+
+
+def card(r: Result | None) -> dict | None:
+    if r is None:
+        return None
+    return {**card_from_recipe(r.recipe), "checks": r.checks, "why": r.why, "flagged": r.flagged, "score": r.score}
+
+
+def _ago(t: int) -> str:
+    days = int((time.time() - t) // 86400)
+    return "today" if days <= 0 else "yesterday" if days == 1 else f"{days} days ago"

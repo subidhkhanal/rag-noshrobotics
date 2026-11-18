@@ -20,6 +20,7 @@ from pathlib import Path
 import numpy as np
 
 from .ontology import Ontology, load, tokenize
+from .profile import STAPLES
 from .query import CUISINE_GROUPS, Constraints
 
 DATA = Path(__file__).resolve().parent.parent / "data" / "processed"
@@ -38,6 +39,13 @@ LIGHT_IDS = {"dal", "millet", "greens", "spinach", "methi_leaves", "gourd", "cab
              "tomato", "capsicum", "chickpeas", "kidney_beans", "pseudo_grain", "zucchini", "pumpkin", "oats"}
 MEAT_TAGS = {"meat", "poultry", "fish", "shellfish", "egg"}
 COMPONENT_QUERY = re.compile(r"powder|masala|homemade|paste|sauce|podi|spread|stock|seasoning|dressing|syrup|ghee|how to", re.I)
+BABY = re.compile(r"\b(bab(y|ies)|toddlers?|infants?|first food|weaning|\d+\s*months?)\b", re.I)
+SWEET_OR_DRINK = re.compile(
+    r"\b(trifle|kheer|halwa|ladoo|laddu|cake|cupcake|pudding|payasam|custard|ice ?cream|kulfi|mousse|barfi|burfi|"
+    r"brownies?|cookies?|tarts?|fudge|truffles?|cheesecake|muffins?|parfait|souffle|panna cotta|shrikhand|rasmalai|"
+    r"jamun|jalebi|smoothie|milkshake|shake|lassi|juice|mocktail|cocktail|sherbet|sharbat|tea|coffee|cooler|punch|"
+    r"lemonade|sorbet|granita|popsicle|candy|toffee|chikki|meetha|sweet)\b", re.I)
+CONDIMENT = re.compile(r"\b(salsa|chutney|dip|raita|pickle|achar|sauce|dressing|thokku|podi|relish|jam|spread|pachadi)\b", re.I)
 
 
 @dataclass
@@ -152,6 +160,9 @@ class Engine:
         self.name_tokens = index["name_tokens"]
         self.name_ids = index["name_ids"]
         self.by_id = {r["id"]: i for i, r in enumerate(self.recipes)}
+        self.is_baby = [bool(BABY.search(r["name"])) for r in self.recipes]
+        self.is_condiment = [bool(CONDIMENT.search(r["name"])) for r in self.recipes]
+        self.is_sweet = [r["course"] == "Dessert" or bool(SWEET_OR_DRINK.search(r["name"])) for r in self.recipes]
         if self.profile == "full":
             try:
                 import fastembed  # noqa: F401
@@ -249,6 +260,10 @@ class Engine:
         }
 
     def _course_ok(self, i: int, course: str) -> bool:
+        if course in ("lunch", "dinner") and self.is_sweet[i]:
+            return False
+        if course == "dessert":
+            return self.is_sweet[i] or course in self.recipes[i]["course_tags"]
         return course in self.recipes[i]["course_tags"]
 
     def _cuisine_ok(self, i: int, cuisine: str) -> bool:
@@ -259,18 +274,25 @@ class Engine:
         parts = [c.text]
         parts += [self.onto.label(i) for i in c.include if self.onto.label(i) not in c.text]
         parts += sorted(a.replace("_", " ") for a in c.attributes)
-        if c.course:
-            parts.append(c.course)
         if c.cuisine:
             parts.append(c.cuisine)
+        if c.prefer_non_veg:
+            parts.append("chicken mutton fish egg")
         if not any(p.strip() for p in parts):
-            parts += [self.onto.diets[d]["label"] for d in sorted(c.diets)] + ["home style indian recipe"]
+            # Course is a filter, not a search word ("dinner" would match "Dinner Rolls").
+            parts += [self.onto.diets[d]["label"] for d in sorted(c.diets)] + [
+                {"breakfast": "breakfast", "dessert": "sweet dessert", "snack": "snack"}.get(c.course or "", "")
+                + " home style indian recipe"]
         return " ".join(p for p in parts if p).strip()
 
     # ---------- main entry ----------
     def search(self, c: Constraints, k: int = 5, exclude_ids: set[int] | None = None,
-               anchor_id: int | None = None) -> SearchOutput:
-        exclude_ids = exclude_ids or set()
+               anchor_id: int | None = None, profile=None) -> SearchOutput:
+        exclude_ids = set(exclude_ids or ())
+        if profile is not None:
+            exclude_ids |= profile.disliked_ids
+            if c.intents & {"different", "usual"}:
+                exclude_ids |= profile.cooked_ids
         keep, removed, blocked_reason = self.hard_filter(c)
         trace = {"corpus": len(self.recipes), "removed_by_constraint": dict(removed), "after_hard_filter": len(keep)}
         relaxed: list[str] = []
@@ -289,6 +311,16 @@ class Engine:
             narrowed = [i for i in cand if have & self.lineages[i]]
             if narrowed:
                 cand = narrowed
+        if c.prefer_non_veg:
+            narrowed = [i for i in cand if self.tags[i] & MEAT_TAGS]
+            if len(narrowed) >= 3:
+                cand = narrowed
+        if profile is not None and not profile.empty and c.intents & {"different", "usual"} and not c.course:
+            usual = {t for e in profile.events if e.action != "dislike"
+                     for t in self.recipes[self.by_id[e.id]]["course_tags"]}
+            narrowed = [i for i in cand if usual & set(self.recipes[i]["course_tags"])]
+            if len(narrowed) >= 5:
+                cand = narrowed
         trace["after_soft_filters"] = len(cand)
 
         qtext = self.query_text(c)
@@ -305,18 +337,22 @@ class Engine:
                 keep2, _, _ = self.hard_filter(c, skip_time=True)
                 pool = [i for i in keep2 if self.recipes[i]["id"] not in exclude_ids]
                 if pool:
-                    ranked = self._rank(c, pool, qtext, qvec, anchor_id, k=1, trace={})
+                    ranked = self._rank(c, pool, qtext, qvec, anchor_id, k=1, trace={}, profile=profile)
                     closest = ranked[0] if ranked else None
             return SearchOutput([], trace, blocked_examples, closest, relaxed)
 
-        results = self._rank(c, cand, qtext, qvec, anchor_id, k, trace)
+        results = self._rank(c, cand, qtext, qvec, anchor_id, k, trace, profile=profile)
         return SearchOutput(results, trace, blocked_examples, None, relaxed)
 
-    def _rank(self, c, cand, qtext, qvec, anchor_id, k, trace) -> list[Result]:
+    def _rank(self, c, cand, qtext, qvec, anchor_id, k, trace, profile=None) -> list[Result]:
+        scored = self.score_pool(c, cand, qtext, qvec, anchor_id, trace, profile=profile)
+        chosen = self._mmr(scored, k)
+        return [self._explain(i, s, flags, c, profile) for s, i, flags, cover in chosen]
+
+    def score_pool(self, c, cand, qtext, qvec, anchor_id, trace, pool_size: int = 30, profile=None):
         idx = np.array(cand)
         qtok = tokenize(qtext)
         lex = self.bm25.scores(qtok, idx)
-        ranks = {}
         lex_order = idx[np.argsort(-lex)]
         rrf = Counter()
         for r, i in enumerate(lex_order[:200]):
@@ -325,7 +361,12 @@ class Engine:
             dense = self.emb[idx] @ qvec
             for r, i in enumerate(idx[np.argsort(-dense)][:200]):
                 rrf[int(i)] += 1 / (60 + r)
-        pool = [i for i, _ in rrf.most_common(30)] or list(idx[:30])
+        novelty = profile is not None and not profile.empty and bool(c.intents & {"different", "usual"})
+        if profile is not None and not profile.empty and profile.liked_vec is not None and len(idx) and not novelty:
+            taste = self.emb[idx] @ profile.liked_vec
+            for r, i in enumerate(idx[np.argsort(-taste)][:100]):
+                rrf[int(i)] += 0.5 / (60 + r)
+        pool = [i for i, _ in rrf.most_common(pool_size)] or list(idx[:pool_size])
         trace["fused_pool"] = len(pool)
 
         rel = np.array([rrf[i] for i in pool], dtype=float)
@@ -364,17 +405,29 @@ class Engine:
                     s -= 0.4
             if self.recipes[i].get("is_component") and not COMPONENT_QUERY.search(qtext):
                 s -= 0.8
+            if self.is_baby[i] and not BABY.search(qtext):
+                s -= 0.8
+            if self.is_condiment[i] and not CONDIMENT.search(qtext):
+                s -= 0.6
             flags = self.is_flagged(i, c)
             if flags:
                 s -= 0.35
+            if profile is not None and not profile.empty and self.emb is not None:
+                rid = self.recipes[i]["id"]
+                sim = float(self.emb[i] @ profile.liked_vec) if profile.liked_vec is not None else 0.0
+                if novelty:
+                    s += 0.6 * (1 - sim)
+                    if self.recipes[i]["cuisine"] not in profile.cuisines:
+                        s += 0.25
+                else:
+                    s += 0.35 * sim
+                    if rid in profile.recent_ids:
+                        s -= 0.5
+                if profile.disliked_vec is not None:
+                    s -= 0.4 * max(0.0, float(self.emb[i] @ profile.disliked_vec))
             scored.append((s, i, flags, cover))
-
         scored.sort(reverse=True)
-        chosen = self._mmr(scored, k)
-        out = []
-        for s, i, flags, cover in chosen:
-            out.append(self._explain(i, s, flags, c))
-        return out
+        return scored
 
     def _base_name(self, i: int) -> str:
         return re.sub(r"[^a-z ]", "", self.recipes[i]["name"].lower().split(" - ")[0].split("(")[0]).strip()
@@ -401,7 +454,7 @@ class Engine:
             rest.remove(best)
         return chosen
 
-    def _explain(self, i: int, score: float, flags: list[str], c: Constraints) -> Result:
+    def _explain(self, i: int, score: float, flags: list[str], c: Constraints, profile=None) -> Result:
         r = self.recipes[i]
         n = len(r["ingredients"])
         checks = []
@@ -441,6 +494,16 @@ class Engine:
                 why.append(f"serves {r['servings']} — scale ×{factor:.1f} for {c.servings}")
             else:
                 why.append(f"serves {r['servings']}")
+        if profile is not None and not profile.empty:
+            if c.intents & {"different", "usual"}:
+                if r["cuisine"] not in profile.cuisines:
+                    why.append(f"new cuisine for you ({r['cuisine']})")
+                new = [self.onto.label(x) for x in r["ingredient_ids"] if x not in profile.ingredients
+                       and x not in STAPLES][:3]
+                if new:
+                    why.append("ingredients you haven't cooked with: " + ", ".join(new))
+            elif profile.liked_vec is not None and self.emb is not None and float(self.emb[i] @ profile.liked_vec) > 0.8:
+                why.append("close to dishes you've liked")
         return Result(recipe=r, score=round(score, 3), checks=checks, why=why, flagged=bool(flags))
 
     def _blocked_examples(self, qtext, qvec, blocked_reason, c, n: int = 3) -> list[dict]:

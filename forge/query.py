@@ -101,7 +101,11 @@ INTENT_RES = {
     "more": r"\b(more|another|other options?|something else|show me (more|others)|anything else)\b",
     "different": r"\b(different|new|something new|change|variety|not the same|other than)\b",
     "similar": r"\b(similar|like (this|that|it|the (first|last) one)|same but|along those lines)\b",
+    "plan": r"\b(plan|planner|planning|weekly menu|menu for (the )?week|\d+[- ]day menu|week'?s? (worth of )?(meals|dinners|lunches))\b",
+    "history": r"\b(what (did|have) i (cook|cooked|make|made|eat|ate)|my (cooking )?history|what i('ve| have)? cooked)\b",
+    "usual": r"\b(usually|normally|always|my usual|what i (usually|normally|always))\b",
 }
+WORD_NUMS = {"two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "ten": 10, "fourteen": 14}
 REFINE_START = re.compile(
     r"^\s*(make it|make them|but|and|also|only|now|what about|how about|instead|same|similar|something similar|"
     r"more|another|something else|less|under|within|no |without|with less|with more|quicker|faster|spicier|healthier|"
@@ -131,7 +135,8 @@ FILLER = re.compile(
     r"for|to|of|is|are|it|that|this|recipes?|dish(es)?|food|options?|ideas?|today|tonight|now|good|nice|tasty|"
     r"delicious|kuch|khana|bana|hai|chahiye|mujhe|ka|ki|ke|mein|lets|do|be|on|in|at|but|and|or|similar|more|another|"
     r"else|different|instead|also|only|just|then|again|one|ones|any|non veg|non vegetarian|nonveg|other|than|usually|"
-    r"from|with|up|bit|little|really|very|so|too|much|kind|type|sort|get|try|eat|ate|not)\b",
+    r"from|with|up|bit|little|really|very|so|too|much|kind|type|sort|get|try|eat|ate|not|week|weekly|plan|"
+    r"planner|menu|meals?|days?|nights?|usually|normally|always|cook|cooked|made|last)\b",
     re.I,
 )
 
@@ -152,6 +157,7 @@ class Constraints:
     swaps: dict[str, str] = field(default_factory=dict)
     text: str = ""
     intents: set[str] = field(default_factory=set)
+    days: int | None = None
 
     def has_soft_content(self) -> bool:
         return bool(self.include or self.course or self.cuisine or self.text.strip() or self.prefer_non_veg)
@@ -161,7 +167,7 @@ class Constraints:
             "diets": sorted(self.diets), "exclude": sorted(self.exclude), "include": list(self.include),
             "pantry_mode": self.pantry_mode, "max_time": self.max_time, "course": self.course,
             "cuisine": self.cuisine, "attributes": sorted(self.attributes), "servings": self.servings,
-            "prefer_non_veg": self.prefer_non_veg, "conflicts": list(self.conflicts), "swaps": dict(self.swaps), "text": self.text, "intents": sorted(self.intents),
+            "prefer_non_veg": self.prefer_non_veg, "conflicts": list(self.conflicts), "swaps": dict(self.swaps), "text": self.text, "intents": sorted(self.intents), "days": self.days,
         }
 
 
@@ -238,8 +244,19 @@ def parse(onto: Ontology, message: str) -> Constraints:
     if "mild" in c.attributes:
         c.attributes.discard("spicy")
     for intent, pat in INTENT_RES.items():
-        if re.search(pat, low):
+        m = re.search(pat, low)
+        if m:
             c.intents.add(intent)
+            if intent in ("plan", "history"):
+                consumed.append(m.group(0))
+    if "plan" in c.intents:
+        m = re.search(r"\b(\d{1,2}|" + "|".join(WORD_NUMS) + r")[- ]?(days?|nights?|dinners|lunches|meals)\b", low)
+        if m:
+            n = m.group(1)
+            c.days = max(1, min(14, int(n) if n.isdigit() else WORD_NUMS[n]))
+            consumed.append(m.group(0))
+        else:
+            c.days = 7
     m = re.search(r"\bfor (\d{1,2})\s*(people|persons|guests|pax|of us|members)?\b", low)
     if m and (m.group(2) or int(m.group(1)) <= 20) and not re.search(rf"for {m.group(1)}\s*(min|hour)", low):
         c.servings = int(m.group(1))

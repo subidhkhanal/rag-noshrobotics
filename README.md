@@ -13,6 +13,16 @@ Built as a working answer to failures observed in a production cooking-robot ass
 - **Adapts near-misses.** A recipe ruled out for your diet is offered with validated swaps where possible: Jain dal makhani (ginger → sonth), no-onion-garlic pad thai (onion → cabbage, garlic → hing), vegan paneer butter masala (paneer → tofu, cream → cashew paste). Every adapted recipe is re-checked against all active constraints, and a swap that changes a dish's named ingredient is called out.
 - **Ranks instead of dumping.** It filters first, then runs BM25 and dense retrieval over the survivors and merges them with reciprocal rank fusion. Preference features (pantry overlap, dish-name match, spicy/creamy/healthy, cuisine) adjust the scores, and MMR keeps the results varied. You get the top 5, each with the checks it passed.
 - **Holds a conversation.** Diets and allergies persist across turns as locked chips. Refinements ("make it under 15 minutes", "something similar but spicier") merge with what came before, and a new request replaces the soft preferences. A requested ingredient that conflicts with the diet is swapped (butter chicken + vegetarian → paneer).
+- **Learns your taste.** "Cooked it", 👍 and 👎 on any dish build a history kept on your device and sent with each request.
+  - Rankings lean toward what you like and skip what you cooked this week.
+  - "Something different from what I usually make" avoids your usual cuisines and ingredients.
+  - "What did I cook last week?" answers from that real history.
+  - With no history, it says so instead of pretending.
+- **Plans meals.** "Plan my week, Jain dinners" returns N validated dishes:
+  - no main ingredient repeated on consecutive days or more than twice;
+  - cuisines rotated, at most two rich dishes;
+  - no desserts, drinks, condiments or baby food posing as dinner (source course labels are unreliable);
+  - a combined shopping list.
 - **Fails honestly.** When nothing qualifies, it says so and offers the closest option that still meets every dietary rule. It never relaxes a dietary or allergy constraint to fill the gap.
 
 ## Results
@@ -25,7 +35,7 @@ Built as a working answer to failures observed in a production cooking-robot ass
 | Independent regex audit of every recipe passing no-onion-garlic / Jain / vegan | 0 leaks |
 | Silent constraint violations, 50 constrained queries × top 5 × 4 configurations | 0 (see `reports/evaluation.md`) |
 | Deployed profile latency / engine load | ~20 ms median per query / ~0.7 s |
-| Tests | 64 passing |
+| Tests | 70 passing |
 
 Compliance is measured by an independent regex checker over raw ingredient text, deliberately separate from the ontology the system itself uses.
 
@@ -77,6 +87,8 @@ forge/build_corpus.py              raw CSV → normalized recipes, verdicts, met
 forge/query.py                     message → constraints (rules; English/Hinglish)
 forge/search.py                    hard filter → BM25 + dense → RRF → features (→ cross-encoder) → MMR
 forge/adapt.py                     swap offending ingredients and re-validate
+forge/profile.py                   taste profile from client-held cooking history
+forge/plan.py                      multi-day planner with variety constraints and shopping list
 forge/chat.py                      stateless dialogue state, swaps, grounded replies
 forge/api.py                       FastAPI app
 public/                            no-build frontend
@@ -89,6 +101,5 @@ The recipe corpus is the Archana's Kitchen "6000+ Indian Food Recipes" dataset (
 ## Next
 
 - Fine-tune a small model (Qwen2.5-3B, QLoRA) as the query parser and as a method reader that can only add risk flags, never remove them, and benchmark it against the rules.
-- Build a persistent taste profile from cooking history.
-- Add a nutrient-bounded weekly planner.
+- Add nutrient targets to the planner once the catalogue has nutrition data (e.g. IFCT-linked).
 - Create a human-labelled relevance set and report nDCG.

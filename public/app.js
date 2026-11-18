@@ -1,6 +1,31 @@
 const API = (window.API_BASE || "").replace(/\/$/, "");
 let state = null;
 
+// ---------- cooking history (this device only) ----------
+const HKEY = "recipeforge.history.v1";
+function loadHistory() {
+  try {
+    const h = JSON.parse(localStorage.getItem(HKEY) || "[]");
+    return Array.isArray(h) ? h : [];
+  } catch { return []; }
+}
+function saveHistory(h) {
+  try { localStorage.setItem(HKEY, JSON.stringify(h.slice(-100))); } catch { /* storage unavailable */ }
+  renderHistoryNote();
+}
+function recordAction(id, action) {
+  const h = loadHistory().filter((e) => !(e.id === id && (action !== "cooked") && e.action !== "cooked"));
+  h.push({ id, action, t: Math.floor(Date.now() / 1000) });
+  saveHistory(h);
+}
+function renderHistoryNote() {
+  const cooked = new Set(loadHistory().filter((e) => e.action === "cooked").map((e) => e.id)).size;
+  const rated = loadHistory().filter((e) => e.action !== "cooked").length;
+  $("#history-note").innerHTML = cooked || rated
+    ? `Your history on this device: ${cooked} cooked, ${rated} rated · <button class="link" id="clear-history">clear</button>`
+    : "Tap “Cooked it”, 👍 or 👎 on a dish and I'll learn your taste (stored only on this device).";
+}
+
 const $ = (sel, root = document) => root.querySelector(sel);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -59,15 +84,30 @@ function cardHtml(r) {
       <div class="actions">
         <button class="link" data-recipe="${esc(r.id)}">Ingredient check</button>
         ${r.url ? `<a class="link" href="${esc(r.url)}" target="_blank" rel="noopener">Full recipe ↗</a>` : ""}
+        <span class="taste">
+          <button class="pill" data-act="cooked" data-id="${esc(r.id)}">Cooked it</button>
+          <button class="pill" data-act="like" data-id="${esc(r.id)}" aria-label="Like">👍</button>
+          <button class="pill" data-act="dislike" data-id="${esc(r.id)}" aria-label="Dislike">👎</button>
+        </span>
       </div>
     </article>`;
+}
+
+function planHtml(data) {
+  const days = data.results.map((r) => `<div class="day"><div class="dayname">${esc(r.day)}</div>${cardHtml(r)}</div>`).join("");
+  const s = data.shopping;
+  const list = s ? `<details class="shopping" open><summary>Shopping list (${s.items.length} items)</summary>
+      <ul>${s.items.map((x) => `<li><b>${esc(x.item)}</b> <span class="sub">— ${esc(x.for.join(", "))}</span></li>`).join("")}</ul>
+      <div class="sub">Pantry staples assumed: ${esc(s.staples.join(", "))}</div></details>` : "";
+  return `<div class="plan">${days}</div>${list}`;
 }
 
 function addBot(data) {
   const el = document.createElement("div");
   el.className = "msg bot";
   let html = `<p>${esc(data.reply)}</p>`;
-  if (data.results.length) html += `<div class="cards">${data.results.map(cardHtml).join("")}</div>`;
+  if (data.mode === "plan" && data.results.length) html += planHtml(data);
+  else if (data.results.length) html += `<div class="cards">${data.results.map(cardHtml).join("")}</div>`;
   if (data.closest) html += `<div class="cards">${cardHtml(data.closest)}</div>`;
   if (data.blocked_examples.length) {
     html += `<div class="ruled"><b>Ruled out — these matched your words but not your constraints:</b><ul>${data.blocked_examples
@@ -76,13 +116,15 @@ function addBot(data) {
   }
   const t = data.trace;
   const removed = Object.entries(t.removed_by_constraint || {}).map(([k, v]) => `  ${k}: ${v}`).join("\n") || "  (none)";
-  html += `<details class="trace"><summary>Pipeline trace</summary><pre>${esc(
-    `parsed: ${JSON.stringify(data.parsed)}\n` +
-    `corpus: ${t.corpus}\nremoved by hard constraints:\n${removed}\n` +
-    `after hard filter: ${t.after_hard_filter}\nafter course/cuisine/pantry: ${t.after_soft_filters ?? "-"}\n` +
-    `search text: "${t.query_text}"\nfused pool (BM25+dense, RRF): ${t.fused_pool ?? "-"}\n` +
-    `cross-encoder reranked: ${t.reranked ?? "-"}${t.relaxed?.length ? `\nrelaxed: ${t.relaxed.join("; ")}` : ""}`
-  )}</pre></details>`;
+  if (data.mode === "search") {
+    html += `<details class="trace"><summary>Pipeline trace</summary><pre>${esc(
+      `parsed: ${JSON.stringify(data.parsed)}\n` +
+      `corpus: ${t.corpus}\nremoved by hard constraints:\n${removed}\n` +
+      `after hard filter: ${t.after_hard_filter}\nafter course/cuisine/pantry: ${t.after_soft_filters ?? "-"}\n` +
+      `search text: "${t.query_text}"\nfused pool (BM25+dense, RRF): ${t.fused_pool ?? "-"}\n` +
+      `cross-encoder reranked: ${t.reranked ?? "-"}${t.relaxed?.length ? `\nrelaxed: ${t.relaxed.join("; ")}` : ""}`
+    )}</pre></details>`;
+  }
   el.innerHTML = html;
   messages.appendChild(el);
 }
@@ -103,7 +145,7 @@ async function send(text) {
   messages.appendChild(typing);
   typing.scrollIntoView({ behavior: "smooth", block: "end" });
   try {
-    const data = await api("/api/chat", { message: text, state });
+    const data = await api("/api/chat", { message: text, state, history: loadHistory() });
     state = data.state;
     typing.remove();
     addBot(data);
@@ -137,6 +179,18 @@ function resetChat() {
   renderChips([]);
 }
 $("#reset").addEventListener("click", resetChat);
+messages.addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-act]");
+  if (!b) return;
+  recordAction(Number(b.dataset.id), b.dataset.act);
+  b.closest(".taste").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b));
+  b.textContent = b.dataset.act === "cooked" ? "Cooked ✓" : b.textContent;
+});
+document.addEventListener("click", (e) => {
+  if (e.target.id !== "clear-history") return;
+  saveHistory([]);
+});
+renderHistoryNote();
 
 // ---------- recipe dialog ----------
 const dialog = $("#recipe-dialog");
@@ -172,7 +226,9 @@ const STRESS = [
   { qs: ["I have chicken tomatoes and rice", "something similar but spicier", "make it under 15 minutes"], tag: "good", obs: "Nosh handled this chain well: it kept context and honestly reported nothing under 15 minutes." },
   { qs: ["I want butter chicken but I'm vegetarian"], tag: "good", obs: "Nosh suggested Paneer Butter Masala — good culinary reasoning." },
   { qs: ["something for a dinner party for 6 people"], tag: "gap", obs: "Returned a single recipe and asked the user to scale it themselves." },
-  { qs: ["suggest something different from what I usually make"], tag: "gap", obs: "Answered confidently with no cooking history to compare against. (Personal history is on the roadmap here too — this demo tracks within-session history only.)" },
+  { qs: ["suggest something different from what I usually make"], tag: "gap", obs: "Answered confidently with no cooking history to compare against. Here, tap “Cooked it” on a few dishes first — it then avoids your usual cuisines and ingredients, and says so honestly when it has no history." },
+  { qs: ["what did I cook last week"], tag: "gap", obs: "Had no history to answer from. Here it answers from dishes you've marked as cooked on this device." },
+  { qs: ["plan my week, Jain dinners"], tag: "gap", obs: "Offered a meal-planning calendar but no plan. Here: 7 validated dinners, no main ingredient repeated on consecutive days, plus a shopping list." },
 ];
 $("#stress-list").innerHTML = STRESS.map((s, i) => `
   <div class="item">

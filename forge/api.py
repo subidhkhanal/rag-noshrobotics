@@ -35,6 +35,7 @@ app.add_middleware(
 class ChatIn(BaseModel):
     message: str = Field(min_length=1, max_length=500)
     state: dict | None = None
+    history: list | None = Field(default=None, max_length=200)
 
 
 class RemoveIn(BaseModel):
@@ -54,7 +55,7 @@ def health():
 
 @app.post("/api/chat")
 def chat(body: ChatIn):
-    return assistant.chat(body.state, body.message)
+    return assistant.chat(body.state, body.message, body.history)
 
 
 @app.post("/api/constraints/remove")

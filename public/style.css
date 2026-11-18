@@ -87,7 +87,7 @@ h2 { font-family: Fraunces, Georgia, serif; font-size: 20px; margin: 0 0 6px; }
 .check.flag { background: var(--flag-bg); color: var(--flag); }
 .check.block { background: var(--block-bg); color: var(--block); }
 .why { margin: 6px 0 0; padding-left: 18px; color: var(--text); font-size: 13px; }
-.card .actions { margin-top: 8px; display: flex; gap: 14px; font-size: 13px; }
+.card .actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13px; align-items: center; }
 .link { background: none; border: 0; padding: 0; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 .flagnote { font-size: 12px; color: var(--flag); margin-top: 6px; }
 
@@ -113,7 +113,19 @@ details.trace pre { white-space: pre-wrap; background: var(--surface-2); padding
 }
 #input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
 #form button { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 0 18px; font-weight: 600; }
-#reset { margin-top: 8px; font-size: 13px; }
+.footrow { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-top: 8px; font-size: 13px; }
+.footrow .sub { margin: 0; }
+.taste { margin-left: auto; display: inline-flex; gap: 6px; }
+.pill { background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 1px 10px; font-size: 12px; }
+.pill:hover { border-color: var(--accent); }
+.pill.on { background: var(--pass-bg); color: var(--pass); border-color: transparent; }
+.plan { display: grid; gap: 10px; }
+.day { display: grid; grid-template-columns: 44px 1fr; gap: 8px; align-items: start; }
+.dayname { font-weight: 700; color: var(--accent); padding-top: 14px; }
+details.shopping { margin-top: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; font-size: 14px; }
+details.shopping summary { font-weight: 600; cursor: pointer; }
+details.shopping ul { padding-left: 18px; margin: 8px 0; columns: 2 240px; }
+details.shopping li { break-inside: avoid; margin-bottom: 2px; }
 .typing { color: var(--muted); font-style: italic; }
 
 .stress { display: grid; gap: 10px; }
@@ -150,6 +162,9 @@ dialog::backdrop { background: rgb(0 0 0 / 0.45); }
 
 @media (max-width: 560px) {
   .brand p { display: none; }
+  .day { grid-template-columns: 1fr; gap: 2px; }
+  .dayname { padding-top: 0; }
+  .taste { margin-left: 0; }
   .card header { flex-direction: column; gap: 2px; }
   .ing li { flex-direction: column; gap: 0; }
 }
