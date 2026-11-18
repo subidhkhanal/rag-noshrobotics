@@ -112,6 +112,7 @@ details.trace pre { white-space: pre-wrap; background: var(--surface-2); padding
   border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px;
 }
 #input:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+#form button:disabled { opacity: 0.55; cursor: wait; }
 #form button { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 12px; padding: 0 18px; font-weight: 600; }
 .chats-btn { margin-left: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 6px 14px; font-weight: 600; }
 .chats-btn:hover { border-color: var(--accent); }

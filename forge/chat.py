@@ -14,7 +14,8 @@ from .adapt import adapt
 from .plan import make_plan
 from .ontology import tokenize
 from .profile import build_profile
-from .query import ATTRIBUTE_RES, COURSE_RES, CUISINE_GROUPS, Constraints, is_refinement, parse
+from .query import (ATTRIBUTE_RES, COMMON_WORDS, COURSE_RES, CUISINE_GROUPS, Constraints, apply_diet_conflicts,
+                    is_refinement, normalize_message, parse, rewrite_swapped_text)
 from .search import Engine, Result, SearchOutput
 
 MAX_SHOWN = 60
@@ -70,10 +71,19 @@ def session_from(engine: Engine, data: dict | None) -> Session:
     return Session(state=st, shown=shown, last_top=last if isinstance(last, int) and last in engine.by_id else None)
 
 
-def merge(prev: Constraints, new: Constraints, message: str) -> Constraints:
+def merge(prev: Constraints, new: Constraints, message: str, onto=None) -> Constraints:
     if "reset" in new.intents:
         new.intents.discard("reset")
         return new
+    merged = _merge(prev, new, message)
+    if onto is not None:
+        # A diet added later ("actually I'm vegetarian") must swap ingredients wanted in earlier turns.
+        apply_diet_conflicts(onto, merged)
+        rewrite_swapped_text(onto, merged)
+    return merged
+
+
+def _merge(prev: Constraints, new: Constraints, message: str) -> Constraints:
     merged = Constraints(
         diets=prev.diets | new.diets,
         exclude=prev.exclude | new.exclude,
@@ -96,7 +106,8 @@ def merge(prev: Constraints, new: Constraints, message: str) -> Constraints:
         merged.max_time, merged.course, merged.cuisine = new.max_time, new.course, new.cuisine
         merged.attributes, merged.prefer_non_veg, merged.text = new.attributes, new.prefer_non_veg, new.text
     merged.include = [i for i in merged.include if i not in merged.exclude]
-    merged.conflicts, merged.swaps = new.conflicts, new.swaps
+    merged.conflicts, merged.swaps = list(new.conflicts), dict(new.swaps)
+    merged.generic, merged.unsupported = new.generic, new.unsupported
     return merged
 
 
@@ -129,12 +140,14 @@ class Assistant:
             return self._small_talk_reply(s, kind)
         profile = build_profile(self.engine, history)
         parsed = parse(onto, message)
-        used_llm = llm_parser.enabled() and llm_parser.should_call(message)
+        if "reset" in parsed.intents and not self._has_food_content(parsed, ignore_intents=True):
+            return self._small_talk_reply(Session(), "reset")
+        used_llm = llm_parser.enabled() and llm_parser.should_call(normalize_message(onto, message), parsed.understood)
         if used_llm:
             parsed = llm_parser.combine(onto, parsed, llm_parser.llm_parse(message))
         if not self._has_food_content(parsed):
             return self._small_talk_reply(s, "unclear")
-        s.state = merge(s.state, parsed, message)
+        s.state = merge(s.state, parsed, message, onto)
         st = s.state
 
         if "history" in parsed.intents:
@@ -187,11 +200,13 @@ class Assistant:
         for ing in self.engine.onto.ingredients.values():
             for a in ing.aliases:
                 words.update(tokenize(a))
-        return frozenset(w for w in words if len(w) > 2 and w not in {"the", "and", "with", "style", "recipe"})
+        stop = COMMON_WORDS | {"the", "and", "with", "style", "recipe", "over", "start", "made", "home", "make",
+                               "easy", "best", "quick", "simple", "classic", "special", "homemade", "delicious"}
+        return frozenset(w for w in words if len(w) > 2 and w not in stop)
 
-    def _has_food_content(self, c: Constraints) -> bool:
+    def _has_food_content(self, c: Constraints, ignore_intents: bool = False) -> bool:
         if (c.diets or c.exclude or c.include or c.max_time or c.course or c.cuisine or c.attributes or c.servings
-                or c.prefer_non_veg or c.intents or c.conflicts):
+                or c.prefer_non_veg or c.conflicts or c.generic or c.unsupported or (c.intents and not ignore_intents)):
             return True
         return bool(set(tokenize(c.text)) & self._food_vocab)
 
@@ -205,6 +220,14 @@ class Assistant:
                         "craving." + keeping,
             "thanks": "You're welcome! Want something else — another meal, a weekly plan, or a different cuisine?"
                       + keeping,
+            "ack": "Got it. What would you like next — another dish, a different cuisine, or a weekly plan?" + keeping,
+            "about": "I'm RecipeForge, a recipe assistant built to show ingredient-grounded recommendations: diets and "
+                     "allergies are checked in code against every recipe's real ingredients, and a language model "
+                     "only helps understand what you ask — it never decides what's safe for you.",
+            "override": "I can't switch off diet or allergy checks — they run in code against every recipe's "
+                        "ingredients, not as instructions I can be talked out of. Tell me what you'd like to eat and "
+                        "I'll find something that fits." + keeping,
+            "reset": "Fresh start — I've cleared this chat's diets and preferences. What would you like to cook?",
             "bye": "Happy cooking! Your chats and cooking history stay saved on this device.",
             "help": "I recommend recipes from 6,000+ Indian and world dishes, checking every ingredient against "
                     "your diet (Jain, sattvic, no onion-garlic, vegan, lactose-free, gluten-free) and allergies. "
@@ -271,15 +294,25 @@ class Assistant:
         onto = self.engine.onto
         diet_labels = [onto.diets[d]["label"] for d in sorted(st.diets)]
         lines = []
-        for x in parsed.conflicts:
-            alt = parsed.swaps.get(x)
-            lines.append(f"{onto.label(x).capitalize()} doesn't fit {', '.join(diet_labels) or 'your diet'}"
-                         + (f", so I swapped it for {onto.label(alt)}." if alt else ", so here are the closest alternatives that do."))
+        if parsed.unsupported:
+            what = " / ".join(parsed.unsupported)
+            lines.append(f"I can't verify “{what}” — this catalogue has no carb, sugar or sodium data — so treat these "
+                         f"as ideas rather than a guarantee.")
+        swaps = [x for x in st.conflicts if x in st.swaps and x not in STYLE_ONLY]
+        if swaps:
+            pairs = ", ".join(f"{onto.label(x)} → {onto.label(st.swaps[x])}" for x in swaps)
+            lines.append(f"That doesn't fit {', '.join(diet_labels) or 'your diet'}, so I swapped {pairs}.")
+        for x in st.conflicts:
+            if x not in st.swaps:
+                lines.append(f"{onto.label(x).capitalize()} doesn't fit {', '.join(diet_labels) or 'your diet'}, "
+                             f"so here are the closest alternatives.")
         if anchor is not None and anchor in self.engine.by_id:
             lines.append(f"Similar to {self.engine.recipes[self.engine.by_id[anchor]]['name']}"
                          + (" but spicier" if "spicy" in st.attributes else "") + ":")
         if not out.results:
             what = describe(onto, st)
+            if st.text and (what == "recipe" or not (st.diets or st.exclude)):
+                what = f"“{st.text}”" if what == "recipe" else f"{what} “{st.text}”"
             if out.closest:
                 cr = out.closest.recipe
                 lines.append(f"Nothing in the catalogue matches {what} within {st.max_time} minutes. "
@@ -293,7 +326,20 @@ class Assistant:
                 lines.append(f"{fix['name']} can be adapted with {len(fix['adaptation']['swaps'])} swap(s) — see below.")
             return " ".join(lines)
         n = len(out.results)
-        head = f"Here {'are' if n > 1 else 'is'} {n} {describe(onto, st)} pick{'s' if n > 1 else ''}"
+        dish = {t for t in tokenize(st.text) if len(t) > 3} - {t for i in st.include for t in tokenize(onto.label(i))}
+        names = {t for r in out.results for t in tokenize(r.recipe["name"])}
+        missing_dish = bool(dish and (st.diets or st.exclude) and not st.swaps and not dish & names)
+        if missing_dish:
+            adaptable = [b for b in out.blocked_examples if b.get("adaptation", {}).get("adaptable")
+                         and not self.engine.is_condiment[self.engine.by_id[b["id"]]]]
+            adaptable.sort(key=lambda b: not dish & set(tokenize(b["name"])))
+            same_dish = adaptable and dish & set(tokenize(adaptable[0]["name"]))
+            lines.append(f"I couldn't find a {describe(onto, st)} “{st.text}” in the catalogue"
+                         + (f" — but {adaptable[0]['name']} can be made {describe(onto, st)} with a few swaps "
+                            f"(see below)." if same_dish else "."))
+        head = (f"Meanwhile, here {'are' if n > 1 else 'is'} {n} {describe(onto, st)} pick{'s' if n > 1 else ''} "
+                f"that do fit" if missing_dish else
+                f"Here {'are' if n > 1 else 'is'} {n} {describe(onto, st)} pick{'s' if n > 1 else ''}")
         if st.include:
             head += " using " + ", ".join(onto.label(i) for i in st.include)
         if "spicy" in st.attributes and anchor is None:
@@ -348,14 +394,23 @@ class Assistant:
 _SMALL_TALK = [
     ("greeting", r"(hi+|hello+|hey+|hiya|helo|namaste|namaskar|hola|yo|sup|good\s+(morning|afternoon|evening|day))"
                  r"(\s+(there|nosh|bot|recipeforge|ji|friend))?"),
-    ("thanks", r"(no,?\s+)?(thanks|thank\s*you|thx|ty|dhanyavad|shukriya|ok(ay)?|cool|great|nice|awesome|perfect|got it)"
-               r"(\s+(so much|a lot|you))?"),
+    ("thanks", r"(no,?\s+)?(thanks|thank\s*you|thx|ty|dhanyavad|shukriya)(\s+(so much|a lot|you))?"),
+    ("ack", r"(ok(ay)?|cool|great|nice|awesome|perfect|got it|alright|fine|sure|yes|yeah|yup|hmm+|accha|achha|theek hai)"),
     ("bye", r"(bye|goodbye|see you|good\s*night|tata)"),
-    ("help", r"(help|what can you do|how (do|does) (you|this|it) work|who are you|what are you|what is this)"),
+    ("about", r"(who (made|built|created) (you|this)|who are you|what are you|what is this( app| site)?|"
+              r"are you (chatgpt|claude|an ai|a bot))"),
+    ("help", r"(help|what can you do|how (do|does) (you|this|it) work)"),
 ]
+# Swaps that only change a cooking fat (butter -> oil) aren't worth announcing.
+STYLE_ONLY = {"butter", "ghee"}
+OVERRIDE = re.compile(r"(ignore (all |any |the )?(previous|prior|above) (instructions|rules)|^\s*system\s*:|"
+                      r"(disable|turn off|remove|bypass|skip) (all |the )?(diet|allergy|safety)? ?(filters?|checks?|rules?)|"
+                      r"jailbreak|developer mode|pretend you)", re.I)
 
 
 def small_talk_kind(message: str) -> str | None:
+    if OVERRIDE.search(message):
+        return "override"
     text = re.sub(r"[\s!.?,:)(]+$", "", message.strip().lower())
     for kind, pat in _SMALL_TALK:
         if re.fullmatch(rf"{pat}(\s*[!.?,]+\s*{pat})*", text) or (kind == "help" and re.search(rf"\b{pat}\b", text)

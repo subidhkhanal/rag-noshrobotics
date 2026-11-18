@@ -45,6 +45,8 @@ SWEET_OR_DRINK = re.compile(
     r"brownies?|cookies?|tarts?|fudge|truffles?|cheesecake|muffins?|parfait|souffle|panna cotta|shrikhand|rasmalai|"
     r"jamun|jalebi|smoothie|milkshake|shake|lassi|juice|mocktail|cocktail|sherbet|sharbat|tea|coffee|cooler|punch|"
     r"lemonade|sorbet|granita|popsicle|candy|toffee|chikki|meetha|sweet)\b", re.I)
+SWEET_WANTED = re.compile(r"\b(sweet|dessert|mithai|cake|kheer|halwa|ladoo|laddu|barfi|cookies?|ice ?cream|"
+                          r"pudding|chocolate|smoothie|shake|lassi|juice|drink|beverage|tea|coffee|festive)\b", re.I)
 CONDIMENT = re.compile(r"\b(salsa|chutney|dip|raita|pickle|achar|sauce|dressing|thokku|podi|relish|jam|spread|pachadi)\b", re.I)
 
 
@@ -298,6 +300,8 @@ class Engine:
         relaxed: list[str] = []
 
         cand = [i for i in keep if self.recipes[i]["id"] not in exclude_ids]
+        if not COMPONENT_QUERY.search(c.text):
+            cand = [i for i in cand if not self.recipes[i].get("is_component")]
         for attr, ok in (("course", self._course_ok), ("cuisine", self._cuisine_ok)):
             val = getattr(c, attr)
             if val:
@@ -321,6 +325,12 @@ class Engine:
             narrowed = [i for i in cand if usual & set(self.recipes[i]["course_tags"])]
             if len(narrowed) >= 5:
                 cand = narrowed
+        if not (c.text.strip() or c.include or c.course or c.cuisine or c.prefer_non_veg):
+            # Nothing to rank by ("no mushrooms", "within an hour"): offer varied main dishes, not snacks or sweets.
+            mains = [i for i in cand if {"lunch", "dinner"} & set(self.recipes[i]["course_tags"]) and not self.is_sweet[i]
+                     and not self.is_condiment[i] and not self.is_baby[i] and not self.recipes[i].get("is_component")]
+            if len(mains) >= 10:
+                cand = mains
         trace["after_soft_filters"] = len(cand)
 
         qtext = self.query_text(c)
@@ -342,6 +352,22 @@ class Engine:
             return SearchOutput([], trace, blocked_examples, closest, relaxed)
 
         results = self._rank(c, cand, qtext, qvec, anchor_id, k, trace, profile=profile)
+        # "5 minute biryani": if the time limit leaves no dish of the named kind, say so and offer the quickest one.
+        content = {t for t in tokenize(c.text) if len(t) > 3}
+        include = set(c.include)
+        if c.max_time and content and results and not any(
+                content & self.name_tokens[self.by_id[r.recipe["id"]]] or include & self.lineages[self.by_id[r.recipe["id"]]]
+                for r in results):
+            keep2, _, _ = self.hard_filter(c, skip_time=True)
+            named = [i for i in keep2 if content & self.name_tokens[i] and self.recipes[i]["id"] not in exclude_ids
+                     and self.recipes[i]["total_min"] > 0 and not self.recipes[i].get("is_component")
+                     and not self.is_condiment[i] and not self.is_baby[i]
+                     and (not c.course or self._course_ok(i, c.course))
+                     and (not self.is_sweet[i] or c.course == "dessert" or SWEET_WANTED.search(qtext))]
+            if named:
+                best = min(named, key=lambda i: self.recipes[i]["total_min"])
+                closest = self._explain(best, 0.0, self.is_flagged(best, c), c, profile)
+                return SearchOutput([], trace, blocked_examples, closest, relaxed)
         return SearchOutput(results, trace, blocked_examples, None, relaxed)
 
     def _rank(self, c, cand, qtext, qvec, anchor_id, k, trace, profile=None) -> list[Result]:
@@ -409,6 +435,8 @@ class Engine:
                 s -= 0.8
             if self.is_condiment[i] and not CONDIMENT.search(qtext):
                 s -= 0.6
+            if self.is_sweet[i] and c.course != "dessert" and not SWEET_WANTED.search(qtext):
+                s -= 0.5
             flags = self.is_flagged(i, c)
             if flags:
                 s -= 0.35

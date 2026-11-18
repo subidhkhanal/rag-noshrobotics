@@ -6,6 +6,7 @@ const CKEY = "recipeforge.chats.v1";
 const MAX_CHATS = 20;
 const MAX_TURNS = 40;
 let chatId = null;
+let busy = false;
 let carried = [];  // chips remembered from an earlier chat: [{kind, value}]
 
 function loadChats() {
@@ -183,13 +184,16 @@ function renderChips(chips) {
 
 async function send(text) {
   text = text.trim();
-  if (!text) return;
+  if (!text || busy) return;
+  busy = true;
+  $("#form button").disabled = true;
   addUser(text);
   const typing = document.createElement("div");
   typing.className = "msg bot typing";
   typing.textContent = "Checking ingredients…";
   messages.appendChild(typing);
   typing.scrollIntoView({ behavior: "smooth", block: "end" });
+  const slow = setTimeout(() => { typing.textContent = "Reading your request carefully…"; }, 1200);
   try {
     const data = await api("/api/chat", { message: text, state, history: loadHistory() });
     state = data.state;
@@ -204,7 +208,11 @@ async function send(text) {
       c.carried = carried;
     });
   } catch (e) {
-    typing.textContent = `Something went wrong (${e.message}). Please try again.`;
+    typing.textContent = "Couldn't reach the server — please check your connection and try again.";
+  } finally {
+    clearTimeout(slow);
+    busy = false;
+    $("#form button").disabled = false;
   }
   messages.lastElementChild.scrollIntoView({ behavior: "smooth", block: "start" });
 }

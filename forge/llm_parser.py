@@ -50,8 +50,14 @@ def enabled() -> bool:
     return bool(os.getenv("ANTHROPIC_API_KEY"))
 
 
-def should_call(message: str) -> bool:
-    return bool(CUES.search(message))
+def should_call(message: str, understood: list[str] | None = None) -> bool:
+    """Call Claude only when a cue word survives after removing what the rules already turned into constraints."""
+    rest = " " + message.lower().replace("’", "'") + " "
+    rest = re.sub(r"n't\b", " not", rest)
+    for span in sorted(understood or [], key=len, reverse=True):
+        if span.strip():
+            rest = rest.replace(span.strip().lower(), " ")
+    return bool(CUES.search(rest))
 
 
 def _get_client():
