@@ -338,7 +338,8 @@ def normalize_message(onto: Ontology, message: str) -> str:
             hits = sorted(t for t in targets if len(lw) >= 5 and _edit1(lw, t))
         return hits[0] if len(hits) == 1 else w
 
-    return re.sub(r"[A-Za-z]+", fix, message)
+    # Collapse the spaces the replacements add: guards like "(?<!ke )bina" need single spaces.
+    return re.sub(r"\s+", " ", re.sub(r"[A-Za-z]+", fix, message))
 
 
 def canonical_text(message: str) -> str:

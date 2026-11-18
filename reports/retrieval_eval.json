@@ -1,14 +1,14 @@
 {
  "summary": {
   "en": {
-   "hit@5": 0.85,
-   "mrr@10": 0.6976322751322751,
-   "ndcg@10": 0.5596527065023633,
-   "p@5": 0.5733333333333334,
+   "hit@5": 0.8666666666666667,
+   "mrr@10": 0.6999470899470899,
+   "ndcg@10": 0.5603855557476931,
+   "p@5": 0.5766666666666667,
    "n": 60,
    "ndcg_ci": [
-    0.46161241109686824,
-    0.6557088611247611
+    0.4623452603421982,
+    0.6569459231378313
    ]
   },
   "hinglish": {
@@ -23,25 +23,25 @@
    ]
   },
   "devanagari": {
-   "hit@5": 0.9333333333333333,
-   "mrr@10": 0.8373611111111111,
-   "ndcg@10": 0.7517175256944328,
-   "p@5": 0.7833333333333333,
+   "hit@5": 0.95,
+   "mrr@10": 0.8540277777777778,
+   "ndcg@10": 0.7595388377948121,
+   "p@5": 0.7866666666666667,
    "n": 60,
    "ndcg_ci": [
-    0.6646398234446084,
-    0.8324435835801492
+    0.6767989920175329,
+    0.8372129968505959
    ]
   },
   "all": {
-   "hit@5": 0.9111111111111111,
-   "mrr@10": 0.8191247795414462,
-   "ndcg@10": 0.6895168566941161,
-   "p@5": 0.7155555555555556,
+   "hit@5": 0.9222222222222223,
+   "mrr@10": 0.8254519400352734,
+   "ndcg@10": 0.6923682438093525,
+   "p@5": 0.7177777777777777,
    "n": 180,
    "ndcg_ci": [
-    0.6417875929128087,
-    0.7377833583842265
+    0.6458796117270394,
+    0.7403750318996339
    ]
   }
  },
@@ -1849,7 +1849,7 @@
    "top3": [
     "Diabetic Friendly Green Moong Dal/ Mung Beans Soup",
     "Green Moong Dal Cheela - Savory Green Mung Bean Pancakes",
-    "Mung Bean & Tofu Salad With Sweet Potatoes, Cucumbers & Tomatoes"
+    "Thai Style Mung Bean Fritter"
    ]
   },
   {
@@ -1926,14 +1926,14 @@
    "id": "jeera_rice",
    "lang": "devanagari",
    "query": "जीरा राइस",
-   "hit@5": 0.0,
-   "mrr@10": 0.0,
-   "ndcg@10": 0.0,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 1.0,
+   "ndcg@10": 0.46927872602275644,
+   "p@5": 0.2,
    "top3": [
-    "Jeera Milagu Rasam - South Indian Pepper Cumin Rasam",
-    "Crispy Fried Kurkuri Bhindi Spiced With Cumin & Chaat Masala",
-    "Aamras - Ripe Mango Ras"
+    "Jeera Rice - Cumin And Ghee Flavored Rice",
+    "Malabar Style Ney Pathiri (Fried Masala Rice Puri)",
+    "Egg and Bread Fried Rice"
    ]
   },
   {
@@ -2108,14 +2108,14 @@
    "id": "shrikhand",
    "lang": "en",
    "query": "sweet strained yogurt dessert",
-   "hit@5": 0.0,
-   "mrr@10": 0.1111111111111111,
-   "ndcg@10": 0.10209739512291163,
-   "p@5": 0.0,
+   "hit@5": 1.0,
+   "mrr@10": 0.25,
+   "ndcg@10": 0.14606834984270645,
+   "p@5": 0.2,
    "top3": [
+    "Rajasthani Style Oliya (Sweetened Rice Yogurt Pudding)",
     "Healthy Fruit & Nut Watermelon Dessert With Greek Yogurt",
-    "Frozen Strawberry Yogurt",
-    "Rose Greek Yogurt Dessert With Pista & Coconut"
+    "Frozen Mango Yogurt-Mango Froyo"
    ]
   },
   {

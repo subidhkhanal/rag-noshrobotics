@@ -8,6 +8,7 @@ Both only change search words; diet and allergen checks never depend on them.
 """
 from __future__ import annotations
 
+import math
 import re
 from collections import Counter
 
@@ -93,6 +94,7 @@ def soft(word: str) -> str:
     """Spelling-insensitive form: long vowels, aspiration and doubled letters collapse."""
     w = word.lower()
     w = re.sub(r"ck", "k", w)
+    w = re.sub(r"c(?=[eiy])", "s", w)
     w = re.sub(r"c(?!h)", "k", w)
     w = w.replace("ph", "f").replace("w", "v").replace("z", "j").replace("q", "k").replace("x", "ks")
     w = re.sub(r"(?<=[bdgjklmnprtv])h", "", w)
@@ -108,14 +110,19 @@ def skeleton(word: str) -> str:
     return s[:1] + re.sub(r"[aeiouy]", "", s[1:])
 
 
-def _edit(a: str, b: str, cap: int = 3) -> int:
+def _edit(a: str, b: str, cap: int = 3) -> float:
+    """Edit distance where vowel changes cost half: romanizations disagree on vowels far more than consonants."""
     if abs(len(a) - len(b)) > cap:
         return cap + 1
-    prev = list(range(len(b) + 1))
-    for i, ca in enumerate(a, 1):
-        cur = [i]
+    cost = lambda ch: 0.5 if ch in "aeiouy" else 1.0  # noqa: E731
+    prev = [0.0]
+    for cb in b:
+        prev.append(prev[-1] + cost(cb))
+    for ca in a:
+        cur = [prev[0] + cost(ca)]
         for j, cb in enumerate(b, 1):
-            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (ca != cb)))
+            sub = 0.0 if ca == cb else (0.5 if ca in "aeiouy" and cb in "aeiouy" else 1.0)
+            cur.append(min(prev[j] + cost(ca), cur[j - 1] + cost(cb), prev[j - 1] + sub))
         prev = cur
     return prev[-1]
 
@@ -152,7 +159,8 @@ class Speller:
                     d = _edit(soft(w), s)
                     if d <= cap:
                         # Consonants survive romanization better than vowels: prefer the same skeleton.
-                        cands.append((key != sk, d, -self.vocab[w], w))
+                        # A common corpus word beats a rare one at similar distance ("rais" -> rice, not ras).
+                        cands.append((key != sk, d - 0.25 * math.log10(self.vocab[w]), w))
             best = min(cands)[-1] if cands else word
         self._cache[word] = best
         return best

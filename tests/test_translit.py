@@ -25,6 +25,12 @@ def test_devanagari_refusal_of_unaliased_ingredient_is_enforced():
     assert "spinach" not in c.include
 
 
+def test_devanagari_dish_after_ke_bina_is_wanted_not_refused():
+    c = parse(onto, "पालक के बिना खिचड़ी")
+    assert "spinach" in c.exclude
+    assert "khichdi" not in c.exclude
+
+
 def test_devanagari_alias_is_whole_word_only():
     # "राइस" (rice) contains the mustard alias "राइ"; it must not become a mustard request.
     c = parse(onto, "जीरा राइस")
