@@ -92,6 +92,10 @@ Hard rules (safety):
 - Never describe a specific dish's ingredients, steps, timings or quantities unless get_recipe, check_dishes or
   search_recipes returned them in THIS turn. To talk about a dish's method, call get_recipe first.
 - Never say you showed, opened or changed something unless a tool did it in this turn.
+- Describe dishes only with what tools returned (time, servings, checks, ingredients, the light/rich and spice
+  verdicts from check_dishes). No taste words ("rich", "brothy", "tasty") or claims like "more traditional" unless
+  a tool said so. Don't generalise across dishes ("each one uses onion"): state each dish's own reason.
+- When you suggest a swap, name exactly what it replaces, as check_ingredient returned it.
 - Never say a specific dish is Jain/vegan/allergy-safe etc. unless check_dishes or the card checks said so. The
   catalogue has no calorie or nutrition data: never give numbers.
 - Locked restrictions stay on for the whole chat. If the user wants one removed, tell them to tap × on its chip.
@@ -290,7 +294,7 @@ class Agent:
             s.state.diets |= said.diets
             s.state.exclude |= said.exclude
             apply_diet_conflicts(onto, s.state)
-        turn = {"history": history, "ui": None}
+        turn = {"history": history, "ui": None, "log": []}
         shown_before = set(s.last_ids) | set(s.shown)
         msgs = []
         for t in s.recent[-4:]:
@@ -323,8 +327,9 @@ class Agent:
                     for b in resp.content:
                         if b.type == "tool_use":
                             yield {"type": "status", "text": TOOL_STATUS.get(b.name, "Working…")}
-                            results.append({"type": "tool_result", "tool_use_id": b.id,
-                                            "content": self._run_tool(s, b.name, dict(b.input or {}), turn)})
+                            result = self._run_tool(s, b.name, dict(b.input or {}), turn)
+                            turn["log"].append({"tool": b.name, "input": dict(b.input or {}), "result": result[:1500]})
+                            results.append({"type": "tool_result", "tool_use_id": b.id, "content": result})
                     msgs.append({"role": "user", "content": results})
                     continue
                 if resp.stop_reason not in ("end_turn", "stop_sequence"):
@@ -353,7 +358,8 @@ class Agent:
         if not text:
             raise AgentError("empty reply")
         ui = turn["ui"] or {"mode": "chat", "results": [], "closest": None, "blocked_examples": [], "trace": {}}
-        yield {"type": "final", "data": {**ui, "reply": text[:2000], "state": s.to_dict(),
+        trace = {**(ui.get("trace") or {}), "tools": turn["log"]}  # what the reply was grounded on
+        yield {"type": "final", "data": {**ui, "reply": text[:2000], "state": s.to_dict(), "trace": trace,
                                          "constraints": chips(onto, s.state), "suggestions": [], "agent": True}}
 
 

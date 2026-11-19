@@ -4,10 +4,10 @@
 
 | Config | Results | Silent violations | Checker hits that were flagged ⚠ | Flagged ⚠ | Empty | Ingredient coverage | Course match | Cuisine match | Intra-list sim | p50 ms | p95 ms | Cold start s |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| BM25 only | 250 | **0** | 0 | 10 | 0 | 0.85 | 0.96 | 1.00 | 0.656 | 11 | 41 |  |
-| Fast: BM25 + Model2Vec (deployed) | 250 | **0** | 0 | 20 | 0 | 0.89 | 0.98 | 1.00 | 0.693 | 11 | 13 | 0.5 |
-| Full: BM25 + bge-small | 250 | **0** | 0 | 12 | 0 | 0.82 | 0.99 | 1.00 | 0.669 | 19 | 48 |  |
-| Full: BM25 + bge-small + cross-encoder | 250 | **0** | 0 | 8 | 0 | 0.81 | 0.99 | 1.00 | 0.672 | 485 | 706 | 1.3 |
+| BM25 only | 250 | **0** | 0 | 10 | 0 | 0.85 | 0.96 | 1.00 | 0.656 | 32 | 223 |  |
+| Fast: BM25 + Model2Vec (deployed) | 250 | **0** | 0 | 20 | 0 | 0.89 | 0.98 | 1.00 | 0.693 | 36 | 46 | 1.3 |
+| Full: BM25 + bge-small | 250 | **0** | 0 | 12 | 0 | 0.82 | 0.99 | 1.00 | 0.669 | 51 | 435 |  |
+| Full: BM25 + bge-small + cross-encoder | 250 | **0** | 0 | 8 | 0 | 0.81 | 0.99 | 1.00 | 0.672 | 628 | 843 | 7.7 |
 
 ## Reading the table
 

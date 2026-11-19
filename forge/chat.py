@@ -218,7 +218,10 @@ class Assistant:
         """Obvious standalone requests ("jain dinner") and exact card references ("explain monday") are answered
         instantly by the deterministic pipeline; everything conversational goes to the agent."""
         s = session_from(self.engine, state)
-        if not dish_qa.is_dish_question(message) and self._explicit_card(s, message) is not None:
+        # Only a reference the rules fully resolve ("explain friday") is instant; "swap friday's dish for dal" names
+        # a day but asks for something else, so it goes to the agent.
+        card = None if dish_qa.is_dish_question(message) else self._explicit_card(s, message)
+        if card is not None and self._referenced_recipe(s, message) == card and not CHATTY.search(message):
             return True
         parsed = parse(self.engine.onto, message)
         if small_talk_kind(message) or self._needs_understanding(s, message, parsed):
