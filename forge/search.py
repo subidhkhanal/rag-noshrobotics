@@ -361,6 +361,15 @@ class Engine:
                 keep.append(i)
         return keep, removed, blocked_reason
 
+    def _only_ingredients(self, c: Constraints) -> bool:
+        """True when the request names ingredients and nothing else (no dish, course or style words)."""
+        names = set()
+        for i in [*c.include, *c.conflicts, *c.swaps, *c.exclude]:
+            names |= set(tokenize(self.onto.label(i))) | set(i.split("_"))
+        rest = {w for w in tokenize(c.text or "")
+                if not ({w, w[:-1], w[:-2]} & names)}  # tomatoes -> tomato
+        return not rest
+
     def _occasion_filters(self, c: Constraints, cand: list[int], want: set, trace: dict) -> list[int]:
         """Soft, common-sense narrowing for occasion and audience words. Each step applies only if 5+ dishes
         survive it, and none of them is a locked restriction."""
@@ -530,6 +539,9 @@ class Engine:
             # A vague request with no course ("comfort food for a rainy day", "halka khana") means a dish to eat,
             # not a drink, dessert or chutney.
             meal = {"main", "side", "soup", "salad", "breakfast", "snack", "bread"}
+        if not meal and c.pantry_mode and c.include and self._only_ingredients(c):
+            # "I have paneer, what can I cook?": a proper dish built on it, not a fruit platter or a drink.
+            meal = {"main", "side", "soup", "breakfast"}
         if meal:
             narrowed = [i for i in cand if self.recipes[i].get("dish_type", "main") in meal]
             if len(narrowed) >= 5:

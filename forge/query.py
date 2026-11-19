@@ -151,7 +151,8 @@ FILLER = re.compile(
     r"else|different|instead|also|only|just|then|again|one|ones|any|non veg|non vegetarian|nonveg|other|than|usually|"
     r"from|with|up|bit|little|really|very|so|too|much|kind|type|sort|get|try|eat|ate|not|week|weekly|plan|"
     r"planner|menu|meals?|days?|nights?|usually|normally|always|cook|cooked|made|last|actually|okay|ok|yes|sure|"
-    r"less|lesser|too)\b",
+    r"less|lesser|too|search|look|looking|items?|prepare|help|use|using|tell|let|lemme|pick|choose|select|"
+    r"dhundo|batao|bataiye|banao|banaiye)\b",
     re.I,
 )
 

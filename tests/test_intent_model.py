@@ -61,3 +61,12 @@ def test_defers_without_screen():
 def test_defers_general_questions(shown):
     for msg in ("why is ginger not allowed in jain food?", "tell me a joke", "thanks, this was really helpful!"):
         assert local(shown, msg) is None, msg
+
+
+def test_pantry_request_words_are_not_a_dish_name():
+    """Live bug: "i have panner search for an item and cook it" searched for a dish called "paneer search item"."""
+    out = assistant._chat({"diets": ["jain"]}, "i have panner search for an item and cook it", understand=False)
+    assert out["parsed"]["text"] == "paneer"
+    assert "couldn't find" not in out["reply"]
+    types = {assistant.engine.recipes[assistant.engine.by_id[r["id"]]].get("dish_type") for r in out["results"]}
+    assert types <= {"main", "side", "soup", "breakfast"}
