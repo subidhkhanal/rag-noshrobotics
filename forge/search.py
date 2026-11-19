@@ -134,6 +134,9 @@ OILY = re.compile(r"\b(fr(y|ied|ies|itters?)|pakor[ae]s?|pakod[ae]s?|bhajj?(i|ia
                   r"chilli oil|red oil|deep)\b", re.I)
 NOT_OILY = re.compile(r"\b(not|less|without|no|kam|na|nahi)\s+(too\s+|so\s+|very\s+)?(oily|greasy|fried|tel\w*)\b|"
                       r"\b(low|less|no|kam)[- ]oil\b", re.I)
+KID_HOT_IDS = {"green_chilli", "curry_paste", "chilli_sauce", "chilli"}
+KID_HOT_NAME = re.compile(r"\b(chill?i|chilly|mirchi|schezwan|szechuan|sichuan|thai|peri[- ]?peri|vindaloo|kolhapuri|"
+                          r"chettinad|teekh[ae]|tikha|spicy|hot|jalape[nñ]o|laal maas|pepper)\b", re.I)
 CHILLED = re.compile(r"\b(chilled|cold|iced|gazpacho)\b", re.I)
 WARM_WANTED = re.compile(r"\b(warm|hot soup|warming|for the cold|winter|rainy|monsoon|baarish)\b", re.I)
 CONDIMENT = re.compile(r"\b(salsa|chutney|dip|raita|pickle|achar|sauce|dressing|thokku|podi|relish|jam|spread|pachadi)\b", re.I)
@@ -374,9 +377,10 @@ class Engine:
         if VEG_FESTIVAL.search(said) and not MEAT_WORDS.search(said) and not c.prefer_non_veg:
             narrow(lambda i: self.recipes[i]["verdicts"]["vegetarian"]["status"] != "block", "festival: vegetarian")
         if "kid_friendly" in want and not BABY.search(said):
-            # Kids: no baby purees, nothing with green chillies (chaat-style "mild" still bites).
-            narrow(lambda i: not self.is_baby[i] and "green_chilli" not in self.recipes[i]["ingredient_ids"],
-                   "kids: no baby food or green chilli")
+            # Kids: no baby purees, nothing with green chillies, curry pastes or chilli sauces, and no dish whose name
+            # says it's hot (chaat-style or Thai-curry "mild" still bites).
+            narrow(lambda i: not self.is_baby[i] and not KID_HOT_IDS & set(self.recipes[i]["ingredient_ids"])
+                   and not KID_HOT_NAME.search(self.recipes[i]["name"]), "kids: no baby food or chilli heat")
         if NOT_OILY.search(said):
             narrow(lambda i: not OILY.search(self.recipes[i]["name"]) and not OILY.search(self.recipes[i].get("description", "")),
                    "not oily: no fried dishes")
