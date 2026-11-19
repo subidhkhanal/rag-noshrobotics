@@ -248,14 +248,16 @@ function addBot(data) {
     const d = data.detail;
     if (d.ingredients.length) html += `<div class="detail"><h4>Ingredients</h4><ul>${d.ingredients.map((x) => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
     const rb = data.results?.[0]?.robot;
-    if (d.steps.length && rb?.fit === "robot" && rb.prep.length) {
-      // Split the method: what you do by hand, then what the Nosh One does.
-      const prep = new Set(rb.prep);
+    if (d.steps.length && rb?.fit === "robot" && (rb.prep?.length || rb.finish?.length)) {
+      // Split the method in order: your hand prep, what the Nosh One cooks, and your finishing touches.
+      const prep = new Set(rb.prep || []), finish = new Set(rb.finish || []);
       const mine = d.steps.filter((x) => prep.has(x));
-      const robot = d.steps.filter((x) => !prep.has(x));
-      html += `<div class="detail prep-steps"><h4>✋ Your prep</h4><ol>${mine.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
-        <p class="sub">Chop and measure these, then load the ingredient tray, oil and water.</p></div>`;
+      const done = d.steps.filter((x) => finish.has(x));
+      const robot = d.steps.filter((x) => !prep.has(x) && !finish.has(x));
+      if (mine.length) html += `<div class="detail prep-steps"><h4>✋ Your prep</h4><ol>${mine.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
+        <p class="sub">Do these by hand first, then load the ingredient tray, oil and water.</p></div>`;
       html += `<div class="detail"><h4>🤖 Nosh One cooks</h4><ol>${robot.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>`;
+      if (done.length) html += `<div class="detail prep-steps"><h4>✋ You finish</h4><ol>${done.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>`;
     } else if (d.steps.length) {
       html += `<div class="detail"><h4>Steps</h4><ol>${d.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol></div>`;
     }

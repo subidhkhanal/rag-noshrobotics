@@ -82,3 +82,21 @@ def test_import_sample_catalogue(tmp_path):
     assert "SAMPLE Phulka" not in names and "SAMPLE Moong Dal Khichdi" in names
     jain = [c["name"] for c in a.chat(None, "jain dinner")["results"]]
     assert "SAMPLE Jeera Aloo" not in jain  # potato isn't Jain: diet checks run on imported recipes too
+
+
+def test_steps_split_in_order_prep_robot_finish():
+    from forge.robot import split_steps
+    steps = ["Prepare cornstarch paste by mixing cornstarch in cold water.", "Mix condensed milk and milk powder.",
+             "Take mango puree in a non stick saucepan kept on medium heat.", "Add the paste and mix well.",
+             "Let it cook until it thickens.", "Once done turn off the heat.",
+             "Grease your palms with ghee and shape into balls.", "Serve as a dessert."]
+    prep, robot, finish = split_steps(steps)
+    assert prep == steps[:2] and robot == steps[2:6] and finish == steps[6:]
+
+
+def test_pressure_cooking_before_the_pan_is_prep():
+    from forge.robot import split_steps
+    steps = ["Pressure cook the raw bananas for 2 whistles.", "Turn off the heat and allow the pressure to release.",
+             "Heat oil in a kadai.", "Add cumin seeds and the bananas.", "Cook for 5 minutes.", "Serve hot."]
+    prep, robot, finish = split_steps(steps)
+    assert prep == steps[:2] and robot == steps[2:5] and finish == steps[5:]

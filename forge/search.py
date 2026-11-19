@@ -134,6 +134,11 @@ OILY = re.compile(r"\b(fr(y|ied|ies|itters?)|pakor[ae]s?|pakod[ae]s?|bhajj?(i|ia
                   r"chilli oil|red oil|deep)\b", re.I)
 NOT_OILY = re.compile(r"\b(not|less|without|no|kam|na|nahi)\s+(too\s+|so\s+|very\s+)?(oily|greasy|fried|tel\w*)\b|"
                       r"\b(low|less|no|kam)[- ]oil\b", re.I)
+# Main ingredients people name on their own to mean "a dish with this" (proteins and everyday vegetables).
+MAIN_INGREDIENTS = {"paneer", "chickpeas", "kidney_beans", "tofu", "soy_chunks", "egg", "chicken", "mutton", "fish",
+                    "shellfish", "potato", "cauliflower", "cabbage", "spinach", "okra", "brinjal", "mushroom", "peas",
+                    "capsicum", "carrot", "bottle_gourd", "pumpkin", "beans", "raw_banana", "corn", "methi", "beetroot",
+                    "sweet_potato", "drumstick", "bitter_gourd", "ridge_gourd", "colocasia", "yam"}
 KID_HOT_IDS = {"green_chilli", "curry_paste", "chilli_sauce", "chilli"}
 KID_HOT_NAME = re.compile(r"\b(chill?i|chilly|mirchi|schezwan|szechuan|sichuan|thai|peri[- ]?peri|vindaloo|kolhapuri|"
                           r"chettinad|teekh[ae]|tikha|spicy|hot|jalape[nñ]o|laal maas|pepper|nasi lemak|sambal)\b", re.I)
@@ -539,7 +544,11 @@ class Engine:
             # A vague request with no course ("comfort food for a rainy day", "halka khana") means a dish to eat,
             # not a drink, dessert or chutney.
             meal = {"main", "side", "soup", "salad", "breakfast", "snack", "bread"}
-        if not meal and c.pantry_mode and c.include and self._only_ingredients(c):
+        # One main ingredient named on its own ("chicken", "paneer"; under Jain, chicken -> paneer): dishes built on
+        # it. Dish-like ingredients (poha, roti, dhokla) are searched as the dish itself.
+        asked = (set(c.include) - set(c.swaps.values())) | set(c.conflicts)
+        bare = len(asked) == 1 and asked <= MAIN_INGREDIENTS and len(tokenize(c.text or "")) <= 2
+        if not meal and (c.pantry_mode or bare) and c.include and self._only_ingredients(c):
             # "I have paneer, what can I cook?": a proper dish built on it, not a fruit platter or a drink.
             meal = {"main", "side", "soup", "breakfast"}
         if meal:

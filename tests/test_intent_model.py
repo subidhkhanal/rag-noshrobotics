@@ -70,3 +70,22 @@ def test_pantry_request_words_are_not_a_dish_name():
     assert "couldn't find" not in out["reply"]
     types = {assistant.engine.recipes[assistant.engine.by_id[r["id"]]].get("dish_type") for r in out["results"]}
     assert types <= {"main", "side", "soup", "breakfast"}
+
+
+def test_bare_ingredient_gives_proper_dishes():
+    """Live bug: "chicken" under Jain (swapped to paneer) suggested stuffed strawberries and a grapes platter."""
+    out = assistant._chat({"diets": ["jain"]}, "chicken", understand=False)
+    types = {assistant.engine.recipes[assistant.engine.by_id[r["id"]]].get("dish_type") for r in out["results"]}
+    assert out["results"] and types <= {"main", "side", "soup", "breakfast"}
+
+
+def test_cook_a_card_by_name_opens_it():
+    """Live bug: "cook the milk peda for me" with Milk Peda on screen started a new search."""
+    st = assistant._chat({"diets": ["jain"]}, "milk", understand=False)["state"]
+    names = {rid: assistant.engine.recipes[assistant.engine.by_id[rid]]["name"] for rid in st["last_ids"]}
+    peda = [rid for rid, n in names.items() if n == "Milk Peda"]
+    if not peda:
+        pytest.skip("Milk Peda not in this result set")
+    out = assistant._chat(st, "cook the milk peda for me", understand=False)
+    assert out["mode"] == "detail" and out["results"][0]["id"] == peda[0]
+    assert assistant._chat(st, "show me peda recipes", understand=False)["mode"] == "search"

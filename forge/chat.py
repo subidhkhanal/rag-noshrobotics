@@ -78,6 +78,11 @@ PRONOUN = re.compile(r"\b(it|its|it's|this|that)\b(?!\s+(one|ones|day)\b)|\b(ye|
                      r"wo|woh|use|usme|uska|uski)\b|(?<![\wऀ-ॿ])(यह|ये|इस|इसमें|इसका|इसकी|इसे|वह|वो|उसमें|उसका)(?![\wऀ-ॿ])",
                      re.I)
 MIDDLE = re.compile(r"\b(middle|beech wala|beech wali|bich wala)\b|बीच", re.I)
+ASK_COOK = re.compile(r"(?<!\w)(cook|make|prepare|bana\w*|recipe|open|show|how|steps|method|explain|try|walk me through)(?!\w)", re.I)
+MANY = re.compile(r"(?<!\w)(something|anything|recipes|dishes|options|ideas|more|other|others|different|another|some|any|similar|varieties|types|kinds|\w+s like)(?!\w)", re.I)
+NAME_ASK_WORDS = {"cook", "make", "prepare", "recipe", "open", "show", "how", "steps", "step", "method",
+                  "explain", "try", "walk", "through", "for", "the", "please", "can", "you", "me", "let",
+                  "banao", "banaye", "banana", "bana", "want", "this", "that", "one", "now", "today"}
 DEVA = re.compile(r"[ऀ-ॿ]")
 RECALL_CUE = re.compile(r"\b(again|earlier|before|previous|last time|go back|pichl|pehle|remind|recap|"
                         r"you (suggested|showed|gave|recommended|mentioned|said)|suggested|recommended)\b", re.I)
@@ -236,6 +241,8 @@ class Assistant:
         # a day but asks for something else, so it goes to the agent.
         card = None if dish_qa.is_dish_question(message) else self._explicit_card(s, message)
         if card is not None and self._referenced_recipe(s, message) == card and not CHATTY.search(message):
+            return True
+        if self._named_card(s, message) is not None:
             return True
         parsed = parse(self.engine.onto, message)
         if small_talk_kind(message) or self._needs_understanding(s, message, parsed):
@@ -410,6 +417,9 @@ class Assistant:
             certain = self._explicit_card(s, message)
             if certain is not None and self._referenced_recipe(s, message) == certain:
                 return self._detail_reply(s, certain, message)
+        named = self._named_card(s, message)
+        if named is not None:
+            return self._detail_reply(s, named, message)
         cmd = None
         if understand and commander.enabled() and self._needs_understanding(s, message, parsed):
             cmd = self._command(s, message)
@@ -501,6 +511,21 @@ class Assistant:
         nums = {int(a or b) for a, b in NUMBERED.findall(message)}
         hits = {by_label[d] for d in days} | {s.last_ids[n - 1] for n in nums if 1 <= n <= len(s.last_ids)}
         return hits.pop() if len(hits) == 1 else None
+
+    def _named_card(self, s: Session, message: str) -> int | None:
+        """A dish on screen asked for by name with a cooking verb ("cook the milk peda for me"): exactly one card's
+        name holds every content word of the message. Anything less certain is not treated as a reference."""
+        if not s.last_ids or not ASK_COOK.search(message) or dish_qa.is_dish_question(message):
+            return None
+        if MANY.search(message):
+            return None  # "show me peda recipes", "other pedas": asking for more dishes, not this card
+        words = {w for w in tokenize(message.lower()) if len(w) > 2} - FOOD_STOP - NAME_ASK_WORDS
+        said = parse(self.engine.onto, message).understood  # "spicy", "quick": attributes, not part of a name
+        words -= {w for span in said for w in tokenize(span.lower())}
+        if not words or not words & self._strong_food_vocab:
+            return None
+        hits = [rid for rid in s.last_ids if words <= self.engine.name_tokens[self.engine.by_id[rid]]]
+        return hits[0] if len(hits) == 1 else None
 
     def _referenced_recipe(self, s: Session, message: str) -> int | None:
         """Recipe id a follow-up points at ("how to make the first one", "#2", "the mushroom matar one")."""
