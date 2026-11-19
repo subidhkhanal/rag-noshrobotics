@@ -136,7 +136,7 @@ NOT_OILY = re.compile(r"\b(not|less|without|no|kam|na|nahi)\s+(too\s+|so\s+|very
                       r"\b(low|less|no|kam)[- ]oil\b", re.I)
 KID_HOT_IDS = {"green_chilli", "curry_paste", "chilli_sauce", "chilli"}
 KID_HOT_NAME = re.compile(r"\b(chill?i|chilly|mirchi|schezwan|szechuan|sichuan|thai|peri[- ]?peri|vindaloo|kolhapuri|"
-                          r"chettinad|teekh[ae]|tikha|spicy|hot|jalape[nñ]o|laal maas|pepper)\b", re.I)
+                          r"chettinad|teekh[ae]|tikha|spicy|hot|jalape[nñ]o|laal maas|pepper|nasi lemak|sambal)\b", re.I)
 CHILLED = re.compile(r"\b(chilled|cold|iced|gazpacho)\b", re.I)
 WARM_WANTED = re.compile(r"\b(warm|hot soup|warming|for the cold|winter|rainy|monsoon|baarish)\b", re.I)
 CONDIMENT = re.compile(r"\b(salsa|chutney|dip|raita|pickle|achar|sauce|dressing|thokku|podi|relish|jam|spread|pachadi)\b", re.I)
