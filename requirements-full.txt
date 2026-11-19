@@ -3,3 +3,4 @@ uvicorn[standard]>=0.29
 fastembed>=0.4
 pandas>=2.1
 pytest>=8.0
+scikit-learn>=1.5  # scripts/train_intent.py only

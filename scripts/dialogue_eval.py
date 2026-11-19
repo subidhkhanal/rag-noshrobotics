@@ -72,6 +72,7 @@ def run(rules_only: bool = False, verbose: bool = False) -> dict:
     cases = yaml.safe_load((ROOT / "data" / "eval" / "dialogue.yaml").read_text(encoding="utf-8"))
     by_tag: dict[str, list[int]] = defaultdict(lambda: [0, 0])
     fails, latencies = [], []
+    local = [0, 0]  # turns the distilled classifier answered without Claude: [correct, total]
     for case in cases:
         state = None
         for msg in case["setup"]:
@@ -91,13 +92,18 @@ def run(rules_only: bool = False, verbose: bool = False) -> dict:
                 why = f"crash: {e!r}"[:120]
             latencies.append(time.perf_counter() - t)
             ok = why is None
+            if (out.get("trace") or {}).get("understood_by") == "classifier" if why is None or not why.startswith("crash") else False:
+                local[0] += ok
+                local[1] += 1
+                if not ok and verbose:
+                    print(f"  classifier wrong: {turn['say']!r}: {why}")
             for tag in (turn["tag"], "all"):
                 by_tag[tag][0] += ok
                 by_tag[tag][1] += 1
             if not ok:
                 fails.append((turn["tag"], turn["say"], why))
     latencies.sort()
-    return {"by_tag": dict(by_tag), "fails": fails,
+    return {"by_tag": dict(by_tag), "fails": fails, "classifier": local,
             "p50_ms": 1000 * latencies[len(latencies) // 2], "p95_ms": 1000 * latencies[int(len(latencies) * .95) - 1]}
 
 
@@ -106,10 +112,13 @@ if __name__ == "__main__":
     ap.add_argument("--rules-only", action="store_true")
     ap.add_argument("--fails", action="store_true")
     args = ap.parse_args()
-    res = run(args.rules_only)
+    res = run(args.rules_only, verbose=args.fails)
     print(f"{'slice':14}{'pass':>6}{'n':>5}{'rate':>8}")
     for tag, (ok, n) in sorted(res["by_tag"].items(), key=lambda kv: (kv[0] == "all", kv[0])):
         print(f"{tag:14}{ok:>6}{n:>5}{ok / n:>8.0%}")
+    ok, n = res["classifier"]
+    total = res["by_tag"]["all"][1]
+    print(f"answered by the distilled classifier (no Claude call): {n}/{total} ({n / total:.0%}), correct {ok}/{n}")
     print(f"latency p50 {res['p50_ms']:.0f} ms, p95 {res['p95_ms']:.0f} ms")
     if args.fails:
         for tag, say, why in res["fails"]:

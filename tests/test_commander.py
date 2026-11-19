@@ -1,6 +1,7 @@
 import pytest
 
 from forge import commander
+import forge.chat as chat_mod
 from forge.chat import Assistant
 from forge.search import Engine
 
@@ -32,6 +33,7 @@ def test_validate_clarify_without_question_never_picks_a_card():
 
 @pytest.fixture
 def fake(monkeypatch):
+    monkeypatch.setattr(chat_mod, "INTENT_MODEL", False)  # these tests cover the Claude path
     calls = []
 
     def install(cmd):

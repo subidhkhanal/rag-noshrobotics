@@ -35,6 +35,11 @@ Built as a working answer to failures observed in a production cooking-robot ass
   - The hardware figures come from public reports, not from Nosh, and are environment settings. See [forge/robot.py](forge/robot.py).
 - **Runs on your own catalogue.** `scripts/import_catalogue.py` loads a JSON export of a robot maker's recipes, including its own robot data, which overrides the rule-based guesses. It maps every ingredient to the ontology and builds the index. Format: [docs/catalogue_format.md](docs/catalogue_format.md).
 - **Talks like an assistant.** Claude holds the conversation and writes the replies, which stream as they're written. Every fact comes from tools over the code above: search, recipe details, dish checks, ingredient checks, weekly plans and recall. Safety stays in code: locked restrictions apply inside the search tool, only the chip × removes one, and replies may only name dishes the tools returned. Obvious requests ("jain dinner") skip the model and answer instantly.
+- **Answers follow-ups without an LLM call when it's sure.** A small classifier distilled from Claude takes follow-ups about dishes on screen ("ingredients for thursday", "teesre wale mein kya dalta hai", "is it spicy?") and answers them in about 1 ms inside the serverless function.
+  - It is logistic regression over hashed character and word n-grams, 1.2 MB, numpy only.
+  - It was trained on 3,132 messages Claude wrote for labelled situations in English, Hinglish and Devanagari ([scripts/distill_data.py](scripts/distill_data.py), [scripts/train_intent.py](scripts/train_intent.py)).
+  - Code works out which dish the message means. When the classifier isn't confident, or the dish isn't certain, the turn goes to Claude as before.
+  - On the hand-written 123-turn gold set, which was never used in training, it answers 31% of turns alone and gets 38 of 38 right.
 
 ## Results
 

@@ -121,6 +121,21 @@ SWEET_OR_DRINK = re.compile(
     r"lemonade|sorbet|granita|popsicle|candy|toffee|chikki|meetha|sweet)\b", re.I)
 SWEET_WANTED = re.compile(r"\b(sweet|dessert|mithai|cake|kheer|halwa|ladoo|laddu|barfi|cookies?|ice ?cream|"
                           r"pudding|chocolate|smoothie|shake|lassi|juice|drink|beverage|tea|coffee|festive)\b", re.I)
+SWEET_ONLY = re.compile(r"\b(sweet|dessert|mithai|meetha)\b", re.I)
+DRINK_WANTED = re.compile(r"\b(drinks?|beverages?|smoothie|shake|lassi|juice|mocktail|sharbat|sherbet|cooler|tea|coffee)\b", re.I)
+# Hindu festivals where the festive table is usually vegetarian. A soft preference, never a locked diet: naming meat
+# ("diwali mutton biryani") turns it off.
+VEG_FESTIVAL = re.compile(r"\b(diwali|deepavali|navratri|navaratri|janmashtami|ganesh chaturthi|ganpati|ganeshotsav|holi|"
+                          r"raksha ?bandhan|rakhi|karva ?chauth|dussehra|dasara|pongal|sankranti|ugadi|gudi padwa|teej|"
+                          r"chhath|onam|vishu|dhanteras|bhai dooj|diwali)\b|दिवाली|दीवाली|नवरात्रि|होली|जन्माष्टमी", re.I)
+MEAT_WORDS = re.compile(r"\b(chicken|mutton|lamb|goat|meat|keema|fish|prawns?|shrimp|egg|eggs|non[- ]?veg|beef|pork|"
+                        r"crab|seafood|gosht|murg|machli|macchi|anda)\b", re.I)
+OILY = re.compile(r"\b(fr(y|ied|ies|itters?)|pakor[ae]s?|pakod[ae]s?|bhajj?(i|ia|iya)s?|vad[ae]s?|crispy|tempura|"
+                  r"chilli oil|red oil|deep)\b", re.I)
+NOT_OILY = re.compile(r"\b(not|less|without|no|kam|na|nahi)\s+(too\s+|so\s+|very\s+)?(oily|greasy|fried|tel\w*)\b|"
+                      r"\b(low|less|no|kam)[- ]oil\b", re.I)
+CHILLED = re.compile(r"\b(chilled|cold|iced|gazpacho)\b", re.I)
+WARM_WANTED = re.compile(r"\b(warm|hot soup|warming|for the cold|winter|rainy|monsoon|baarish)\b", re.I)
 CONDIMENT = re.compile(r"\b(salsa|chutney|dip|raita|pickle|achar|sauce|dressing|thokku|podi|relish|jam|spread|pachadi)\b", re.I)
 
 
@@ -343,6 +358,32 @@ class Engine:
                 keep.append(i)
         return keep, removed, blocked_reason
 
+    def _occasion_filters(self, c: Constraints, cand: list[int], want: set, trace: dict) -> list[int]:
+        """Soft, common-sense narrowing for occasion and audience words. Each step applies only if 5+ dishes
+        survive it, and none of them is a locked restriction."""
+        text = c.text or ""
+        said = " ".join([text, *c.understood])
+
+        def narrow(keep, label):
+            nonlocal cand
+            kept = [i for i in cand if keep(i)]
+            if len(kept) >= 5:
+                cand = kept
+                trace.setdefault("occasion", []).append(label)
+
+        if VEG_FESTIVAL.search(said) and not MEAT_WORDS.search(said) and not c.prefer_non_veg:
+            narrow(lambda i: self.recipes[i]["verdicts"]["vegetarian"]["status"] != "block", "festival: vegetarian")
+        if "kid_friendly" in want and not BABY.search(said):
+            # Kids: no baby purees, nothing with green chillies (chaat-style "mild" still bites).
+            narrow(lambda i: not self.is_baby[i] and "green_chilli" not in self.recipes[i]["ingredient_ids"],
+                   "kids: no baby food or green chilli")
+        if NOT_OILY.search(said):
+            narrow(lambda i: not OILY.search(self.recipes[i]["name"]) and not OILY.search(self.recipes[i].get("description", "")),
+                   "not oily: no fried dishes")
+        if WARM_WANTED.search(said):
+            narrow(lambda i: not CHILLED.search(self.recipes[i]["name"]), "warm: no chilled dishes")
+        return cand
+
     def is_flagged(self, i: int, c: Constraints) -> list[str]:
         r = self.recipes[i]
         notes = []
@@ -477,7 +518,10 @@ class Engine:
             if len(narrowed) >= 5:
                 cand = narrowed
             trace["qualities"] = sorted(want)
+        cand = self._occasion_filters(c, cand, want, trace)
         meal = MEAL_TYPES.get(c.course or "")
+        if not meal and SWEET_ONLY.search(c.text or "") and not DRINK_WANTED.search(c.text or ""):
+            meal = {"dessert", "snack"}  # "something sweet" is a sweet dish, not a mocktail
         if not meal and want and not SWEET_WANTED.search(c.text or "") and not CONDIMENT.search(c.text or ""):
             # A vague request with no course ("comfort food for a rainy day", "halka khana") means a dish to eat,
             # not a drink, dessert or chutney.

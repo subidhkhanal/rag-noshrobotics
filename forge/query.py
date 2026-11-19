@@ -492,6 +492,8 @@ def parse(onto: Ontology, message: str) -> Constraints:
     # Comparatives ("spicier", "lighter") adjust results; they are never dish names.
     c.text = re.sub(r"\s+", " ", re.sub(r"\b(spicier|milder|creamier|crispier|healthier|lighter|tangier|quicker|faster|"
                                         r"richer|simpler|easier|heavier)\b", " ", c.text)).strip()
+    if any(re.search(r"\b(not|less|without|no|kam)\b", sp) for sp in attr_spans if re.search(r"oily|greasy|heavy|rich", sp)):
+        c.text = re.sub(r"\b(oily|greasy|heavy|rich)\b", " ", c.text).strip()  # "not too oily" is not a search for oily
     if "mild" in c.attributes:
         c.text = re.sub(r"\b(spicy|spicier|spice|teekha|tikha|hot)\b", " ", c.text).strip()
     rewrite_swapped_text(onto, c)

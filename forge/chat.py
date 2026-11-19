@@ -10,7 +10,7 @@ from functools import cached_property
 
 import httpx
 
-from . import agent as agent_mod, commander, dish_qa, llm_parser
+from . import agent as agent_mod, commander, dish_qa, intent_model, llm_parser
 from .adapt import adapt
 from .plan import make_plan
 from .ontology import tokenize
@@ -25,6 +25,9 @@ LAST_IDS = 14  # a weekly plan shows up to 14 cards
 RECENT_TURNS = 4
 # The app is a Nosh One assistant: new chats only show dishes the robot can cook (chip × turns it off).
 NOSH_MODE = os.getenv("NOSH_MODE", "1") != "0"
+# Distilled classifier (forge/intent_model.py): turns about on-screen dishes it is sure of skip the LLM.
+INTENT_MODEL = os.getenv("INTENT_MODEL", "1") != "0"
+INTENT_THRESHOLD = float(os.getenv("INTENT_THRESHOLD", "0.7"))
 # Signs a message is conversation, not a bare request ("hi! I'm tired after work").
 CHATTY = re.compile(r"\b(hi|hello|hey|tired|bored|stressed|sick|feeling|today was|after work|husband|wife|kids?|"
                     r"family|friends?|guests?|party|why|because|should i|do you|can you|could you|would you|"
@@ -64,6 +67,17 @@ FOOD_STOP = COMMON_WORDS | {"the", "and", "with", "style", "recipe", "over", "st
                             "free", "use", "using", "way", "ways", "version", "instant", "minute", "minutes", "mins",
                             "ideas", "tips", "perfect", "favourite", "favorite", "world", "famous", "street",
                             "restaurant", "party", "kids", "baby", "indian", "south", "north", "east", "west"} | COMMON
+# Positions the ordinal regex doesn't cover (middle, top, aakhri, Devanagari ordinals) -> index into the cards.
+EXTRA_POSITIONS = [(re.compile(r"(?<![\wऀ-ॿ])(पहला|पहली|पहले)(?![\wऀ-ॿ])"), 0),
+                   (re.compile(r"(?<![\wऀ-ॿ])(दूसरा|दूसरी|दूसरे)(?![\wऀ-ॿ])"), 1),
+                   (re.compile(r"(?<![\wऀ-ॿ])(तीसरा|तीसरी|तीसरे)(?![\wऀ-ॿ])"), 2),
+                   (re.compile(r"(?<![\wऀ-ॿ])(आखिरी|आख़िरी|अंतिम)(?![\wऀ-ॿ])|\b(aakhri|akhri|aakhiri|bottom)\b", re.I), -1),
+                   (re.compile(r"\b(top|upar wala|upar wali)\b", re.I), 0)]
+DEVA_INGREDIENTS = re.compile(r"सामग्री|क्या क्या|क्या-क्या|चाहिए|लगेगा|लगेंगे|लगती|डलता|डालें")
+PRONOUN = re.compile(r"\b(it|its|it's|this|that)\b(?!\s+(one|ones|day)\b)|\b(ye|yeh|ise|isme|iska|iski|isko|isse|"
+                     r"wo|woh|use|usme|uska|uski)\b|(?<![\wऀ-ॿ])(यह|ये|इस|इसमें|इसका|इसकी|इसे|वह|वो|उसमें|उसका)(?![\wऀ-ॿ])",
+                     re.I)
+MIDDLE = re.compile(r"\b(middle|beech wala|beech wali|bich wala)\b|बीच", re.I)
 DEVA = re.compile(r"[ऀ-ॿ]")
 RECALL_CUE = re.compile(r"\b(again|earlier|before|previous|last time|go back|pichl|pehle|remind|recap|"
                         r"you (suggested|showed|gave|recommended|mentioned|said)|suggested|recommended)\b", re.I)
@@ -251,8 +265,8 @@ class Assistant:
         return s
 
     def chat(self, state: dict | None, message: str, history: list | None = None) -> dict:
-        out = None
-        if agent_mod.enabled() and not self._fast_path(state, message):
+        out = None if self._fast_path(state, message) else self._distilled(state, message)
+        if out is None and agent_mod.enabled() and not self._fast_path(state, message):
             try:
                 out = self.agent.turn(state, message, history)
             except Exception:  # noqa: BLE001 - any agent failure falls back to the deterministic pipeline
@@ -266,7 +280,9 @@ class Assistant:
         payload (cards, state). If the agent fails midway, a "reset" clears the partial text and the
         deterministic pipeline answers."""
         out, started = None, False
-        if agent_mod.enabled() and not self._fast_path(state, message):
+        if not self._fast_path(state, message):
+            out = self._distilled(state, message)
+        if out is None and agent_mod.enabled() and not self._fast_path(state, message):
             try:
                 for ev in self.agent.stream_turn(state, message, history):
                     if ev["type"] == "final":
@@ -281,6 +297,87 @@ class Assistant:
         if out is None:
             out = self._chat(state, message, history)
         yield {"type": "final", "data": self._remember(out, message)}
+
+    def _distilled(self, state: dict | None, message: str) -> dict | None:
+        """The distilled classifier's answer for turns about dishes on screen, or None to let Claude handle it.
+        Only acts when the model is confident AND the dish it means is resolved with certainty."""
+        if not (INTENT_MODEL and intent_model.available()):
+            return None
+        s = session_from(self.engine, state)
+        if not (s.last_ids or s.shown):
+            return None
+        screen = ("plan" if s.labels() and s.labels()[0] in DAYS else
+                  "focus" if s.focus is not None else "list") if s.last_ids else "none"
+        t0 = time.perf_counter()
+        p = intent_model.predict(message, screen)
+        if p is None or p["confidence"] < INTENT_THRESHOLD:
+            return None
+        if parse(self.engine.onto, message).intents & {"more", "different", "similar", "plan", "history", "reset"}:
+            return None  # "one more", "something different": a new search, whatever the wording resembles
+        out = None
+        if p["action"] == "recall":
+            if not (dish_qa.RECALL.search(message) or RECALL_CUE.search(message)):
+                return None  # "the last one" is a card, not "what did you suggest"
+            out = self._recall_reply(s)
+        elif p["action"] in ("show_recipe", "ask_about") and s.last_ids:
+            targets = self._resolve_targets(s, message, p["ref"] == "all" and p["action"] == "ask_about")
+            if not targets:
+                return None
+            if p["action"] == "show_recipe":
+                want = p["want"]
+                if DEVA_INGREDIENTS.search(message) or (ASK_INGREDIENTS.search(message) and not ASK_STEPS.search(message)):
+                    want = "ingredients"
+                out = self._detail_reply(s, targets[0], message, want=want)
+            else:
+                out = self._dish_question(s, message, targets=targets)
+        if out is None:
+            return None
+        out["trace"] = {**(out.get("trace") or {}), "understood_by": "classifier", "intent": p["action"],
+                        "confidence": round(p["confidence"], 3), "classifier_ms": round((time.perf_counter() - t0) * 1000, 2)}
+        return out
+
+    def _resolve_targets(self, s: Session, message: str, all_cards: bool) -> list[int] | None:
+        """Which on-screen dish(es) a message means, deterministically; None when it can't be sure."""
+        text = message.strip().lower()
+        n = len(s.last_ids)
+        if all_cards or dish_qa.ALL_SHOWN.search(text):
+            return list(s.last_ids) if n > 1 else None
+        hits: set[int] = set()
+        card_ = self._explicit_card(s, message)
+        if card_ is not None:
+            hits.add(card_)
+        for m in REFERENCE.finditer(text):
+            word = (m.group(1) or m.group(2) or "").lower()
+            if word in _ORDINALS and -n <= _ORDINALS[word] < n:
+                hits.add(s.last_ids[_ORDINALS[word]])
+        for rx, idx in EXTRA_POSITIONS:
+            if rx.search(message) and -n <= idx < n:
+                hits.add(s.last_ids[idx])
+        if MIDDLE.search(message) and n >= 3:
+            hits.add(s.last_ids[n // 2])
+        # By name: "the palak one", "tawa paneer". Words naming food that match no card mean something new.
+        words = {w for w in tokenize(text) if len(w) > 2} - FOOD_STOP - {"make", "cook", "recipe", "need", "dish",
+                                                                         "ingredient", "step", "method", "wala", "wali"}
+        if words:
+            scored = [(len(words & self.engine.name_tokens[self.engine.by_id[rid]]), rid) for rid in s.last_ids]
+            best = max(scored)[0]
+            if best:
+                top = [rid for sc, rid in scored if sc == best]
+                if len(top) == 1:
+                    hits.add(top[0])
+            unmatched = words - set().union(*(self.engine.name_tokens[self.engine.by_id[r]] for r in s.last_ids))
+            if not hits and unmatched & self._strong_food_vocab:
+                return None  # names a dish or ingredient that isn't on screen: not a follow-up
+        if len(hits) > 1:
+            return None
+        if hits:
+            return [hits.pop()]
+        # No explicit card: only a pronoun ("is it healthy", "isme kya hai") safely means the dish in focus.
+        if not PRONOUN.search(message):
+            return None
+        if s.focus is not None and (s.focus in s.last_ids or s.focus in s.shown):
+            return [s.focus]
+        return [s.last_ids[0]]
 
     @staticmethod
     def _remember(out: dict, message: str) -> dict:

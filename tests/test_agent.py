@@ -3,6 +3,7 @@ import types
 import pytest
 
 from forge import agent
+import forge.chat as chat_mod
 from forge.chat import Assistant
 from forge.search import Engine
 
@@ -81,6 +82,7 @@ def tool_msg(name, args):
 
 @pytest.fixture
 def fake(monkeypatch):
+    monkeypatch.setattr(chat_mod, "INTENT_MODEL", False)  # these tests cover the Claude path
     def install(script):
         client = FakeClient(script)
         monkeypatch.setattr(agent.llm_parser, "_get_client", lambda: client)
