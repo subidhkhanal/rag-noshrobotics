@@ -1,0 +1,917 @@
+{
+ "precision@5": 0.8583333333333334,
+ "rows": [
+  {
+   "query": "something light for dinner",
+   "precision@5": 1.0,
+   "dishes": [
+    "Roasted Bell Pepper Quinoa",
+    "Italian Style Broccoli And Cauliflower Soup",
+    "Asian Carrot Ginger Lentil Soup",
+    "Spinach And Millet Pulav",
+    "Fusilli Alla Caprese-Pasta With Cherry Tomatoes And Basil Leaves"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Quinoa with roasted peppers, olive oil and lemon is a light, wholesome main course for dinner."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Vegetable soup served as a light meal. The texture comes from blended vegetables, with only a little cheese, so it isn't heavy."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Warm lentil and carrot soup that is light and nourishing, suited to dinner."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Millet and spinach pulav is a light one-pot dinner with only modest ghee."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Pasta in a light cherry tomato and basil sauce rather than a cream sauce makes a reasonably light dinner."
+    }
+   ]
+  },
+  {
+   "query": "a healthy lunch",
+   "precision@5": 1.0,
+   "dishes": [
+    "Thengai Sadam (A Quick and Healthy Coconut Rice)",
+    "Healthy Fulkopir Paturi (Bengali Style Cauliflower Dumplings)",
+    "Healthy Kale Pesto Pasta",
+    "Palak Chana Dal - Healthy Spinach Gram Dal",
+    "Kollu Rasam - Healthy Horse Gram Rasam"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Simple tempered rice with dals and peanuts; reasonably wholesome lunch, not fried or creamy."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Steamed cauliflower dumplings, vegetable-based and light."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Kale and basil pesto pasta with walnuts; a vegetable-forward lunch, though the cheese makes it somewhat rich."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Lentils with spinach, protein and greens; a nutritious lunch."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Light horse gram rasam, nutritious and served with rice for lunch."
+    }
+   ]
+  },
+  {
+   "query": "food for my kids, nothing spicy",
+   "precision@5": 0.8,
+   "dishes": [
+    "Broken Wheat Upma Or Dalia Khichdi for Babies & Toddlers",
+    "Mint Vegetables Moilee (Mixed Vegetables Cooked In Minty Coconut Milk)",
+    "Easy Spaghetti In Creamy Tomato Sauce | Vegetarian & Kid Friendly",
+    "Healthy Snack Bowl",
+    "Thai Yellow Curry"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Mild, soft porridge made for young kids; no spicy elements."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Mild coconut vegetable stew, gentle flavors suitable for kids."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Kid-friendly creamy tomato pasta; the chilli flakes are minor and optional."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Sweet popcorn snack with peanut butter and fruit, appealing to kids and not spicy."
+    },
+    {
+     "n": 5,
+     "fits": false,
+     "why": "Thai curry with a spice paste is not reliably non-spicy or typical kid food."
+    }
+   ]
+  },
+  {
+   "query": "kid friendly snack",
+   "precision@5": 0.8,
+   "dishes": [
+    "Sookha Bhujia Bhel",
+    "Mozzarella Basil Sandwiches",
+    "Stuffed Jacket Potatoes",
+    "Healthy Snack Bowl",
+    "Karnataka Style Ellu Bella (Sankrati Mix)"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": false,
+     "why": "Contains green chilli and tangy chaat masala; spicy-tangy chaat is not reliably mild for kids."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Toasted cheese and tomato sandwich is mild and kid-appealing."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Cheesy baked potatoes with sweet corn are mild and popular with kids."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Popcorn with a chocolate peanut butter dip, apple and raisins is a fun, kid-appealing snack."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Sweet jaggery, peanut and coconut mix is mild and kid-friendly."
+    }
+   ]
+  },
+  {
+   "query": "party starters for guests",
+   "precision@5": 1.0,
+   "dishes": [
+    "Paneer And Grapes Platter - Healthy Party Appetizer",
+    "Zucchini Tater Tots - A Delicious Party Appetizer",
+    "Watermelon & Feta Skewers",
+    "Fresh Mango Salsa",
+    "Potato Puff Pastry"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Toothpick party appetizer of paneer and grapes, ideal for guests."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Crispy bite-sized tots explicitly served at parties as starters."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Quick no-cook skewers served as a party snack."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Served with nachos as a party snack, a common starter dip."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Warm stuffed puff pastry snack, a classic party starter."
+    }
+   ]
+  },
+  {
+   "query": "something to cook when guests come over",
+   "precision@5": 1.0,
+   "dishes": [
+    "Perfect Christmas Roast Potatoes",
+    "Teriyaki Tofu",
+    "Karnataka Style Ellu Bella (Sankrati Mix)",
+    "Southern Style Fried Chicken",
+    "Paneer Makhani"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Festive crowd-pleasing roast potato side, well suited to hosting a meal."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Quick, attractive glazed tofu appetizer that is easy to serve to guests."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "A traditional snack mix meant for sharing, fine to offer visiting guests."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Crispy fried chicken wings are a classic crowd-pleaser for company."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Rich restaurant-style paneer curry, a typical dish for entertaining at dinner."
+    }
+   ]
+  },
+  {
+   "query": "comfort food for a rainy day",
+   "precision@5": 1.0,
+   "dishes": [
+    "Barnyard Millet Sweet Pongal (Kuthiraivali Sakkarai Pongal)",
+    "Khatua (Bhojpuri Style Khichdi)",
+    "Sprouted Kollu Sambar - Horse Gram Sambar With Vegetables",
+    "Karwar Style Khatkhate (Mixed Vegetable Curry With Toor Dal & Coconut)",
+    "Dal Ghiya with Punjabi Wadiyan - Lentils with Bottle Gourd & Sundried Lentil Dumplings"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Warm, soft ghee-rich sweet pongal is classic homely comfort food."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Mashed rice-lentil khichdi with ghee tadka is quintessential rainy-day comfort."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Hot lentil sambar with rice is a warm, homely meal."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Thick soupy dal-coconut vegetable curry with rice is warm and comforting."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Hearty soupy dal with wadiyan served with rice or roti is homely comfort food."
+    }
+   ]
+  },
+  {
+   "query": "something soothing when I'm sick",
+   "precision@5": 0.8,
+   "dishes": [
+    "Oats And Spinach Pongal",
+    "Khichdi With Fresh Spices",
+    "Khatua (Bhojpuri Style Khichdi)",
+    "Varan Bhat - Maharashtrino Dal",
+    "Menthe / Fenugreek Seeds Tambli (Karnataka Recipes)"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Soft, warm oats-and-moong-dal porridge with gentle pepper and ghee; easy to eat and soothing when unwell."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Khichdi is the classic Indian sick-day food: soft, warm rice and moong dal with ghee."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "A soft, mashed rice-and-lentil porridge that is warm and easy to digest, which suits someone who is sick."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Thin, mild, soft dal served with rice is simple and gentle on the stomach."
+    },
+    {
+     "n": 5,
+     "fits": false,
+     "why": "A cold curd-and-coconut side dish meant to go with rice rather than a warm, soothing meal on its own."
+    }
+   ]
+  },
+  {
+   "query": "high protein vegetarian dinner",
+   "precision@5": 1.0,
+   "dishes": [
+    "Protein Rich Paneer And Horse Gram Soup - Kollu/ Kulith Soup",
+    "Tofu Stir Fry Curry",
+    "Maa Ki Dal",
+    "Naked Burrito Bowl",
+    "Soya Chunks Masala in Coconut Milk"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Paneer and horse gram give substantial protein; served as a vegetarian main."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Tofu is the main ingredient, a solid vegetarian protein, in a dinner curry."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "A dinner curry built on urad dal and kidney beans, which are protein-rich legumes."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "A vegetarian dinner bowl with black beans as the protein source, alongside brown rice."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Soy chunks are very high in protein; a vegetarian dinner curry."
+    }
+   ]
+  },
+  {
+   "query": "protein rich breakfast",
+   "precision@5": 1.0,
+   "dishes": [
+    "Cream Cheese Scrambled Eggs",
+    "Spinach Mushroom Scrambled Eggs",
+    "Egg White Cheese Scrambled Eggs With Spinach & Caramelized Onion",
+    "Akuri (Parsi Style Seasoned Scrambled Eggs)",
+    "Spicy Avocado Scrambled Eggs"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Egg-based scramble is a protein-rich breakfast."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Scrambled eggs with veg, solid protein breakfast."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Egg whites plus cheddar make it a high-protein breakfast."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Egg-based Parsi scramble, protein-rich breakfast."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Scrambled eggs are the main protein source at breakfast."
+    }
+   ]
+  },
+  {
+   "query": "a rich indulgent weekend dinner",
+   "precision@5": 1.0,
+   "dishes": [
+    "Kerala Style Rich Creamy Egg Cashew Curry",
+    "Reshmi Kofta in Rich Cashew Gravy",
+    "Malai Matar Paneer (Cottage Cheese & Peas In Rich Creamy Gravy)",
+    "Vegan Baingan Makhani (Eggplant In Rich Coconut Gravy)",
+    "Paneer In Coconut Gravy"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Rich, creamy cashew egg curry served as a dinner main."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Fried paneer koftas in a cream and cashew gravy make an indulgent dinner."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Creamy paneer curry in a rich cashew gravy is an indulgent dinner."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Thick, creamy makhani-style curry with coconut cream is a rich dinner main."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Paneer in a rich coconut gravy finished with butter is an indulgent dinner."
+    }
+   ]
+  },
+  {
+   "query": "festive dish for diwali",
+   "precision@5": 0.6,
+   "dishes": [
+    "Sakkare Achhu (Festive Sugar Figurines)",
+    "Instant Kalakand -Indian Festive Sweet",
+    "Prawns Biryani",
+    "Lal Mas Biryani - Laal Maas Biryani",
+    "Khurchan Mawa Burfi"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Traditional festive sugar figurines made for Indian festivals; reasonable for a Diwali spread."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Kalakand is a classic Indian festival sweet, very common at Diwali."
+    },
+    {
+     "n": 3,
+     "fits": false,
+     "why": "Prawn biryani is a non-vegetarian dish. Diwali festive meals are typically vegetarian, so it is a poor fit."
+    },
+    {
+     "n": 4,
+     "fits": false,
+     "why": "Mutton biryani is a non-vegetarian festive meal not typical of Diwali celebrations."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Mawa burfi with silver leaf is a quintessential Diwali sweet."
+    }
+   ]
+  },
+  {
+   "query": "simple everyday dal sabzi type food",
+   "precision@5": 0.8,
+   "dishes": [
+    "Telangana Style Barada Palya - Chana Dal Dry Sabzi",
+    "Cabbage Chana Dal Sabzi - Gobi Chana Dal",
+    "Punjabi Wadi Choliya Ki Sabzi",
+    "Chana dal and fenugreek vegetable",
+    "Karwar Style Bibya Usal (Spiced Cashew Nut Sabzi)"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Homely dry chana dal sabzi with a basic tempering, eaten with rice or roti; the 80 minutes is mostly soaking."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Simple everyday cabbage and chana dal dry sabzi, eaten with roti or rice."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "A homestyle Punjabi wadi sabzi in a tomato gravy, eaten with roti or rice; a reasonable everyday dish."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Simple dry chana dal sabzi with a basic tempering, the everyday dal-sabzi type."
+    },
+    {
+     "n": 5,
+     "fits": false,
+     "why": "A cashew-based coastal specialty, so it is not a simple everyday dal or sabzi; the urad dal is only used in the tempering."
+    }
+   ]
+  },
+  {
+   "query": "quick weeknight dinner",
+   "precision@5": 0.8,
+   "dishes": [
+    "Quick Vegetable Noodles",
+    "15 Minutes Mexican Fried Rice",
+    "Quick And Spicy Bell Pepper Pasta",
+    "Quick & Spicy Mutton Curry",
+    "Pasta Aglio Olio"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "30-minute stir-fried noodle main, quick and easy for a weeknight."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "15-minute fried rice main, very quick dinner."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "35-minute pasta main, reasonable for a weeknight."
+    },
+    {
+     "n": 4,
+     "fits": false,
+     "why": "60 minutes with a ground masala paste; too long and involved for a quick weeknight meal."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "25-minute simple spaghetti dinner, a classic quick weeknight meal."
+    }
+   ]
+  },
+  {
+   "query": "light and easy breakfast",
+   "precision@5": 1.0,
+   "dishes": [
+    "Curried Couscous",
+    "Spicy And Tangy Bread Upma",
+    "Kale And Vegetable Fried Quinoa",
+    "Schezwan Poha (Fusion)",
+    "Puffed Rice Upma - Murmura Upma"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Light vegetable couscous breakfast, simple to make in 30 min."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Quick 15-min savory bread upma, light breakfast."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Vegetable quinoa stir-fry with minimal oil, described as a light breakfast; easy, if a bit longer."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Poha with vegetables is a light, quick breakfast."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Puffed rice upma is soft, light and easy."
+    }
+   ]
+  },
+  {
+   "query": "something not too oily",
+   "precision@5": 0.6,
+   "dishes": [
+    "Sichuan Style Zhong Shui Jiao (Caramelized Onion, Cabbage And Peas Dumplings in Red Oil)",
+    "Mirchi Ke Tipore - Green Chilli Stir Fry",
+    "Tripura Style Kosoi Bwtwi - Sauteed Tofu & Green Beans Stir Fry With Garlic",
+    "Pistachio & Cranberry Broken Wheat Pilaf",
+    "Bihari Style Aloo Ka Chokha - Spiced & Mashed Potatoes With Mustard Oil"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": false,
+     "why": "Dumplings are served tossed in spicy red oil, so oil is a defining feature of the dish."
+    },
+    {
+     "n": 2,
+     "fits": false,
+     "why": "Chillies are stir-fried in mustard oil with a tempering, which tends to make the dish quite oily."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "A simple sauté of tofu and beans with little oil and light seasoning."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "A pressure-cooked grain pilaf with only a little olive oil, so not oily."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Boiled, mashed potatoes with just a drizzle of raw mustard oil for flavour, so not oily overall."
+    }
+   ]
+  },
+  {
+   "query": "healthy snack for evening tea",
+   "precision@5": 0.8,
+   "dishes": [
+    "Chatpata Lobia Chaat - Healthy Black Eyed Bean Snack",
+    "Rice Paper Vegetarian Spring Rolls (Healthy Summer Rolls)",
+    "Nutty Oats Almond Truffle - A Healthy Snack",
+    "Healthy Ragi Energy Balls with Strawberry",
+    "Oats Methi Muthia-Healthy Diabetic Friendly Muthia"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Light, protein-rich bean chaat; a classic healthy tea-time snack."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Fresh, uncooked vegetable rolls make a light, healthy snack, though they take longer to prepare."
+    },
+    {
+     "n": 3,
+     "fits": false,
+     "why": "Chocolate-and-biscuit truffle is closer to a sweet confection than a healthy savoury tea snack."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Ragi and fruit energy balls are a wholesome, healthy snack bite."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Steamed oats and methi muthia is a traditional healthy Gujarati tea-time snack."
+    }
+   ]
+  },
+  {
+   "query": "halka khana chahiye",
+   "precision@5": 0.8,
+   "dishes": [
+    "Kathiawadi Dhokli Nu Shaak",
+    "Konkani Style Kadgi Chakko - Raw Jackfruit With Coconut",
+    "Karnataka Style Hurali Kalu Saaru",
+    "Karnataka Style Sabbasige Rasam - Dill leave & Toor Dal Rasam",
+    "Manathakkali Kootu"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": false,
+     "why": "Steamed besan dhokli in buttermilk gravy is fairly dense and filling, not really a light meal."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Raw jackfruit side with coconut masala, not fried or creamy, so reasonably light."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "A thin horse gram soup with rice is a light, homely meal."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "A thin, lightly spiced rasam is a classic light meal."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Moong dal and greens kootu is easy to digest and light."
+    }
+   ]
+  },
+  {
+   "query": "bachon ke liye kuch",
+   "precision@5": 0.6,
+   "dishes": [
+    "Homemade Rice Cereal (Babies-4 months onward)",
+    "One Pot Spinach Macaroni Pasta",
+    "Chaman Qaliya",
+    "Corn Bhel",
+    "Sookha Bhujia Bhel"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Mild homemade rice cereal made for babies, so it suits a request for something for kids."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Mild, cheesy spinach macaroni is a classic kid-friendly dish."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Mild, milky paneer curry with no heat, which is gentle and appealing for children."
+    },
+    {
+     "n": 4,
+     "fits": false,
+     "why": "Tangy street chaat with green chillies; it is spicy and aimed at adult snacking with chai rather than at kids."
+    },
+    {
+     "n": 5,
+     "fits": false,
+     "why": "Chaat with green chillies and sharp tangy flavours; not mild enough to count as a kid-oriented dish."
+    }
+   ]
+  },
+  {
+   "query": "mehmaan aa rahe hain kuch special",
+   "precision@5": 1.0,
+   "dishes": [
+    "Goan Kaju Curry",
+    "Methi Matar Malai",
+    "Nawabi Kofta Curry",
+    "Tandoori Gobi Tikka",
+    "Hariyali Paneer Tikka Masala Gravy"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Rich cashew curry is a special, guest-worthy main dish."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Creamy methi matar malai is a classic dish served when hosting guests."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Elaborate stuffed kofta in a cream gravy is a festive dish suited to guests."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Tandoori gobi tikka is an impressive starter or side to serve guests."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Paneer tikka masala in a herb gravy is a popular special dish for guests."
+    }
+   ]
+  },
+  {
+   "query": "something filling after the gym",
+   "precision@5": 0.8,
+   "dishes": [
+    "Mushroom & Bean Sloppy Joe",
+    "Spiced Indian Potato Flatbread",
+    "Mexican Style Black Bean Burrito",
+    "Veg Shawarma",
+    "Panjiri - Healthy Punjabi Dry Fruit Snack"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Hearty bean-and-mushroom sandwich with protein from kidney beans; filling main meal."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Stuffed potato paratha is a substantial, carb-rich filling meal suited to refuelling."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Bean, rice and cheese burrito is filling with good protein and carbs."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Chickpea patty wrap with hummus is a filling, protein-rich main."
+    },
+    {
+     "n": 5,
+     "fits": false,
+     "why": "Sweet ghee-and-sugar snack, dessert-like and not a sensible post-gym filling meal."
+    }
+   ]
+  },
+  {
+   "query": "a light summer lunch",
+   "precision@5": 1.0,
+   "dishes": [
+    "Bengali Sukto - Mixed Vegetable Curry",
+    "Pohala Jhola (Pohala Fish Curry)",
+    "Roasted Bell Pepper Quinoa",
+    "Zucchini Zoodles with mushroom Meatball",
+    "Tomato Rice With Basil"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Light vegetable curry traditionally served at lunch; suits a light summer meal."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Thin, light fish curry served with rice at lunch; light enough for summer."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Light quinoa with roasted peppers and lemon, a fresh summery lunch."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "Zucchini noodles with light olive oil dressing; light and summery."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Light tangy tomato-basil rice described as a light lunch."
+    }
+   ]
+  },
+  {
+   "query": "warm soup for the cold",
+   "precision@5": 0.8,
+   "dishes": [
+    "Chilled Spinach And Cucumber Soup",
+    "Soulful Chicken Soup",
+    "Noodle Soup with Vegetables",
+    "French Style Red Sorrel Two Bean Soup",
+    "Cumin Spiced Potato And Leek Soup"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": false,
+     "why": "Served chilled, the opposite of the warm soup asked for."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Hot chicken soup, the classic warming choice for a cold."
+    },
+    {
+     "n": 3,
+     "fits": true,
+     "why": "Hot, savoury noodle soup with chilli and ginger, warming and soothing."
+    },
+    {
+     "n": 4,
+     "fits": true,
+     "why": "A warm bean and sorrel soup simmered in stock and served warm."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "A warm potato and leek soup with cumin, comforting when unwell."
+    }
+   ]
+  },
+  {
+   "query": "something sweet but not too heavy",
+   "precision@5": 0.6,
+   "dishes": [
+    "Chewy Pumpkin Seed Chikki",
+    "Coconut Kewra Drink",
+    "Khus And Cucumber Mojito",
+    "Lemon Cherry Berry Spa Water",
+    "Coconut Chia Pudding"
+   ],
+   "verdicts": [
+    {
+     "n": 1,
+     "fits": true,
+     "why": "Sweet jaggery-seed snack in small portions, not rich or fried; reasonably light sweet treat."
+    },
+    {
+     "n": 2,
+     "fits": true,
+     "why": "Lightly sweet chilled coconut drink; sweet and very light, fits a casual sweet craving."
+    },
+    {
+     "n": 3,
+     "fits": false,
+     "why": "Refreshing mocktail, mainly tangy/minty rather than a sweet treat; doesn't really answer a craving for something sweet."
+    },
+    {
+     "n": 4,
+     "fits": false,
+     "why": "Flavoured water with no real sweetness; not a sweet dish."
+    },
+    {
+     "n": 5,
+     "fits": true,
+     "why": "Chia pudding with honey and fruit is sweet yet light, a classic light dessert."
+    }
+   ]
+  }
+ ]
+}

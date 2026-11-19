@@ -142,6 +142,7 @@ hai hain ho hun hoon tha thi the ka ki ke ko se me mein par pe aur ya bhi kya ka
 mujhe muje humko hum tum aap ap apna mera meri mere tera teri yeh ye woh wo wala wali vala vali chahiye chaiye
 banane banao banaye banaun banau bana karna karo karna kar sakte sakta sakti accha acha achha theek thik
 nahi nahin mat bas abhi phir fir ab jaldi thoda zyada bahut khana khane
+nothing anything everything somebody someone
 """.split())
 
 

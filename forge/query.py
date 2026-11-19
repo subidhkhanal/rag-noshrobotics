@@ -73,7 +73,8 @@ COURSE_RES = {
     "dinner": r"\b(dinners?|suppers?|raat ka khana)\b",
     "snack": r"\b(snacks?|starters?|appetizers?|evening snack|chai time|tea time|party snack)\b",
     "dessert": r"\b(desserts?|sweets?|mithai|sweet dish|pudding|kheer|payasam|halwa|ladoo|laddu|barfi|burfi|"
-               r"gulab jamun|rasgulla|rasmalai|ice ?cream|kulfi|cakes?|cupcakes?|brownies?|cookies?|shrikhand|phirni)\b",
+               r"gulab jamun|rasgulla|rasmalai|ice ?cream|kulfi|(?<!steamed )(?<!rice )(?<!savoury )(?<!savory )"
+               r"(?<!flour )(?<!lentil )cakes?|cupcakes?|brownies?|cookies?|shrikhand|phirni)\b",
     "side": r"\b(side dish|sides?|accompaniment|sabzi|sabji)\b",
 }
 COURSE_DISH = re.compile(r"pudding|kheer|payasam|halwa|ladoo|laddu|barfi|burfi|gulab jamun|rasgulla|rasmalai|"
@@ -99,9 +100,9 @@ CUISINE_GROUPS = {
 }
 ATTRIBUTE_RES = {
     "spicy": r"\b(spicy|spicier|hot|teekha|tikha|fiery|chatpata|masaledar)\b",
-    "mild": r"\b(mild|less spicy|not (too )?spicy|non[- ]spicy|kid[- ]friendly|for kids|bland)\b",
+    "mild": r"\b(mild|less spicy|(not|nothing|no|zero|without|never) (too |so |very )?spic(y|e)|non[- ]spicy|kid[- ]friendly|for kids|bland)\b",
     "creamy": r"\b(creamy|rich|malai(dar)?|buttery)\b",
-    "healthy": r"\b(healthy|healthier|healthiest|light|lighter|low[- ]?(cal|calorie|fat|oil)|diet|nutritious|weight loss|halka|not (too )?oily|less oil)\b",
+    "healthy": r"\b(healthy|healthier|healthiest|light|lighter|low[- ]?(cal|calorie|fat|oil)|diet|nutritious|weight loss|halka|not (too |so )?(oily|heavy|rich|greasy)|less oil)\b",
     "high_protein": r"\b(high[- ]?protein|protein[- ]?rich|protein)\b",
     "quick": r"\b(quick|quickly|fast|jaldi|in a hurry|instant|easy|simple|busy)\b",
     "comfort": r"\b(comfort|comforting|homely|ghar ka)\b",

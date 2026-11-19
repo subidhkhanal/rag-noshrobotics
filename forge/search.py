@@ -27,6 +27,45 @@ from .translit import Speller
 
 KEEP_WORDS = COMMON_WORDS | HINGLISH_WORDS
 
+# Vague request words -> recipe qualities tagged offline (scripts/enrich_tags.py).
+QUALITY_WORDS = [(re.compile(rx, re.I), q) for rx, q in [
+    (r"\b(kids?|children|child|bach+[oe]n?|bachch?[oe]n|toddlers?|little ones|school)\b", "kid_friendly"),
+    (r"\b(party|parties|guests?|mehm[ae]an|get ?together|potluck|starters?|appetizers?|special occasion)\b", "party"),
+    (r"\b(sick|unwell|fever|soothing|upset (stomach|tummy)|recover\w*|easy to digest|cold and cough|bimaar)\b", "soothing"),
+    (r"\b(filling|hearty|gym|workout|hungry|satiating|fuller)\b", "filling"),
+    (r"\b(summer|hot day|cooling|garmi|refreshing)\b", "cooling"),
+    (r"\b(winter|cold (day|weather|night)|for the cold|rainy|monsoon|baarish|warming|warm (me|up))\b", "warming"),
+    (r"\b(everyday|daily|weeknight|regular|ghar ka|homestyle|home style)\b", "everyday"),
+    (r"\b(indulgent|indulge|heavy|treat|lavish)\b", "heavy"),
+    (r"\b(comfort|comforting|cozy|cosy|homely|soul ?food)\b", "comfort"),
+    (r"\b(festive|festival|diwali|holi|eid|navratri|pongal|onam|celebration)\b", "festive"),
+]]
+ATTRIBUTE_QUALITIES = {"healthy": "light", "comfort": "comfort", "festive": "festive", "high_protein": "high_protein"}
+# Requested course -> dish types that genuinely fit it (source course labels are unreliable).
+MEAL_TYPES = {"dinner": {"main", "side", "soup", "salad", "bread"}, "lunch": {"main", "side", "soup", "salad", "bread"},
+              "snack": {"snack"}, "breakfast": {"breakfast", "main", "snack", "bread"}}
+
+
+def wanted_qualities(c) -> tuple[set, set, set]:
+    """(qualities wanted, qualities to avoid, acceptable spice levels) for a request."""
+    text = c.text or ""
+    want = {ATTRIBUTE_QUALITIES[a] for a in c.attributes if a in ATTRIBUTE_QUALITIES}
+    want |= {q for rx, q in QUALITY_WORDS if rx.search(text)}
+    if re.search(r"\bnot (too |so )?heavy\b|\bnot (too |so )?(rich|oily)\b", text, re.I):
+        want.add("light")
+    if "festive" in c.attributes and re.search(r"\b(party|guests?|starters?)\b", text, re.I):
+        want.add("party")
+    avoid = {"heavy"} if "light" in want else ({"light"} if "heavy" in want else set())
+    if "light" in want and "heavy" in want:
+        want.discard("heavy")
+        avoid = {"heavy"}
+    spice_ok = set()
+    if "kid_friendly" in want or "soothing" in want or "mild" in c.attributes:
+        spice_ok = {"mild"}
+    elif "spicy" in c.attributes:
+        spice_ok = {"medium", "hot"}
+    return want, avoid, spice_ok
+
 # Domain thesaurus: general English food descriptions -> Indian dish names that fit them. Query expansion only
 # (adds search words); it never filters, and diet checks are unaffected.
 DISH_SYNONYMS = [(re.compile(rx, re.I), names) for rx, names in [
@@ -161,6 +200,13 @@ def load_recipes(data_dir: Path = DATA) -> list[dict]:
         for r in recipes:
             if r["id"] in desc:
                 r["aka"], r["description"] = desc[r["id"]]["aka"], desc[r["id"]]["description"]
+    tags_path = data_dir / "tags.jsonl"
+    if tags_path.exists():
+        tags = {d["id"]: d for d in map(json.loads, tags_path.read_text(encoding="utf-8").splitlines()) if d}
+        for r in recipes:
+            if r["id"] in tags:
+                d = tags[r["id"]]
+                r["qualities"], r["spice_level"], r["dish_type"] = d["qualities"], d["spice"], d["dish_type"]
     return recipes
 
 
@@ -339,6 +385,9 @@ class Engine:
         if course in ("lunch", "dinner") and self.is_sweet[i]:
             return False
         if course == "dessert":
+            kind = self.recipes[i].get("dish_type")
+            if kind:  # tagged: a real dessert (or sweet drink), not "Sweet Corn Sundal"
+                return kind in ("dessert", "drink")
             return self.is_sweet[i] or course in self.recipes[i]["course_tags"]
         return course in self.recipes[i]["course_tags"]
 
@@ -349,7 +398,10 @@ class Engine:
     def query_text(self, c: Constraints) -> str:
         parts = [c.text]
         parts += [self.onto.label(i) for i in c.include if self.onto.label(i) not in c.text]
-        parts += sorted(a.replace("_", " ") for a in c.attributes)
+        # Preference words the quality tags already handle ("healthy", "comfort") would only match dish *names*
+        # ("Healthy Bharwa Karela") here, so they stay out of the search text once tags exist.
+        tagged = bool(self.recipes and self.recipes[0].get("qualities") is not None)
+        parts += sorted(a.replace("_", " ") for a in c.attributes if not (tagged and a in ATTRIBUTE_QUALITIES))
         if c.cuisine:
             parts.append(c.cuisine)
         if c.prefer_non_veg:
@@ -412,6 +464,28 @@ class Engine:
                      and not self.is_condiment[i] and not self.is_baby[i] and not self.recipes[i].get("is_component")]
             if len(mains) >= 10:
                 cand = mains
+        want, avoid, spice_ok = wanted_qualities(c)
+        if want or avoid or spice_ok:
+            # Vague requests ("something light", "for my kids", "party starters"): keep dishes tagged with the wanted
+            # qualities (scripts/enrich_tags.py) when enough exist, so results never thin out to nothing.
+            def fits(i):
+                r = self.recipes[i]
+                q = set(r.get("qualities", []))
+                return ((not want or q & want) and not (q & avoid)
+                        and (not spice_ok or r.get("spice_level", "medium") in spice_ok))
+            narrowed = [i for i in cand if fits(i)]
+            if len(narrowed) >= 5:
+                cand = narrowed
+            trace["qualities"] = sorted(want)
+        meal = MEAL_TYPES.get(c.course or "")
+        if not meal and want and not SWEET_WANTED.search(c.text or "") and not CONDIMENT.search(c.text or ""):
+            # A vague request with no course ("comfort food for a rainy day", "halka khana") means a dish to eat,
+            # not a drink, dessert or chutney.
+            meal = {"main", "side", "soup", "salad", "breakfast", "snack", "bread"}
+        if meal:
+            narrowed = [i for i in cand if self.recipes[i].get("dish_type", "main") in meal]
+            if len(narrowed) >= 5:
+                cand = narrowed
         trace["after_soft_filters"] = len(cand)
 
         qtext = self.query_text(c)
@@ -498,6 +572,7 @@ class Engine:
             anchor_vec = self.emb[self.by_id[anchor_id]]
 
         scored = []
+        want_q = wanted_qualities(c)[0]
         include = set(c.include)
         content = {t for t in tokenize(c.text) if len(t) > 2}
         for j, i in enumerate(pool):
@@ -516,6 +591,8 @@ class Engine:
                 s += 0.3 * feats.get(a, 0.0)
             if c.prefer_non_veg and self.tags[i] & MEAT_TAGS:
                 s += 0.4
+            if want_q:
+                s += 0.4 * len(want_q & set(self.recipes[i].get("qualities", []))) / len(want_q)
             if c.cuisine and self._cuisine_ok(i, c.cuisine):
                 s += 0.15
             if anchor_vec is not None:
@@ -663,10 +740,11 @@ def count_lines(path: Path) -> int:
     return path.read_bytes().count(b"\n")
 
 
-def source_signature(data_dir: Path = DATA) -> tuple[int, int]:
+def source_signature(data_dir: Path = DATA) -> tuple[int, ...]:
     """Recipes and descriptions line counts: the index is rebuilt when either changes."""
-    desc = data_dir / "descriptions.jsonl"
-    return count_lines(data_dir / "recipes.jsonl"), count_lines(desc) if desc.exists() else 0
+    desc, tags = data_dir / "descriptions.jsonl", data_dir / "tags.jsonl"
+    return (count_lines(data_dir / "recipes.jsonl"), count_lines(desc) if desc.exists() else 0,
+            count_lines(tags) if tags.exists() else 0)
 
 
 def build_index(onto: Ontology, data_dir: Path = DATA, write: bool = False) -> dict:

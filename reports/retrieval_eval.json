@@ -2,46 +2,46 @@
  "summary": {
   "en": {
    "hit@5": 1.0,
-   "mrr@10": 0.9227777777777778,
-   "ndcg@10": 0.7407565964051045,
-   "p@5": 0.7533333333333334,
+   "mrr@10": 0.9144444444444445,
+   "ndcg@10": 0.7452095965036675,
+   "p@5": 0.7633333333333333,
    "n": 60,
    "ndcg_ci": [
-    0.6765900219241506,
-    0.8044321022670438
+    0.6801505389325414,
+    0.8097378572168432
    ]
   },
   "hinglish": {
    "hit@5": 1.0,
    "mrr@10": 0.9916666666666667,
-   "ndcg@10": 0.8136205940422779,
+   "ndcg@10": 0.8135237534799807,
    "p@5": 0.8466666666666666,
    "n": 60,
    "ndcg_ci": [
-    0.7619978212218343,
+    0.7616104589726459,
     0.8627428829109228
    ]
   },
   "devanagari": {
    "hit@5": 0.9666666666666667,
    "mrr@10": 0.9305555555555556,
-   "ndcg@10": 0.8166482925687689,
+   "ndcg@10": 0.8177525296263422,
    "p@5": 0.8366666666666667,
    "n": 60,
    "ndcg_ci": [
-    0.7493681547007237,
-    0.8793980586202133
+    0.750163902883887,
+    0.8805022956777865
    ]
   },
   "all": {
    "hit@5": 0.9888888888888889,
-   "mrr@10": 0.9483333333333333,
-   "ndcg@10": 0.7903418276720504,
-   "p@5": 0.8122222222222222,
+   "mrr@10": 0.9455555555555555,
+   "ndcg@10": 0.7921619598699968,
+   "p@5": 0.8155555555555556,
    "n": 180,
    "ndcg_ci": [
-    0.7555180054351831,
-    0.8244017775483091
+    0.7571207951364228,
+    0.8257764705301021
    ]
   }
  },
@@ -51,13 +51,13 @@
    "lang": "en",
    "query": "rice and lentil one pot comfort meal for dinner",
    "hit@5": 1.0,
-   "mrr@10": 1.0,
-   "ndcg@10": 0.5670429581667766,
+   "mrr@10": 0.5,
+   "ndcg@10": 0.3971921948634016,
    "p@5": 0.6,
    "top3": [
-    "Khatua (Bhojpuri Style Khichdi)",
     "South Indian One Pot Sambar Rice",
-    "Masoor Dal And Palak Khichdi"
+    "Masoor Dal And Palak Khichdi",
+    "Dal Chenchki ( Red Lentils with Shallots)"
    ]
   },
   {
@@ -528,7 +528,7 @@
    "query": "chawal ki kheer",
    "hit@5": 1.0,
    "mrr@10": 0.5,
-   "ndcg@10": 0.3529461582433962,
+   "ndcg@10": 0.3471357245055706,
    "p@5": 0.2,
    "top3": [
     "Rajasthani Style Oliya (Sweetened Rice Yogurt Pudding)",
@@ -556,7 +556,7 @@
    "query": "carrot halwa dessert",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7125523635307982,
+   "ndcg@10": 0.7788065869851872,
    "p@5": 1.0,
    "top3": [
     "Vegan Carrot Halwa Ice Cream",
@@ -584,7 +584,7 @@
    "query": "गाजर का हलवा",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.7125523635307982,
+   "ndcg@10": 0.7788065869851872,
    "p@5": 1.0,
    "top3": [
     "Vegan Carrot Halwa Ice Cream",
@@ -598,8 +598,8 @@
    "query": "festive sweet balls",
    "hit@5": 1.0,
    "mrr@10": 0.3333333333333333,
-   "ndcg@10": 0.2528410271851774,
-   "p@5": 0.2,
+   "ndcg@10": 0.2614432242450501,
+   "p@5": 0.4,
    "top3": [
     "Indian Festive Sweet Rice And Jamun Bhog",
     "Sakkare Achhu (Festive Sugar Figurines)",
@@ -1144,12 +1144,12 @@
    "query": "steamed gram flour cake from gujarat",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.42520843362602373,
-   "p@5": 0.4,
+   "ndcg@10": 0.7385567757549498,
+   "p@5": 0.6,
    "top3": [
-    "Pudina Sooji & Oats Dhokla - Steamed Semolina Cake With Oats & Mint Leaves",
-    "Makai Dhokla - Savoury Steamed Corn Cake",
-    "Besan Halwa"
+    "Instant Khaman Dhokla",
+    "Rasawala Dhokla",
+    "Spinach Khandvi - Savory Gram Flour Pinwheels With Spinach"
    ]
   },
   {
@@ -1312,12 +1312,12 @@
    "query": "sweet yogurt drink",
    "hit@5": 1.0,
    "mrr@10": 1.0,
-   "ndcg@10": 0.6569815082938862,
-   "p@5": 0.6,
+   "ndcg@10": 0.7058075148678525,
+   "p@5": 0.8,
    "top3": [
-    "Rose Lassi",
     "Peach Lassi - Peach Yogurt Smoothie",
-    "Pomegranate And Chia Seeds Yogurt Smoothie"
+    "Rose Lassi",
+    "Afghani Dhoog - Cucumber Mint Buttermilk/ Chaas"
    ]
   },
   {
@@ -2114,8 +2114,8 @@
    "p@5": 0.2,
    "top3": [
     "Frozen Mango Yogurt-Mango Froyo",
-    "Rajasthani Style Oliya (Sweetened Rice Yogurt Pudding)",
-    "Maharashtrian Style Semolina and Yogurt Cake"
+    "Lemon Frozen Yogurt",
+    "Rajasthani Style Oliya (Sweetened Rice Yogurt Pudding)"
    ]
   },
   {
